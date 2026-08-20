@@ -1,0 +1,166 @@
+package dev.hogwai.platform.examples.provider.exceptions;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import dev.hogwai.platform.spi.data.access.DataAccess;
+import dev.hogwai.platform.spi.data.access.DataAccessFactory;
+import dev.hogwai.platform.spi.data.access.QueryContext;
+import dev.hogwai.platform.spi.data.access.QueryRequest;
+import dev.hogwai.platform.examples.provider.model.SupplyChainData;
+import dev.hogwai.platform.examples.provider.model.SupplyChainSchemas;
+import dev.hogwai.platform.spi.CapabilityKind;
+import dev.hogwai.platform.spi.PlatformErrorCode;
+import dev.hogwai.platform.spi.PlatformException;
+import dev.hogwai.platform.spi.PortId;
+import dev.hogwai.platform.spi.ProviderVersion;
+import dev.hogwai.platform.spi.SpiMajor;
+import dev.hogwai.platform.spi.data.FieldId;
+import dev.hogwai.platform.spi.data.MaterializedDataSet;
+import dev.hogwai.platform.spi.data.Schema;
+import dev.hogwai.platform.spi.data.SchemaRecord;
+import dev.hogwai.platform.spi.execution.CancellationToken;
+import dev.hogwai.platform.spi.execution.ExecutionContext;
+import dev.hogwai.platform.spi.provider.BuildContext;
+import dev.hogwai.platform.spi.provider.CapabilityInputs;
+import dev.hogwai.platform.spi.provider.CapabilityInstance;
+import dev.hogwai.platform.spi.provider.ProviderDescriptor;
+import java.time.Clock;
+import java.time.Instant;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import org.junit.jupiter.api.Test;
+
+class SupplyChainExceptionDetectorFactoryTest {
+
+    private static final ProviderVersion VERSION = ProviderVersion.parse("1.0.0");
+    private static final DataAccessFactory DATA_ACCESS_FACTORY = configuration -> new DataAccess() {
+        @Override
+        public <T> List<T> query(QueryRequest<T> request, QueryContext context) {
+            return List.of();
+        }
+
+        @Override
+        public void close() {
+            // no resources
+        }
+    };
+    private static final BuildContext BUILD_CONTEXT = new BuildContext(
+            Clock.systemUTC(), resource -> { }, DATA_ACCESS_FACTORY);
+
+    @Test
+    void exposesTheExactDetectorDescriptor() {
+        ProviderDescriptor descriptor = new SupplyChainExceptionDetectorFactory().descriptor();
+
+        assertThat(descriptor.providerId().value()).isEqualTo("supply-chain.exception-detector");
+        assertThat(descriptor.version()).isEqualTo(VERSION);
+        assertThat(descriptor.capabilityKind()).isEqualTo(CapabilityKind.TRANSFORM);
+        assertThat(descriptor.spiMajor()).isEqualTo(SpiMajor.V1);
+        assertThat(descriptor.inputPorts().keySet()).extracting(PortId::value)
+                .containsExactlyInAnyOrder("orders", "deliveries");
+        assertThat(descriptor.outputPorts().keySet()).isEqualTo(Set.of(new PortId("records")));
+        assertThat(descriptor.outputPorts().get(new PortId("records")).schema().fields())
+                .extracting(field -> field.id().value())
+                .containsExactly("orderId", "exceptionType", "severity", "reason", "recommendedAction");
+    }
+
+    @Test
+    void detectorProducesAllExceptionKindsAndLeavesOneOrderClean() {
+        MaterializedDataSet orders = testOrders();
+        MaterializedDataSet deliveries = testDeliveries();
+        CapabilityInstance detector = detector(Map.of(
+                "lateToleranceDays", 1L,
+                "minimumDeliveryRatio", new BigDecimal("0.80"),
+                "priorityRiskDays", 3L));
+
+        MaterializedDataSet result = detector.execute(CapabilityInputs.of(Map.of(
+                new PortId("orders"), orders,
+                new PortId("deliveries"), deliveries)), context());
+
+        assertThat(result.records()).extracting(record -> record.value(new FieldId("exceptionType")))
+                .contains("LATE_DELIVERY", "INSUFFICIENT_QUANTITY", "PRIORITY_RISK");
+        assertThat(result.records()).allSatisfy(record -> {
+            assertThat(record.value(new FieldId("orderId"))).isNotNull();
+            assertThat(record.value(new FieldId("reason"))).asString().isNotBlank();
+            assertThat(record.value(new FieldId("recommendedAction"))).asString().isNotBlank();
+        });
+        assertThat(result.records()).noneMatch(record -> "OK-001".equals(record.value(new FieldId("orderId"))));
+    }
+
+    @Test
+    void detectorRejectsMissingAndInvalidConfigurationWithDiagnostics() {
+        List<Map<String, Object>> invalid = List.of(
+                Map.of(),
+                Map.of("lateToleranceDays", -1L, "minimumDeliveryRatio", new BigDecimal("0.8"),
+                        "priorityRiskDays", 3L),
+                Map.of("lateToleranceDays", 1L, "minimumDeliveryRatio", new BigDecimal("1.1"),
+                        "priorityRiskDays", 3L),
+                Map.of("lateToleranceDays", 1L, "minimumDeliveryRatio", new BigDecimal("0.8"),
+                        "priorityRiskDays", -1L));
+
+        for (Map<String, Object> config : invalid) {
+            assertThat(new SupplyChainExceptionDetectorFactory().validate(config))
+                    .isNotEmpty()
+                    .allSatisfy(diagnostic -> assertThat(diagnostic.code())
+                            .isEqualTo(PlatformErrorCode.PROVIDER_CONFIG_ERROR));
+        }
+    }
+
+    @Test
+    void detectorIsStableAndHonoursCancellationAndInvalidInputs() {
+        MaterializedDataSet orders = testOrders();
+        MaterializedDataSet deliveries = testDeliveries();
+        Map<PortId, MaterializedDataSet> inputs = Map.of(
+                new PortId("orders"), orders, new PortId("deliveries"), deliveries);
+        CapabilityInstance detector = detector(Map.of(
+                "lateToleranceDays", 1L,
+                "minimumDeliveryRatio", new BigDecimal("0.8"),
+                "priorityRiskDays", 3L));
+
+        assertThat(detector.execute(CapabilityInputs.of(inputs), context()).records()).extracting(SchemaRecord::values)
+                .isEqualTo(detector.execute(CapabilityInputs.of(inputs), context()).records().stream()
+                        .map(SchemaRecord::values).toList());
+        assertThatThrownBy(() -> detector.execute(CapabilityInputs.of(inputs), context(
+                () -> true, Instant.parse("2099-01-01T00:00:00Z"))))
+                .isInstanceOf(PlatformException.class)
+                .extracting("code").isEqualTo(PlatformErrorCode.CANCELLATION_REQUESTED);
+        assertThatThrownBy(() -> detector.execute(CapabilityInputs.of(Map.of()), context()))
+                .isInstanceOf(PlatformException.class);
+    }
+
+    private static CapabilityInstance detector(Map<String, Object> config) {
+        return new SupplyChainExceptionDetectorFactory().create(config, BUILD_CONTEXT);
+    }
+
+    private static MaterializedDataSet testOrders() {
+        Schema schema = SupplyChainSchemas.orders();
+        return SupplyChainData.dataSet(schema, "test-orders", List.of(
+                SupplyChainData.schemaRecord(schema, Map.of("orderId", "LATE-001", "orderedQuantity", 10L,
+                        "requiredAt", Instant.parse("2025-01-10T00:00:00Z"), "priority", "NORMAL")),
+                SupplyChainData.schemaRecord(schema, Map.of("orderId", "SHORT-001", "orderedQuantity", 100L,
+                        "requiredAt", Instant.parse("2025-01-20T00:00:00Z"), "priority", "HIGH")),
+                SupplyChainData.schemaRecord(schema, Map.of("orderId", "OK-001", "orderedQuantity", 20L,
+                        "requiredAt", Instant.parse("2025-01-15T00:00:00Z"), "priority", "NORMAL"))));
+    }
+
+    private static MaterializedDataSet testDeliveries() {
+        Schema schema = SupplyChainSchemas.deliveries();
+        return SupplyChainData.dataSet(schema, "test-deliveries", List.of(
+                SupplyChainData.schemaRecord(schema, Map.of("orderId", "LATE-001", "deliveredQuantity", 10L,
+                        "deliveredAt", Instant.parse("2025-01-12T00:00:00Z"))),
+                SupplyChainData.schemaRecord(schema, Map.of("orderId", "SHORT-001", "deliveredQuantity", 50L,
+                        "deliveredAt", Instant.parse("2025-01-19T00:00:00Z"))),
+                SupplyChainData.schemaRecord(schema, Map.of("orderId", "OK-001", "deliveredQuantity", 20L,
+                        "deliveredAt", Instant.parse("2025-01-14T00:00:00Z")))));
+    }
+
+    private static ExecutionContext context() {
+        return context(() -> false, Instant.parse("2099-01-01T00:00:00Z"));
+    }
+
+    private static ExecutionContext context(CancellationToken token, Instant deadline) {
+        return new ExecutionContext("request-1", "snapshot-1", deadline, token, "correlation-1");
+    }
+}

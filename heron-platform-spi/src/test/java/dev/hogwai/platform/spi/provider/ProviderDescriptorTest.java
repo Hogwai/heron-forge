@@ -25,21 +25,18 @@ class ProviderDescriptorTest {
     }
 
     private static ProviderDescriptor descriptor(CapabilityKind kind, int spiMajor,
-            Map<PortId, PortDescriptor> inputs, Map<PortId, PortDescriptor> outputs,
-            boolean deterministic, ProviderDescriptor.ThreadSafety threadSafety) {
+            Map<PortId, PortDescriptor> inputs, Map<PortId, PortDescriptor> outputs) {
         return new ProviderDescriptor(PROVIDER, VERSION, kind, spiMajor, inputs, outputs,
-                config(), deterministic, threadSafety);
+                config());
     }
 
     private static ProviderDescriptor source() {
-        return descriptor(CapabilityKind.SOURCE, SpiMajor.V1, Map.of(), OUTPUT,
-                true, ProviderDescriptor.ThreadSafety.THREAD_SAFE);
+        return descriptor(CapabilityKind.SOURCE, SpiMajor.V1, Map.of(), OUTPUT);
     }
 
     private static ProviderDescriptor transform() {
         return descriptor(CapabilityKind.TRANSFORM, SpiMajor.V1,
-                Map.of(new PortId("in"), ProviderTestSupport.port("in")), OUTPUT,
-                false, ProviderDescriptor.ThreadSafety.NOT_THREAD_SAFE);
+                Map.of(new PortId("in"), ProviderTestSupport.port("in")), OUTPUT);
     }
 
     @Test
@@ -51,8 +48,7 @@ class ProviderDescriptorTest {
         assertThat(descriptor.spiMajor()).isEqualTo(SpiMajor.V1);
         assertThat(descriptor.inputPorts()).isEmpty();
         assertThat(descriptor.outputPorts()).containsKey(new PortId("out"));
-        assertThat(descriptor.deterministic()).isTrue();
-        assertThat(descriptor.threadSafety()).isEqualTo(ProviderDescriptor.ThreadSafety.THREAD_SAFE);
+        assertThat(descriptor.configurationSchema()).isEqualTo(config());
     }
 
     @Test
@@ -61,7 +57,6 @@ class ProviderDescriptorTest {
         assertThat(descriptor.capabilityKind()).isEqualTo(CapabilityKind.TRANSFORM);
         assertThat(descriptor.inputPorts()).containsKey(new PortId("in"));
         assertThat(descriptor.outputPorts()).containsKey(new PortId("out"));
-        assertThat(descriptor.deterministic()).isFalse();
     }
 
     @Test
@@ -69,7 +64,7 @@ class ProviderDescriptorTest {
         Map<PortId, PortDescriptor> noInputs = Map.of();
         Map<PortId, PortDescriptor> noOutputs = Map.of();
         assertThatThrownBy(() -> descriptor(CapabilityKind.TRANSFORM, SpiMajor.V1,
-                noInputs, noOutputs, true, ProviderDescriptor.ThreadSafety.THREAD_SAFE))
+                noInputs, noOutputs))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -77,7 +72,7 @@ class ProviderDescriptorTest {
     void rejectsSourceWithInputPorts() {
         Map<PortId, PortDescriptor> sourceInputs = Map.of(new PortId("in"), ProviderTestSupport.port("in"));
         assertThatThrownBy(() -> descriptor(CapabilityKind.SOURCE, SpiMajor.V1,
-                sourceInputs, OUTPUT, true, ProviderDescriptor.ThreadSafety.THREAD_SAFE))
+                sourceInputs, OUTPUT))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -86,7 +81,7 @@ class ProviderDescriptorTest {
         Map<PortId, PortDescriptor> transformInputs = Map.of(new PortId("in"), ProviderTestSupport.port("in"));
         Map<PortId, PortDescriptor> noOutputs = Map.of();
         assertThatThrownBy(() -> descriptor(CapabilityKind.TRANSFORM, SpiMajor.V1,
-                transformInputs, noOutputs, true, ProviderDescriptor.ThreadSafety.THREAD_SAFE))
+                transformInputs, noOutputs))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -95,7 +90,7 @@ class ProviderDescriptorTest {
         Map<PortId, PortDescriptor> noInputs = Map.of();
         Map<PortId, PortDescriptor> mismatchedOutputs = Map.of(new PortId("other"), ProviderTestSupport.port("out"));
         assertThatThrownBy(() -> descriptor(CapabilityKind.SOURCE, SpiMajor.V1,
-                noInputs, mismatchedOutputs, true, ProviderDescriptor.ThreadSafety.THREAD_SAFE))
+                noInputs, mismatchedOutputs))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -103,7 +98,7 @@ class ProviderDescriptorTest {
     void rejectsNonPositiveSpiMajor() {
         Map<PortId, PortDescriptor> noInputs = Map.of();
         assertThatThrownBy(() -> descriptor(CapabilityKind.SOURCE, 0,
-                noInputs, OUTPUT, true, ProviderDescriptor.ThreadSafety.THREAD_SAFE))
+                noInputs, OUTPUT))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -112,19 +107,16 @@ class ProviderDescriptorTest {
         Map<PortId, PortDescriptor> noInputs = Map.of();
         ConfigurationSchema schema = config();
         assertThatThrownBy(() -> new ProviderDescriptor(null, VERSION, CapabilityKind.SOURCE, SpiMajor.V1,
-                noInputs, OUTPUT, schema, true, ProviderDescriptor.ThreadSafety.THREAD_SAFE))
+                noInputs, OUTPUT, schema))
                 .isInstanceOf(NullPointerException.class);
         assertThatThrownBy(() -> new ProviderDescriptor(PROVIDER, VERSION, CapabilityKind.SOURCE, SpiMajor.V1,
-                null, OUTPUT, schema, true, ProviderDescriptor.ThreadSafety.THREAD_SAFE))
+                null, OUTPUT, schema))
                 .isInstanceOf(NullPointerException.class);
         assertThatThrownBy(() -> new ProviderDescriptor(PROVIDER, VERSION, CapabilityKind.SOURCE, SpiMajor.V1,
-                noInputs, null, schema, true, ProviderDescriptor.ThreadSafety.THREAD_SAFE))
+                noInputs, null, schema))
                 .isInstanceOf(NullPointerException.class);
         assertThatThrownBy(() -> new ProviderDescriptor(PROVIDER, VERSION, CapabilityKind.SOURCE, SpiMajor.V1,
-                noInputs, OUTPUT, null, true, ProviderDescriptor.ThreadSafety.THREAD_SAFE))
-                .isInstanceOf(NullPointerException.class);
-        assertThatThrownBy(() -> new ProviderDescriptor(PROVIDER, VERSION, CapabilityKind.SOURCE, SpiMajor.V1,
-                noInputs, OUTPUT, schema, true, null))
+                noInputs, OUTPUT, null))
                 .isInstanceOf(NullPointerException.class);
     }
 
@@ -141,10 +133,4 @@ class ProviderDescriptorTest {
                 .isInstanceOf(UnsupportedOperationException.class);
     }
 
-    @Test
-    void threadSafetyEnumExposesBothValues() {
-        assertThat(ProviderDescriptor.ThreadSafety.values())
-                .containsExactly(ProviderDescriptor.ThreadSafety.THREAD_SAFE,
-                        ProviderDescriptor.ThreadSafety.NOT_THREAD_SAFE);
-    }
 }

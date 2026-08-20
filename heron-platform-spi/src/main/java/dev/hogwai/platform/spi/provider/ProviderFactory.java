@@ -25,10 +25,9 @@ public interface ProviderFactory {
      * Validates the raw configuration against the provider's own rules.
      *
      * @param rawConfig the raw configuration after generic validation
-     * @param context   the validation context
      * @return an immutable list of diagnostics; empty when valid
      */
-    List<Diagnostic> validate(Map<String, Object> rawConfig, ValidationContext context);
+    List<Diagnostic> validate(Map<String, Object> rawConfig);
 
     /**
      * Creates a capability instance from the raw configuration.

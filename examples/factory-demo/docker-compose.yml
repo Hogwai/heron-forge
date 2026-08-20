@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: heron_demo
+      POSTGRES_USER: heron
+      POSTGRES_PASSWORD: heron
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U heron -d heron_demo"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    volumes:
+      - heron_postgres_data:/var/lib/postgresql
+      - ./src/main/resources/database/init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
+
+volumes:
+  heron_postgres_data:

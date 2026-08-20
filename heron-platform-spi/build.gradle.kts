@@ -8,7 +8,6 @@ plugins {
 // `revapiVersion` in gradle.properties.
 apply(plugin = "org.revapi.revapi-gradle-plugin")
 
-val slf4jVersion = providers.gradleProperty("slf4jVersion").get()
 val platformSpiBaselineVersion = providers.gradleProperty("platformSpiBaselineVersion").get()
 
 publishing {
@@ -20,10 +19,6 @@ publishing {
             version = platformSpiBaselineVersion
         }
     }
-}
-
-dependencies {
-    api("org.slf4j:slf4j-api:$slf4jVersion")
 }
 
 // Revapi API compatibility check against an explicit baseline artifact.

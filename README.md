@@ -42,9 +42,9 @@ flowchart TD
     snapshotStage -.-> executionStage["Capability execution<br/>(future)"]
 ```
 
-The project currently provides a substantial SPI and runtime foundation. The
-execution engine, CLI, OpenTelemetry integration, reusable testkit, and
-runnable examples are still under development.
+The project provides a framework-independent SPI/runtime foundation, a standard
+Helidon/picocli shell, external supply-chain providers, and a runnable factory
+demo.
 
 ## Requirements
 
@@ -63,31 +63,73 @@ Use the Gradle wrapper (Gradle 9.6.1):
 `check` runs the unit tests, static analysis (Checkstyle, PMD, Error Prone),
 coverage reporting and coverage gates.
 
+## Factory demo consumer path
+
+The factory demo has one supported consumer path: the standard Heron shell and
+the PostgreSQL fixture supplied by Compose. Start the database, run the
+acceptance checks, build the shell distribution, and start the application:
+
+```bash
+docker compose -f examples/factory-demo/docker-compose.yml up -d
+RUN_POSTGRES_TESTS=true ./gradlew :examples:factory-demo:test
+./gradlew :heron-platform-cli:installDist
+./heron-platform-cli/build/install/heron-platform-cli/bin/heron start \
+  --config examples/factory-demo/src/main/resources/supply-chain.yaml
+```
+
+The shell serves `GET /health/ready` and `GET /exceptions` on
+`http://127.0.0.1:8080`. To try a different policy, stop the shell, change
+`minimumDeliveryRatio` in `supply-chain.yaml` (for example from `0.8` to
+`0.4`), and start it again. Stop the shell with `Ctrl-C`; stop PostgreSQL with
+`docker compose -f examples/factory-demo/docker-compose.yml down`.
+
+`factory-demo` has no `main`, scheduler, retry loop, or custom runner. Helidon
+and picocli are supplied by the standard shell.
+
 ## Modules
 
-| Module                       | Description                                         | Depends on                                                                   |
-|------------------------------|-----------------------------------------------------|------------------------------------------------------------------------------|
-| `heron-platform-spi`         | Service provider interfaces (framework-independent) | N/A                                                                          |
-| `heron-platform-runtime`     | Runtime implementation                              | `heron-platform-spi`                                                         |
-| `heron-platform-cli`         | Command-line entry point                            | `heron-platform-runtime` (prod), `heron-platform-testkit` (test)             |
-| `heron-platform-testkit`     | Test support / testkit                              | `heron-platform-spi`                                                         |
-| `heron-platform-otel`        | OpenTelemetry integration                           | `heron-platform-spi`, OpenTelemetry                                          |
-| `examples:external-provider` | Example external provider                           | `heron-platform-spi` (prod), `heron-platform-testkit` (test)                 |
-| `examples:factory-demo`      | Example factory demo                                | `heron-platform-runtime`, `heron-platform-cli`, `examples:external-provider` |
+| Module                              | Description                                         | Depends on                                                                   |
+|-------------------------------------|-----------------------------------------------------|------------------------------------------------------------------------------|
+| `heron-platform-spi`                | Service provider interfaces and data access contract | N/A                                                                         |
+| `heron-platform-data`               | Jdbi core, PostgreSQL plugin/driver and data implementation | `heron-platform-spi`                                                    |
+| `heron-platform-runtime`            | Runtime implementation                              | `heron-platform-spi`, `heron-platform-host-api`, `heron-platform-data`      |
+| `heron-platform-host-api`           | Framework-independent host contract                 | N/A                                                                          |
+| `heron-platform-host-helidon`       | Helidon SE 4.5.3 HTTP shell                         | `heron-platform-host-api`                                                    |
+| `heron-platform-cli`                | picocli standard command-line bootstrap             | `heron-platform-runtime`, `heron-platform-host-helidon`                     |
+| `examples:external-provider`        | Example external provider                           | `heron-platform-spi`                                                        |
+| `examples:factory-demo`             | Example factory demo                                | `heron-platform-runtime`, `heron-platform-cli`, `heron-platform-host-helidon`, `examples:external-provider` |
 
 ## Boundaries
 
-- The core (`spi`, `runtime`, `cli`, `testkit`) is framework-independent.
-- `heron-platform-otel` is the only module that pulls in OpenTelemetry.
+- The core (`spi`, `runtime`, `host-api`) is framework-independent.
+- The standard shell (`host-helidon`, `cli`) owns HTTP and CLI framework dependencies.
+- The data contract lives in the framework-independent `heron-platform-spi`.
+  `heron-platform-data` is the single data module: its internal Jdbi and
+  PostgreSQL components provide the generic implementation, plugin and driver.
+
+The runtime explicitly wires `PostgresJdbiDataAccessFactory` as its default
+PostgreSQL implementation and supplies it to providers through `BuildContext`.
+A provider opens a data client during creation, registers it in the resource
+tracker, and receives a fresh database handle for each query. The generic Jdbi
+factory installs no plugins unless they are supplied explicitly; the PostgreSQL
+factory installs `PostgresPlugin`. Both factories run a `SELECT 1` startup probe
+and sanitize startup and query failures. The current demonstration has no
+connection pool. Jdbi applies a per-query timeout from the execution deadline; a
+cancellation signal cannot actively interrupt a server call that is already
+blocked without a separate statement-cancellation mechanism. PostgreSQL
+integration tests are opt-in with `RUN_POSTGRES_TESTS=true`.
 
 ## Versions & tools
 
 - Gradle 9.6.1 (wrapper)
 - Java toolchain 25
 - JUnit Jupiter 5.11.4, AssertJ 3.27.7
-- Jackson YAML/DataBind 2.19.2
+- Jackson Databind 2.19.2; Jackson YAML is test-only
+- SnakeYAML Engine 3.1.1
+- Jdbi 3.54.0
+- Helidon SE 4.5.3
+- picocli 4.7.7
 - SLF4J 2.0.16
-- OpenTelemetry API/SDK 1.50.0
 - Revapi 0.19.1 (SPI module only; compatible with gradle-revapi 1.8.0)
 - JMH 1.37 (runtime module only)
 - Error Prone 2.50.0

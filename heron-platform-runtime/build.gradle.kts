@@ -5,13 +5,17 @@ plugins {
 
 val slf4jVersion = providers.gradleProperty("slf4jVersion").get()
 val jacksonVersion = providers.gradleProperty("jacksonVersion").get()
+val snakeyamlEngineVersion = providers.gradleProperty("snakeyamlEngineVersion").get()
 val jmhVer = providers.gradleProperty("jmhVersion").get()
 
 dependencies {
     api(project(":heron-platform-spi"))
+    api(project(":heron-platform-host-api"))
+    implementation(project(":heron-platform-data"))
     implementation("org.slf4j:slf4j-api:$slf4jVersion")
     implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion")
+    implementation("org.snakeyaml:snakeyaml-engine:$snakeyamlEngineVersion")
+    testImplementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion")
 }
 
 jmh {

@@ -1,0 +1,143 @@
+package dev.hogwai.platform.examples.provider.orders;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import dev.hogwai.platform.spi.data.access.DataAccess;
+import dev.hogwai.platform.spi.data.access.DataAccessFactory;
+import dev.hogwai.platform.spi.data.access.DataRow;
+import dev.hogwai.platform.spi.data.access.QueryContext;
+import dev.hogwai.platform.spi.data.access.QueryRequest;
+import dev.hogwai.platform.spi.CapabilityKind;
+import dev.hogwai.platform.spi.ProviderVersion;
+import dev.hogwai.platform.spi.SpiMajor;
+import dev.hogwai.platform.spi.PortId;
+import dev.hogwai.platform.spi.data.FieldId;
+import dev.hogwai.platform.spi.provider.BuildContext;
+import dev.hogwai.platform.spi.provider.ProviderDescriptor;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import org.junit.jupiter.api.Test;
+
+class DemoOrdersProviderFactoryTest {
+
+    private static final ProviderVersion VERSION = ProviderVersion.parse("1.0.0");
+
+    @Test
+    void exposesOrdersDescriptorAndConfiguration() {
+        ProviderDescriptor descriptor = new DemoOrdersProviderFactory().descriptor();
+
+        assertThat(descriptor.providerId().value()).isEqualTo("demo.orders");
+        assertThat(descriptor.version()).isEqualTo(VERSION);
+        assertThat(descriptor.capabilityKind()).isEqualTo(CapabilityKind.SOURCE);
+        assertThat(descriptor.spiMajor()).isEqualTo(SpiMajor.V1);
+        assertThat(descriptor.inputPorts().keySet()).isEqualTo(Set.of());
+        assertThat(descriptor.outputPorts().keySet()).isEqualTo(Set.of(new PortId("records")));
+        assertThat(descriptor.outputPorts().get(new PortId("records")).schema().fields())
+                .extracting(field -> field.id().value())
+                .containsExactly("orderId", "orderedQuantity", "requiredAt", "priority");
+        assertThat(new DemoOrdersProviderFactory().validate(Map.of())).isEmpty();
+    }
+
+    @Test
+    void readsOrdersThroughDataAccessWithStableQueryContextAndOrder() {
+        RecordingDataAccess access = new RecordingDataAccess(List.of(
+                Map.of("order_id", "ORDER-001", "ordered_quantity", 12L,
+                        "required_at", Instant.parse("2025-01-01T00:00:00Z"), "priority", "HIGH"),
+                Map.of("order_id", "ORDER-002", "ordered_quantity", 7L,
+                        "required_at", Instant.parse("2025-01-02T00:00:00Z"), "priority", "NORMAL")));
+        QueryContext queryContext = new QueryContext(Instant.parse("2099-01-01T00:00:00Z"), () -> false);
+
+        var first = OrdersQuery.read(access, queryContext);
+        var second = OrdersQuery.read(access, queryContext);
+
+        assertThat(access.requests()).hasSize(2);
+        assertThat(access.requests()).allSatisfy(request -> {
+            assertThat(request.operation()).isEqualTo("orders");
+            assertThat(request.sql()).isEqualTo("SELECT order_id, ordered_quantity, required_at, priority "
+                    + "FROM orders ORDER BY order_id");
+            assertThat(request.parameters()).isEmpty();
+        });
+        assertThat(access.contexts()).containsExactly(queryContext, queryContext);
+        assertThat(first.records()).extracting(record -> record.value(new FieldId("orderId")))
+                .containsExactly("ORDER-001", "ORDER-002");
+        assertThat(first.records()).extracting(record -> record.value(new FieldId("orderedQuantity")))
+                .containsExactly(12L, 7L);
+        assertThat(second.records()).extracting(record -> record.value(new FieldId("orderId")))
+                .containsExactly("ORDER-001", "ORDER-002");
+    }
+
+    @Test
+    void closesDataAccessWhenResourceRegistrationFails() {
+        RecordingDataAccess access = new RecordingDataAccess(List.of());
+        RuntimeException registrationFailure = new IllegalStateException("registration failed");
+        DataAccessFactory factory = configuration -> access;
+        BuildContext context = new BuildContext(java.time.Clock.systemUTC(),
+                resource -> { throw registrationFailure; }, factory);
+
+        assertThatThrownBy(() -> new DemoOrdersProviderFactory().create(Map.of(), context))
+                .isSameAs(registrationFailure);
+        assertThat(access.closed()).isTrue();
+    }
+
+    private static final class RecordingDataAccess implements DataAccess {
+        private final List<Map<String, Object>> values;
+        private final List<QueryRequest<?>> requests = new ArrayList<>();
+        private final List<QueryContext> contexts = new ArrayList<>();
+        private boolean closed;
+
+        private RecordingDataAccess(List<Map<String, Object>> values) {
+            this.values = values;
+        }
+
+        @Override
+        public <T> List<T> query(QueryRequest<T> request, QueryContext context) {
+            requests.add(request);
+            contexts.add(context);
+            return values.stream().map(value -> request.mapper().map(new MapDataRow(value))).toList();
+        }
+
+        @Override
+        public void close() {
+            closed = true;
+        }
+
+        private List<QueryRequest<?>> requests() {
+            return requests;
+        }
+
+        private List<QueryContext> contexts() {
+            return contexts;
+        }
+
+        private boolean closed() {
+            return closed;
+        }
+    }
+
+    private static final class MapDataRow implements DataRow {
+        private final Map<String, Object> values;
+
+        private MapDataRow(Map<String, Object> values) {
+            this.values = values;
+        }
+
+        @Override
+        public String string(String column) {
+            return (String) values.get(column);
+        }
+
+        @Override
+        public long longValue(String column) {
+            return ((Number) values.get(column)).longValue();
+        }
+
+        @Override
+        public Instant instant(String column) {
+            return (Instant) values.get(column);
+        }
+    }
+}

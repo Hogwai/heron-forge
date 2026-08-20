@@ -7,11 +7,6 @@ import org.junit.jupiter.api.Test;
 class ConstantsTest {
 
     @Test
-    void platformVersionConfigApiConstant() {
-        assertThat(PlatformVersion.CONFIG_API).isEqualTo("platform.dev/v1alpha1");
-    }
-
-    @Test
     void spiMajorV1IsOne() {
         assertThat(SpiMajor.V1).isEqualTo(1);
     }
