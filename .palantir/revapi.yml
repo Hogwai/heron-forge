@@ -1,0 +1,3 @@
+# Plugin 1.8.0 reads this hard-coded path for accepted intentional breaks and version overrides.
+acceptedBreaks: {}
+versionOverrides: {}

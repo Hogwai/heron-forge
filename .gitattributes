@@ -1,0 +1,11 @@
+# Normalize text files across operating systems.
+* text=auto eol=lf
+
+# Keep Windows command scripts in their native line-ending format.
+*.bat text eol=crlf
+
+# Never apply text normalization to compiled or packaged artifacts.
+*.class binary
+*.jar binary
+*.war binary
+*.zip binary
