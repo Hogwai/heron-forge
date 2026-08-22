@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
-import picocli.CommandLine.ParameterException;
 import picocli.CommandLine.Spec;
 
 import java.io.InputStream;
@@ -19,7 +18,8 @@ import java.util.ServiceLoader;
 import java.util.concurrent.CountDownLatch;
 
 /** The sole standard process bootstrap for Heron applications. */
-@Command(name = "heron", subcommands = {StartCommand.class, InitCommand.class},
+@Command(name = "heron", mixinStandardHelpOptions = true,
+        subcommands = {StartCommand.class, InitCommand.class, CreateCommand.class},
         description = "Heron application launcher")
 @SuppressWarnings("PMD.CyclomaticComplexity")
 public final class HeronLauncher implements Runnable {
@@ -70,7 +70,7 @@ public final class HeronLauncher implements Runnable {
 
     @Override
     public void run() {
-        throw new ParameterException(commandSpec.commandLine(), "command 'start' is required");
+        commandSpec.commandLine().usage(commandSpec.commandLine().getOut());
     }
 
     static int run(StartCommand command, ApplicationLoaderFunction loader,

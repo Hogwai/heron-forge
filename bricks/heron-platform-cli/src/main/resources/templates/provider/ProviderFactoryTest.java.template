@@ -1,0 +1,17 @@
+package {{basePackage}};
+
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+class {{className}}ProviderFactoryTest {
+
+    @Test
+    void describesTheGeneratedCapability() {
+        {{className}}ProviderFactory factory = new {{className}}ProviderFactory();
+
+        assertThat(factory.descriptor().providerId().value())
+                .isEqualTo("{{basePackage}}.{{projectName}}");
+        assertThat(factory.descriptor().capabilityKind().name()).isEqualTo("{{kind}}");
+    }
+}

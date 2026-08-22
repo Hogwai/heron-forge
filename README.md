@@ -63,6 +63,33 @@ Use the Gradle wrapper (Gradle 9.6.1):
 `check` runs the unit tests, static analysis (Checkstyle, PMD, Error Prone),
 coverage reporting and coverage gates.
 
+## Scaffolding (`heron create`)
+
+The CLI distribution ships a project generator. Build it once:
+
+```bash
+./gradlew :bricks:heron-platform-cli:installDist
+```
+
+Then scaffold projects from anywhere:
+
+```bash
+HERON=bricks/heron-platform-cli/build/install/heron/bin/heron
+
+$HERON create app my-app                       # runnable application starter
+$HERON create provider orders --package com.acme.orders   # provider plugin library
+$HERON create brick pg-store --type=data       # data-access brick skeleton
+$HERON create brick web --type=host            # host adapter brick skeleton
+```
+
+`heron create` without arguments starts an interactive wizard in a terminal,
+or prints the direct usage with exit status 2 when no terminal is available.
+Project names must match `[a-z][a-z0-9-]*`; generated builds resolve
+`dev.hogwai.platform:heron-platform-*` from `mavenLocal()`, so run
+`./gradlew publishToMavenLocal` first during the POC phase.
+
+`heron init` remains as a deprecated alias for `heron create app`.
+
 ## Factory demo consumer path
 
 The factory demo has one supported consumer path: the standard Heron shell and

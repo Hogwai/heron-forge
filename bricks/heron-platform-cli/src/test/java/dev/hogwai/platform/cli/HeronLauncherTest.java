@@ -111,6 +111,13 @@ class HeronLauncherTest {
     }
 
     @Test
+    void printsUsageInsteadOfThrowingWhenNoCommandIsSupplied() {
+        assertThat(HeronLauncher.run(new String[] { })).isZero();
+        assertThatThrownBy(() -> StartCommand.parse(new String[] { }))
+                .isInstanceOf(ParameterException.class);
+    }
+
+    @Test
     void factoryDemoHasNoMainMethod() throws IOException {
         Path demoSources = Path.of("../examples/factory-demo/src");
         if (Files.exists(demoSources)) {

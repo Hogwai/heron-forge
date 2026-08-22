@@ -1,0 +1,35 @@
+plugins {
+    `java-library`
+    `maven-publish`
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of({{javaToolchainVersion}})
+    }
+}
+
+dependencies {
+    implementation("dev.hogwai.platform:heron-platform-spi:{{platformVersion}}")
+    testImplementation(platform("org.junit:junit-bom:{{junitJupiterVersion}}"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation("org.assertj:assertj-core:{{assertjVersion}}")
+}
+
+tasks.test {
+    useJUnitPlatform()
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            from(components["java"])
+        }
+    }
+}

@@ -1,0 +1,27 @@
+plugins {
+    `java-library`
+    `maven-publish`
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of({{javaToolchainVersion}})
+    }
+}
+
+dependencies {
+    implementation("dev.hogwai.platform:heron-platform-spi:{{platformVersion}}")
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            from(components["java"])
+        }
+    }
+}

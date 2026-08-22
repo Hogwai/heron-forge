@@ -8,11 +8,16 @@ plugins {
 
 application {
     mainClass.set("dev.hogwai.platform.cli.HeronLauncher")
+    applicationName = "heron"
 }
 
 val slf4jVersion = providers.gradleProperty("slf4jVersion").get()
 val archunitVersion = providers.gradleProperty("archunitVersion").get()
 val picocliVersion = providers.gradleProperty("picocliVersion").get()
+val junitJupiterVersion = providers.gradleProperty("junitJupiterVersion").get()
+val assertjVersion = providers.gradleProperty("assertjVersion").get()
+val javaToolchainVersion = providers.gradleProperty("javaToolchainVersion").get()
+val gradleVersion = providers.gradleProperty("gradleVersion").get()
 
 dependencies {
     api(project(":core:heron-platform-spi"))
@@ -37,6 +42,10 @@ publishing {
 tasks.processResources {
     filter(mapOf("tokens" to mapOf(
         "platformVersion" to project.version.toString(),
-        "slf4jVersion" to slf4jVersion
+        "slf4jVersion" to slf4jVersion,
+        "junitJupiterVersion" to junitJupiterVersion,
+        "assertjVersion" to assertjVersion,
+        "javaToolchainVersion" to javaToolchainVersion,
+        "gradleVersion" to gradleVersion
     )), ReplaceTokens::class.java)
 }
