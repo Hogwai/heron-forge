@@ -26,7 +26,6 @@ buildscript {
 
 plugins {
     base
-    id("net.ltgt.errorprone") apply false
 }
 
 allprojects {
@@ -35,76 +34,82 @@ allprojects {
 }
 
 subprojects {
-    apply(plugin = "java-library")
-    apply(plugin = "jacoco")
-    apply(plugin = "pmd")
-    apply(plugin = "checkstyle")
-    apply(plugin = "net.ltgt.errorprone")
+    pluginManager.withPlugin("java-library") {
+        val javaToolchainVersion = providers.gradleProperty("javaToolchainVersion").get()
+        val junitJupiterVersion = providers.gradleProperty("junitJupiterVersion").get()
+        val assertjVersion = providers.gradleProperty("assertjVersion").get()
+        val errorproneVersion = providers.gradleProperty("errorproneVersion").get()
+        val pmdVersion = providers.gradleProperty("pmdVersion").get()
+        val checkstyleVersion = providers.gradleProperty("checkstyleVersion").get()
+        val jacocoVersion = providers.gradleProperty("jacocoVersion").get()
 
-    val javaToolchainVersion = providers.gradleProperty("javaToolchainVersion").get()
-    val junitJupiterVersion = providers.gradleProperty("junitJupiterVersion").get()
-    val assertjVersion = providers.gradleProperty("assertjVersion").get()
-    val errorproneVersion = providers.gradleProperty("errorproneVersion").get()
-    val pmdVersion = providers.gradleProperty("pmdVersion").get()
-    val checkstyleVersion = providers.gradleProperty("checkstyleVersion").get()
-    val jacocoVersion = providers.gradleProperty("jacocoVersion").get()
-
-    configure<JavaPluginExtension> {
-        toolchain {
-            languageVersion = JavaLanguageVersion.of(javaToolchainVersion)
+        configure<JavaPluginExtension> {
+            toolchain {
+                languageVersion = JavaLanguageVersion.of(javaToolchainVersion)
+            }
         }
-    }
 
-    dependencies {
-        add("testImplementation", platform("org.junit:junit-bom:$junitJupiterVersion"))
-        add("testImplementation", "org.junit.jupiter:junit-jupiter")
-        add("testRuntimeOnly", "org.junit.platform:junit-platform-launcher")
-        add("testImplementation", "org.assertj:assertj-core:$assertjVersion")
-        add("errorprone", "com.google.errorprone:error_prone_core:$errorproneVersion")
-    }
-
-    tasks.named<Test>("test") {
-        useJUnitPlatform()
-    }
-
-    configure<CheckstyleExtension> {
-        toolVersion = checkstyleVersion
-        maxErrors = 0
-        maxWarnings = 0
-    }
-
-    configure<PmdExtension> {
-        toolVersion = pmdVersion
-        ruleSetFiles = files("${rootDir}/config/pmd/pmd-rules.xml")
-        ruleSets = listOf()
-        isConsoleOutput = true
-    }
-
-    // Test sources use a dedicated ruleset that excludes CyclomaticComplexity,
-    // which adds noise on tests without guarding production quality.
-    tasks.named<Pmd>("pmdTest") {
-        ruleSetFiles = files("${rootDir}/config/pmd/pmd-rules-test.xml")
-    }
-
-    configure<JacocoPluginExtension> {
-        toolVersion = jacocoVersion
-    }
-
-    tasks.named<JacocoReport>("jacocoTestReport") {
-        dependsOn(tasks.named("test"))
-        reports {
-            xml.required.set(true)
-            html.required.set(true)
+        dependencies {
+            add("testImplementation", platform("org.junit:junit-bom:$junitJupiterVersion"))
+            add("testImplementation", "org.junit.jupiter:junit-jupiter")
+            add("testRuntimeOnly", "org.junit.platform:junit-platform-launcher")
+            add("testImplementation", "org.assertj:assertj-core:$assertjVersion")
         }
-    }
 
-    tasks.named<Javadoc>("javadoc") {
-        options.encoding = "UTF-8"
-    }
+        pluginManager.withPlugin("net.ltgt.errorprone") {
+            dependencies {
+                add("errorprone", "com.google.errorprone:error_prone_core:$errorproneVersion")
+            }
+        }
 
-    // `check` must include tests, static analysis and coverage reporting.
-    tasks.named("check") {
-        dependsOn(tasks.named("jacocoTestReport"))
+        tasks.named<Test>("test") {
+            useJUnitPlatform()
+        }
+
+        pluginManager.withPlugin("checkstyle") {
+            configure<CheckstyleExtension> {
+                toolVersion = checkstyleVersion
+                maxErrors = 0
+                maxWarnings = 0
+            }
+        }
+
+        pluginManager.withPlugin("pmd") {
+            configure<PmdExtension> {
+                toolVersion = pmdVersion
+                ruleSetFiles = files("${rootDir}/config/pmd/pmd-rules.xml")
+                ruleSets = listOf()
+                isConsoleOutput = true
+            }
+
+            // Test sources use a dedicated ruleset that excludes CyclomaticComplexity,
+            // which adds noise on tests without guarding production quality.
+            tasks.named<Pmd>("pmdTest") {
+                ruleSetFiles = files("${rootDir}/config/pmd/pmd-rules-test.xml")
+            }
+        }
+
+        pluginManager.withPlugin("jacoco") {
+            configure<JacocoPluginExtension> {
+                toolVersion = jacocoVersion
+            }
+
+            tasks.named<JacocoReport>("jacocoTestReport") {
+                dependsOn(tasks.named("test"))
+                reports {
+                    xml.required.set(true)
+                    html.required.set(true)
+                }
+            }
+
+            // `check` must include tests, static analysis and coverage reporting.
+            tasks.named("check") {
+                dependsOn(tasks.named("jacocoTestReport"))
+            }
+        }
+
+        tasks.named<Javadoc>("javadoc") {
+            options.encoding = "UTF-8"
+        }
     }
 }
-

@@ -2,6 +2,10 @@ plugins {
     `java-library`
     `maven-publish`
     id("me.champeau.jmh")
+    id("jacoco")
+    id("pmd")
+    id("checkstyle")
+    id("net.ltgt.errorprone")
 }
 
 val slf4jVersion = providers.gradleProperty("slf4jVersion").get()

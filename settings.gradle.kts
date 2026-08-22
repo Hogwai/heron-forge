@@ -1,10 +1,12 @@
 pluginManagement {
     val jmhPluginVersion = providers.gradleProperty("jmhPluginVersion").get()
     val errorpronePluginVersion = providers.gradleProperty("errorpronePluginVersion").get()
+    val revapiPluginVersion = providers.gradleProperty("revapiPluginVersion").get()
 
     plugins {
         id("me.champeau.jmh") version jmhPluginVersion
         id("net.ltgt.errorprone") version errorpronePluginVersion
+        id("org.revapi.revapi-gradle-plugin") version revapiPluginVersion
     }
 
     repositories {

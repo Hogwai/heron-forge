@@ -1,5 +1,9 @@
 plugins {
     `java-library`
+    id("jacoco")
+    id("pmd")
+    id("checkstyle")
+    id("net.ltgt.errorprone")
 }
 
 dependencies {

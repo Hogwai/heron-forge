@@ -1,6 +1,10 @@
 plugins {
     `java-library`
     `maven-publish`
+    id("jacoco")
+    id("pmd")
+    id("checkstyle")
+    id("net.ltgt.errorprone")
 }
 
 val helidonVersion = providers.gradleProperty("helidonVersion").get()

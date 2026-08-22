@@ -1,6 +1,10 @@
 plugins {
     `java-library`
     application
+    id("jacoco")
+    id("pmd")
+    id("checkstyle")
+    id("net.ltgt.errorprone")
 }
 
 application {

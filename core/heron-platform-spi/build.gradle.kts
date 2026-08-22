@@ -1,13 +1,16 @@
 plugins {
     `java-library`
     `maven-publish`
+    id("jacoco")
+    id("pmd")
+    id("checkstyle")
+    id("net.ltgt.errorprone")
+    id("org.revapi.revapi-gradle-plugin")
 }
 
 // The Revapi Gradle plugin is resolved from the root buildscript classpath
 // (see root build.gradle.kts) so that the analyzer version is controlled by
 // `revapiVersion` in gradle.properties.
-apply(plugin = "org.revapi.revapi-gradle-plugin")
-
 val platformSpiBaselineVersion = providers.gradleProperty("platformSpiBaselineVersion").get()
 val archunitVersion = providers.gradleProperty("archunitVersion").get()
 

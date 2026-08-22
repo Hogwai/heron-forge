@@ -1,6 +1,7 @@
 package dev.hogwai.platform.cli;
 
 import java.io.Console;
+import java.io.PrintWriter;
 
 /** Console session backed by {@link System#console()}. */
 final class SystemConsoleSession implements ConsoleSession {
@@ -32,16 +33,20 @@ final class SystemConsoleSession implements ConsoleSession {
     @Override
     public void print(String value) {
         if (console != null) {
-            console.writer().print(value);
-            console.writer().flush();
+            try (PrintWriter printWriter = console.writer()) {
+                printWriter.print(value);
+                printWriter.flush();
+            }
         }
     }
 
     @Override
     public void println(String value) {
         if (console != null) {
-            console.writer().println(value);
-            console.writer().flush();
+            try (PrintWriter printWriter = console.writer()) {
+                printWriter.println(value);
+                printWriter.flush();
+            }
         }
     }
 }
