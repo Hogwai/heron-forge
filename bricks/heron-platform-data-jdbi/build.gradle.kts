@@ -8,16 +8,14 @@ plugins {
 }
 
 val jdbiVersion = providers.gradleProperty("jdbiVersion").get()
-val postgresqlVersion = providers.gradleProperty("postgresqlVersion").get()
+val hikariVersion = providers.gradleProperty("hikariVersion").get()
 val archunitVersion = providers.gradleProperty("archunitVersion").get()
 
 dependencies {
-    api(project(":bricks:heron-platform-data-jdbi"))
     implementation(project(":core:heron-platform-spi"))
-    annotationProcessor(project(":tools:heron-platform-processor"))
     implementation(platform("org.jdbi:jdbi3-bom:$jdbiVersion"))
-    implementation("org.jdbi:jdbi3-postgres")
-    runtimeOnly("org.postgresql:postgresql:$postgresqlVersion")
+    implementation("org.jdbi:jdbi3-core")
+    implementation("com.zaxxer:HikariCP:$hikariVersion")
     testImplementation("com.tngtech.archunit:archunit-junit5:$archunitVersion")
 }
 
@@ -27,8 +25,4 @@ publishing {
             from(components["java"])
         }
     }
-}
-
-tasks.named<Test>("test") {
-    inputs.property("RUN_POSTGRES_TESTS", providers.environmentVariable("RUN_POSTGRES_TESTS").orElse(""))
 }

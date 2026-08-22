@@ -31,6 +31,7 @@ rootProject.name = "heron-forge"
 
 include("core:heron-platform-spi")
 include("core:heron-platform-runtime")
+include("bricks:heron-platform-data-jdbi")
 include("bricks:heron-platform-data-postgresql")
 include("bricks:heron-platform-host-helidon")
 include("bricks:heron-platform-cli")
