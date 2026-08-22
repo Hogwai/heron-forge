@@ -19,6 +19,7 @@ import dev.hogwai.platform.spi.provider.CapabilityInstance;
 import dev.hogwai.platform.spi.provider.ConfigurationSchema;
 import dev.hogwai.platform.spi.provider.PortDescriptor;
 import dev.hogwai.platform.spi.provider.ProviderDescriptor;
+import dev.hogwai.platform.spi.annotation.HeronService;
 import dev.hogwai.platform.spi.provider.ProviderFactory;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +27,7 @@ import java.util.Optional;
 import java.util.Set;
 
 /** Starter source capability that returns a static greeting record. */
+@HeronService(value = ProviderFactory.class, id = "{{basePackage}}.hello")
 public final class HelloProviderFactory implements ProviderFactory {
 
     private static final Schema SCHEMA = new Schema("hello", 1,

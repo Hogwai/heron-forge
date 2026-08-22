@@ -26,8 +26,10 @@ class InitCommandTest {
         assertThat(project.resolve("build.gradle.kts")).exists();
         assertThat(project.resolve("src/main/resources/application.yaml")).exists();
         assertThat(project.resolve("src/main/java/demoapp/HelloProviderFactory.java")).exists();
+        assertThat(Files.readString(project.resolve("src/main/java/demoapp/HelloProviderFactory.java")))
+                .contains("@HeronService");
         assertThat(project.resolve("src/main/resources/META-INF/services/"
-                + "dev.hogwai.platform.spi.provider.ProviderFactory")).exists();
+                + "dev.hogwai.platform.spi.provider.ProviderFactory")).doesNotExist();
         assertThat(Files.readString(project.resolve("settings.gradle.kts")))
                 .contains("rootProject.name = \"demo-app\"");
         assertThat(Files.readString(project.resolve("build.gradle.kts")))
@@ -40,8 +42,8 @@ class InitCommandTest {
         assertThat(Files.readString(project.resolve("src/main/java/demoapp/HelloProviderFactory.java")))
                 .contains("package demoapp;")
                 .contains("new ProviderId(\"demoapp.hello\")");
-        assertThat(Files.readString(project.resolve("src/main/resources/META-INF/services/"
-                + "dev.hogwai.platform.spi.provider.ProviderFactory"))).contains("demoapp.HelloProviderFactory");
+        assertThat(Files.readString(project.resolve("src/main/java/demoapp/HelloProviderFactory.java")))
+                .contains("demoapp.hello");
     }
 
     @Test

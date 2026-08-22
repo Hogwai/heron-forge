@@ -13,6 +13,7 @@ dependencies {
     implementation("dev.hogwai.platform:heron-platform-cli:{{platformVersion}}")
     implementation("dev.hogwai.platform:heron-platform-data-postgresql:{{platformVersion}}")
     implementation("dev.hogwai.platform:heron-platform-host-helidon:{{platformVersion}}")
+    annotationProcessor("dev.hogwai.platform:heron-platform-processor:{{platformVersion}}")
     runtimeOnly("org.slf4j:slf4j-simple:{{slf4jVersion}}")
 }
 

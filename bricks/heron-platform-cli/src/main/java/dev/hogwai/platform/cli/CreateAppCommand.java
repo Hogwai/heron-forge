@@ -50,8 +50,6 @@ public final class CreateAppCommand implements Callable<Integer> {
             files.put("settings.gradle.kts", render("settings.gradle.kts.template", model));
             files.put("build.gradle.kts", render("build.gradle.kts.template", model));
             files.put("src/main/resources/application.yaml", render("application.yaml.template", model));
-            files.put("src/main/resources/META-INF/services/dev.hogwai.platform.spi.provider.ProviderFactory",
-                    render("ProviderFactory.template", model));
             files.put("src/main/java/%s/HelloProviderFactory.java".formatted(basePackage.replace('.', '/')),
                     render("HelloProviderFactory.java.template", model));
             ProjectWriter.writeAll(baseDirectory.resolve(projectName), files);

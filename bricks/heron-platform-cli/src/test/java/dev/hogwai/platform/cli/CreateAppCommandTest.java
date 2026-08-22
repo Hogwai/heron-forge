@@ -25,8 +25,10 @@ class CreateAppCommandTest {
         assertThat(project.resolve("build.gradle.kts")).exists();
         assertThat(project.resolve("src/main/resources/application.yaml")).exists();
         assertThat(project.resolve("src/main/java/demoapp/HelloProviderFactory.java")).exists();
+        assertThat(Files.readString(project.resolve("src/main/java/demoapp/HelloProviderFactory.java")))
+                .contains("@HeronService");
         assertThat(project.resolve("src/main/resources/META-INF/services/"
-                + "dev.hogwai.platform.spi.provider.ProviderFactory")).exists();
+                + "dev.hogwai.platform.spi.provider.ProviderFactory")).doesNotExist();
         assertThat(Files.readString(project.resolve("src/main/resources/application.yaml")))
                 .contains("application: demo-app")
                 .contains("id: demoapp.hello");

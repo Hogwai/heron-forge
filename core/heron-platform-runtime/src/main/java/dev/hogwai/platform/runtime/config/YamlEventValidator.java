@@ -35,6 +35,7 @@ import org.snakeyaml.engine.v2.schema.JsonSchema;
 final class YamlEventValidator {
 
     private static final Pattern ENV_INTERPOLATION = Pattern.compile("\\$\\{[^}]*}");
+    private static final Pattern CANONICAL_PLACEHOLDER = Pattern.compile("\\$\\{([A-Za-z_][A-Za-z0-9_]*)}");
     private static final JsonSchema JSON_SCHEMA = new JsonSchema();
 
     private final YamlLimits limits;
@@ -187,9 +188,9 @@ final class YamlEventValidator {
         if (value.length() > limits.maxStringLength()) {
             return fail(diagnostics, path, "string value exceeds maximum length", "shorten the value");
         }
-        if (hasInterpolation(value)) {
+        if (hasForbiddenInterpolation(value)) {
             return fail(diagnostics, path, "value contains forbidden interpolation",
-                    "remove the ${...} expression");
+                    "use exactly ${VARIABLE} as the entire value");
         }
         return true;
     }
@@ -326,6 +327,18 @@ final class YamlEventValidator {
 
     private static boolean hasInterpolation(String value) {
         return ENV_INTERPOLATION.matcher(value).find();
+    }
+
+    /**
+     * Returns whether the value contains an interpolation expression that the
+     * environment-placeholder resolver will not accept. A single canonical
+     * {@code ${VARIABLE}} spanning the entire value is allowed through this
+     * lexical gate and resolved later; any other occurrence of {@code ${...}}
+     * (partial, doubled or malformed) is rejected here so that a mistyped
+     * reference can never silently survive as literal content.
+     */
+    private static boolean hasForbiddenInterpolation(String value) {
+        return hasInterpolation(value) && !CANONICAL_PLACEHOLDER.matcher(value).matches();
     }
 
     private static boolean fail(List<Diagnostic> diagnostics, String path, String message, String remediation) {
