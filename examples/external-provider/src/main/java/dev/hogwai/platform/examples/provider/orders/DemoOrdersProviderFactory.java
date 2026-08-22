@@ -13,6 +13,7 @@ import dev.hogwai.platform.spi.PortId;
 import dev.hogwai.platform.spi.ProviderId;
 import dev.hogwai.platform.spi.ProviderVersion;
 import dev.hogwai.platform.spi.SpiMajor;
+import dev.hogwai.platform.spi.annotation.HeronService;
 import dev.hogwai.platform.spi.data.access.DataAccess;
 import dev.hogwai.platform.spi.data.access.QueryContext;
 import dev.hogwai.platform.spi.error.PlatformErrorCode;
@@ -24,6 +25,7 @@ import dev.hogwai.platform.spi.provider.ProviderDescriptor;
 import dev.hogwai.platform.spi.provider.ProviderFactory;
 
 /** Deterministic source of the example order records. */
+@HeronService(value = ProviderFactory.class, id = "demo.orders")
 public final class DemoOrdersProviderFactory implements ProviderFactory {
 
     private static final ProviderDescriptor DESCRIPTOR = new ProviderDescriptor(

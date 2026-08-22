@@ -97,14 +97,45 @@ Project names must match `[a-z][a-z0-9-]*`.
 Generated builds resolve `dev.hogwai.platform:heron-platform-*` from `mavenLocal()`, so run `./gradlew publishToMavenLocal` first during the POC phase.
 Provider generation defaults to Java. Use `--language=KOTLIN` to generate a Kotlin/JVM provider that implements the Java SPI and registers through `ServiceLoader`.
 
+## Service registration (`@HeronService`)
+
+Services are registered with the `@HeronService` annotation:
+
+```java
+@HeronService(value = ProviderFactory.class, id = "demo.orders")
+public final class DemoOrdersProviderFactory implements ProviderFactory {
+    // ...
+}
+```
+
+At compile time the `heron-platform-processor` annotation processor generates the `META-INF/services/<interface>` descriptor. 
+It also validates the declaration: public non-abstract class with a public no-argument constructor, class implementing the declared contract, non-blank whitespace-free id, canonical `major.minor.patch` version (default `1.0.0`), and unique ids per contract inside a module.
+
+Modules carrying annotated classes must declare the processor on javac's processor path:
+
+```kotlin
+dependencies {
+    implementation("dev.hogwai.platform:heron-platform-spi:<version>")
+    annotationProcessor("dev.hogwai.platform:heron-platform-processor:<version>") // Java
+    // kapt("dev.hogwai.platform:heron-platform-processor:<version>")            // Kotlin
+}
+```
+
+The annotation lives in `core:heron-platform-spi`; the processor is build-time only and never appears in runtime artifacts. 
+The runtime discovery mechanism (`ServiceLoader`) is unchanged.
+
 ## Factory demo consumer path
 
 The factory demo has one supported consumer path: 
 the standard Heron shell and the PostgreSQL fixture supplied by Compose. 
-Start the database, run the acceptance checks, build the shell distribution, and start the application:
+Credentials are never stored in configuration files: the runtime resolves `${HERON_DB_URL}`, `${HERON_DB_USER}` and `${HERON_DB_PASSWORD}` placeholders in `supply-chain.yaml` from the environment.
+Start the database, export the connection settings matching the Compose fixture, run the acceptance checks, build the shell distribution, and start the application:
 
 ```bash
 docker compose -f examples/factory-demo/docker-compose.yml up -d
+export HERON_DB_URL=jdbc:postgresql://localhost:5432/heron_demo
+export HERON_DB_USER=heron
+export HERON_DB_PASSWORD=heron
 RUN_POSTGRES_TESTS=true ./gradlew :examples:factory-demo:test
 ./gradlew :examples:factory-demo:installDist
 ./examples/factory-demo/build/install/factory-demo/bin/heron start \
@@ -125,15 +156,15 @@ Helidon and picocli are supplied by the standard shell.
 
 The platform is split into core modules (agnostic, framework-independent) and bricks (pluggable components that a solution squad wires in).
 
-| Module                                  | Kind    | Description                                                         | Depends on                                                                                                                        |
-|-----------------------------------------|---------|---------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
-| `core:heron-platform-spi`               | core    | Service provider interfaces, host contract and data access contract | N/A                                                                                                                               |
-| `core:heron-platform-runtime`           | core    | Runtime implementation                                              | `core:heron-platform-spi`                                                                                                         |
-| `bricks:heron-platform-data-postgresql` | brick   | Jdbi core, PostgreSQL plugin/driver and data implementation         | `core:heron-platform-spi`                                                                                                         |
-| `bricks:heron-platform-host-helidon`    | brick   | Helidon SE 4.5.3 HTTP shell                                         | `core:heron-platform-spi`                                                                                                         |
-| `bricks:heron-platform-cli`             | brick   | picocli standard command-line bootstrap                             | `core:heron-platform-spi`, `core:heron-platform-runtime`                                                                          |
-| `examples:external-provider`            | example | Example external provider                                           | `core:heron-platform-spi`                                                                                                         |
-| `examples:kotlin-provider`              | example | Kotlin/JVM PostgreSQL-backed provider                               | `core:heron-platform-spi`                                                                                                         |
+| Module                                  | Kind    | Description                                                         | Depends on                                                                                                                                                    |
+|-----------------------------------------|---------|---------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `core:heron-platform-spi`               | core    | Service provider interfaces, host contract and data access contract | N/A                                                                                                                                                           |
+| `core:heron-platform-runtime`           | core    | Runtime implementation                                              | `core:heron-platform-spi`                                                                                                                                     |
+| `bricks:heron-platform-data-postgresql` | brick   | Jdbi core, PostgreSQL plugin/driver and data implementation         | `core:heron-platform-spi`                                                                                                                                     |
+| `bricks:heron-platform-host-helidon`    | brick   | Helidon SE 4.5.3 HTTP shell                                         | `core:heron-platform-spi`                                                                                                                                     |
+| `bricks:heron-platform-cli`             | brick   | picocli standard command-line bootstrap                             | `core:heron-platform-spi`, `core:heron-platform-runtime`                                                                                                      |
+| `examples:external-provider`            | example | Example external provider                                           | `core:heron-platform-spi`                                                                                                                                     |
+| `examples:kotlin-provider`              | example | Kotlin/JVM PostgreSQL-backed provider                               | `core:heron-platform-spi`                                                                                                                                     |
 | `examples:factory-demo`                 | example | Example factory demo                                                | `core:heron-platform-runtime`, `bricks:heron-platform-cli`, `bricks:heron-platform-data-postgresql`, `examples:external-provider`, `examples:kotlin-provider` |
 
 ## Boundaries

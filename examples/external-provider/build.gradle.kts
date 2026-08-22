@@ -8,6 +8,7 @@ plugins {
 
 dependencies {
     implementation(project(":core:heron-platform-spi"))
+    annotationProcessor(project(":tools:heron-platform-processor"))
     testImplementation(project(":bricks:heron-platform-data-postgresql"))
 }
 

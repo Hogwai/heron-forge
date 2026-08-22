@@ -20,9 +20,6 @@ public final class CreateProviderCommand implements Callable<Integer> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CreateProviderCommand.class);
 
-    private static final String PROVIDER_SERVICE =
-            "src/main/resources/META-INF/services/dev.hogwai.platform.spi.provider.ProviderFactory";
-
     private final Path baseDirectory;
 
     @Parameters(index = "0", arity = "0..1", paramLabel = "NAME", description = "provider project name")
@@ -92,8 +89,6 @@ public final class CreateProviderCommand implements Callable<Integer> {
                 sourceExtension), render(sourceTemplate, model));
         files.put("%s%sProviderFactoryTest.%s".formatted(sourcePath(basePackage, "test", sourceLanguage), className,
                 sourceExtension), render(testTemplate, model));
-        files.put(PROVIDER_SERVICE,
-                render("provider/provider-service.template", model));
         return files;
     }
 

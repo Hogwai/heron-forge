@@ -53,7 +53,9 @@ class DemoDeliveriesProviderFactoryConcurrencyTest {
                         "delivered_at", Instant.parse("2025-01-03T00:00:00Z"))));
         BuildContext buildContext = new BuildContext(Clock.systemUTC(), resource -> { },
                 configuration -> access);
-        CapabilityInstance instance = new DemoDeliveriesProviderFactory().create(Map.of(), buildContext);
+        CapabilityInstance instance = new DemoDeliveriesProviderFactory().create(
+                Map.of("url", "jdbc:postgresql://localhost:5432/heron_demo",
+                        "user", "test-user", "password", "test-password"), buildContext);
         ExecutionContext executionContext = new ExecutionContext("r1", "snap-1",
                 Instant.parse("2099-01-01T00:00:00Z"), () -> false, "c1");
 

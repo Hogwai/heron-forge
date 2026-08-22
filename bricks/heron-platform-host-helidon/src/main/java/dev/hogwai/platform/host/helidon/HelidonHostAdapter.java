@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import dev.hogwai.platform.spi.annotation.HeronService;
 import dev.hogwai.platform.spi.host.EntrypointDescriptor;
 import dev.hogwai.platform.spi.host.HostAdapter;
 import dev.hogwai.platform.spi.host.HostApplication;
@@ -15,6 +16,7 @@ import io.helidon.webserver.WebServer;
 import static dev.hogwai.platform.host.helidon.http.HttpHelper.writeHealth;
 
 /** Minimal Helidon transport adapter for the host API. */
+@HeronService(value = HostAdapter.class, id = "host.helidon")
 @SuppressWarnings("PMD.CyclomaticComplexity")
 public final class HelidonHostAdapter implements HostAdapter {
 

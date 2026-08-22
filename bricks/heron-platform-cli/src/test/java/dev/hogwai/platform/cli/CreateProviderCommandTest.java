@@ -22,15 +22,15 @@ class CreateProviderCommandTest {
         Path project = tempDirectory.resolve("orders");
         assertThat(project.resolve("settings.gradle.kts")).exists();
         assertThat(project.resolve("build.gradle.kts")).exists();
-        assertThat(project.resolve("src/main/java/com/acme/orders/OrdersProviderFactory.java")).exists();
-        assertThat(project.resolve("src/main/resources/META-INF/services/"
-                + "dev.hogwai.platform.spi.provider.ProviderFactory")).exists();
-        assertThat(Files.readString(project.resolve("build.gradle.kts")))
-                .contains("dev.hogwai.platform:heron-platform-spi:0.1.0");
+        Path source = project.resolve("src/main/java/com/acme/orders/OrdersProviderFactory.java");
+        assertThat(source).exists();
+        assertThat(Files.readString(buildGradleKts(project)))
+                .contains("dev.hogwai.platform:heron-platform-spi:0.1.0")
+                .contains("annotationProcessor(\"dev.hogwai.platform:heron-platform-processor:0.1.0\")");
         assertThat(project.resolve("src/test/java/com/acme/orders/OrdersProviderFactoryTest.java")).exists();
-        assertThat(Files.readString(project.resolve("src/main/resources/META-INF/services/"
-                + "dev.hogwai.platform.spi.provider.ProviderFactory")))
-                .isEqualTo("com.acme.orders.OrdersProviderFactory\n");
+        assertThat(Files.readString(source)).contains("@HeronService(value = ProviderFactory.class")
+                .contains("id = \"com.acme.orders.orders\"");
+        assertThat(project.resolve("src/main/resources/META-INF/services")).doesNotExist();
     }
 
     @Test
@@ -55,12 +55,15 @@ class CreateProviderCommandTest {
         Path project = tempDirectory.resolve("orders");
         assertThat(project.resolve("src/main/kotlin/com/acme/orders/OrdersProviderFactory.kt")).exists();
         assertThat(project.resolve("src/main/java/com/acme/orders/OrdersProviderFactory.java")).doesNotExist();
-        assertThat(Files.readString(project.resolve("build.gradle.kts")))
+        assertThat(Files.readString(buildGradleKts(project)))
                 .contains("kotlin(\"jvm\") version")
-                .contains("dev.hogwai.platform:heron-platform-spi:0.1.0");
-        assertThat(Files.readString(project.resolve("src/main/resources/META-INF/services/"
-                + "dev.hogwai.platform.spi.provider.ProviderFactory")))
-                .isEqualTo("com.acme.orders.OrdersProviderFactory\n");
+                .contains("kotlin(\"kapt\") version")
+                .contains("dev.hogwai.platform:heron-platform-spi:0.1.0")
+                .contains("kapt(\"dev.hogwai.platform:heron-platform-processor:0.1.0\")");
+        assertThat(Files.readString(project.resolve("src/main/kotlin/com/acme/orders/OrdersProviderFactory.kt")))
+                .contains("@HeronService(value = ProviderFactory::class")
+                .contains("id = \"com.acme.orders.orders\"");
+        assertThat(project.resolve("src/main/resources/META-INF/services")).doesNotExist();
     }
 
     @Test
@@ -93,6 +96,10 @@ class CreateProviderCommandTest {
 
     private CreateProviderCommand command(String name, String packageName, String kind) {
         return command(name, packageName, kind, null);
+    }
+
+    private static Path buildGradleKts(Path project) {
+        return project.resolve("build.gradle.kts");
     }
 
     private CreateProviderCommand command(String name, String packageName, String kind, String language) {

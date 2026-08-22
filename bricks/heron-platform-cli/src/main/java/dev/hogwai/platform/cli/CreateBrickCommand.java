@@ -60,14 +60,10 @@ public final class CreateBrickCommand implements Callable<Integer> {
                 files.put("src/main/java/%s/%sDataAccessFactory.java"
                                 .formatted(basePackage.replace('.', '/'), className),
                         render("brick/DataAccessFactory.java.template", model));
-                files.put("src/main/resources/META-INF/services/dev.hogwai.platform.spi.data.access.DataAccessFactory",
-                        render("brick/data-service.template", model));
             } else {
                 files.put("src/main/java/%s/%sHostAdapter.java"
                                 .formatted(basePackage.replace('.', '/'), className),
                         render("brick/HostAdapter.java.template", model));
-                files.put("src/main/resources/META-INF/services/dev.hogwai.platform.spi.host.HostAdapter",
-                        render("brick/host-service.template", model));
             }
             ProjectWriter.writeAll(baseDirectory.resolve(projectName), files);
             LOGGER.info("Created Heron {} brick project '{}'", brickType, projectName);

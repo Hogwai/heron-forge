@@ -6,6 +6,7 @@ import dev.hogwai.platform.spi.PortId
 import dev.hogwai.platform.spi.ProviderId
 import dev.hogwai.platform.spi.ProviderVersion
 import dev.hogwai.platform.spi.SpiMajor
+import dev.hogwai.platform.spi.annotation.HeronService
 import dev.hogwai.platform.spi.data.DataSetLimits
 import dev.hogwai.platform.spi.data.Field
 import dev.hogwai.platform.spi.data.FieldId
@@ -41,6 +42,7 @@ private val SUMMARY_SCHEMA = Schema(
 )
 
 /** Kotlin provider exposing an aggregate delivery status rather than raw orders. */
+@HeronService(value = ProviderFactory::class, id = "demo.kotlin.order-summary")
 class KotlinOrderSummaryProviderFactory : ProviderFactory {
 
     override fun descriptor(): ProviderDescriptor = DESCRIPTOR
@@ -60,6 +62,12 @@ class KotlinOrderSummaryProviderFactory : ProviderFactory {
                 diagnostics += diagnostic("/config/$key", "database configuration field must be a non-blank string")
             }
         }
+
+        for (field in REQUIRED_FIELDS) {
+            if (rawConfig[field] == null) {
+                diagnostics += diagnostic("/config/$field", "missing required database configuration field")
+            }
+        }
         return diagnostics
     }
 
@@ -71,9 +79,9 @@ class KotlinOrderSummaryProviderFactory : ProviderFactory {
 
         val dataAccess = context.dataAccessFactory().open(
             DataAccessConfiguration(
-                value(rawConfig, "url", "HERON_DB_URL", "jdbc:postgresql://localhost:5432/heron_demo"),
-                value(rawConfig, "user", "HERON_DB_USER", "heron"),
-                value(rawConfig, "password", "HERON_DB_PASSWORD", "heron")
+                requiredText(rawConfig, "url"),
+                requiredText(rawConfig, "user"),
+                requiredText(rawConfig, "password")
             )
         )
         try {
@@ -102,12 +110,14 @@ class KotlinOrderSummaryProviderFactory : ProviderFactory {
         }
     }
 
-    private fun value(rawConfig: Map<String, Any>, key: String, environment: String, fallback: String): String {
+    private fun requiredText(rawConfig: Map<String, Any>, key: String): String {
         val configured = rawConfig[key]
         if (configured is String && configured.isNotBlank()) {
             return configured
         }
-        return System.getenv(environment)?.takeIf { it.isNotBlank() } ?: fallback
+        // Unreachable through create(): validate() rejects a missing or blank
+        // password before the configuration is decoded.
+        throw IllegalArgumentException("missing required database configuration field: $key")
     }
 
     private fun positiveLong(value: Any?, fallback: Long): Long =
@@ -123,6 +133,7 @@ class KotlinOrderSummaryProviderFactory : ProviderFactory {
 
     private companion object {
         val CONFIGURATION_FIELDS = setOf("url", "user", "password", "maxRows", "maxBytes")
+        val REQUIRED_FIELDS = listOf("url", "user", "password")
 
         val DESCRIPTOR = ProviderDescriptor(
             ProviderId("demo.kotlin.order-summary"),

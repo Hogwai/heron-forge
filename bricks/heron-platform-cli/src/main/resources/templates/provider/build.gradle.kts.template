@@ -16,6 +16,7 @@ java {
 
 dependencies {
     implementation("dev.hogwai.platform:heron-platform-spi:{{platformSpiVersion}}")
+    annotationProcessor("dev.hogwai.platform:heron-platform-processor:{{platformSpiVersion}}")
     testImplementation(platform("org.junit:junit-bom:{{junitJupiterVersion}}"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")

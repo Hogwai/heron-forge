@@ -12,6 +12,7 @@ val archunitVersion = providers.gradleProperty("archunitVersion").get()
 
 dependencies {
     api(project(":core:heron-platform-spi"))
+    annotationProcessor(project(":tools:heron-platform-processor"))
     implementation("io.helidon.webserver:helidon-webserver:$helidonVersion")
     implementation("io.helidon.http.media:helidon-http-media-jackson:$helidonVersion")
     testImplementation("com.tngtech.archunit:archunit-junit5:$archunitVersion")

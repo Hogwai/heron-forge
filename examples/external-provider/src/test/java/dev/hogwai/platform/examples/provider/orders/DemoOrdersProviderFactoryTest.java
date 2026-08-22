@@ -45,7 +45,17 @@ class DemoOrdersProviderFactoryTest {
         assertThat(descriptor.outputPorts().get(new PortId("records")).schema().fields())
                 .extracting(field -> field.id().value())
                 .containsExactly("orderId", "orderedQuantity", "requiredAt", "priority");
-        assertThat(new DemoOrdersProviderFactory().validate(Map.of())).isEmpty();
+        assertThat(new DemoOrdersProviderFactory().validate(validDatabaseConfig())).isEmpty();
+    }
+
+    @Test
+    void rejectsConfigurationMissingRequiredDatabaseFields() {
+        assertThat(new DemoOrdersProviderFactory().validate(Map.of()))
+                .extracting(dev.hogwai.platform.spi.Diagnostic::message)
+                .containsExactlyInAnyOrder(
+                        "missing required database configuration field",
+                        "missing required database configuration field",
+                        "missing required database configuration field");
     }
 
     @Test
@@ -84,9 +94,16 @@ class DemoOrdersProviderFactoryTest {
         BuildContext context = new BuildContext(java.time.Clock.systemUTC(),
                 resource -> { throw registrationFailure; }, factory);
 
-        assertThatThrownBy(() -> new DemoOrdersProviderFactory().create(Map.of(), context))
+        assertThatThrownBy(() -> new DemoOrdersProviderFactory().create(
+                Map.of("url", "jdbc:postgresql://localhost:5432/heron_demo",
+                        "user", "test-user", "password", "test-password"), context))
                 .isSameAs(registrationFailure);
         assertThat(access.closed()).isTrue();
+    }
+
+    private static Map<String, Object> validDatabaseConfig() {
+        return Map.of("url", "jdbc:postgresql://localhost:5432/heron_demo",
+                "user", "test-user", "password", "test-password");
     }
 
     private static final class RecordingDataAccess implements DataAccess {

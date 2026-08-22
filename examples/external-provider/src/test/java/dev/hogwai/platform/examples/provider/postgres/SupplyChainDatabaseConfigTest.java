@@ -28,25 +28,42 @@ class SupplyChainDatabaseConfigTest {
     }
 
     @Test
-    void resolvesDefaultsAndEnvironmentOverrides() {
-        DataAccessConfiguration config = SupplyChainDatabaseConfig.from(Map.of());
+    void requiresUrlUserAndPasswordWithoutDefaults() {
+        DataAccessConfiguration config = SupplyChainDatabaseConfig.from(Map.of(
+                "url", "jdbc:postgresql://db/example",
+                "user", "db-user",
+                "password", "db-password"));
 
-        assertThat(config.url()).isEqualTo(environmentOrDefault(
-                "HERON_DB_URL", "jdbc:postgresql://localhost:5432/heron_demo"));
-        assertThat(config.username()).isEqualTo(environmentOrDefault("HERON_DB_USER", "heron"));
-        assertThat(config.password()).isEqualTo(environmentOrDefault("HERON_DB_PASSWORD", "heron"));
+        assertThat(config.url()).isEqualTo("jdbc:postgresql://db/example");
+        assertThat(config.username()).isEqualTo("db-user");
+        assertThat(config.password()).isEqualTo("db-password");
+
+        assertThat(org.assertj.core.api.Assertions.catchThrowableOfType(
+                IllegalArgumentException.class, () -> SupplyChainDatabaseConfig.from(Map.of())))
+                .isNotNull();
+        assertThat(org.assertj.core.api.Assertions.catchThrowableOfType(
+                IllegalArgumentException.class,
+                () -> SupplyChainDatabaseConfig.from(Map.of("user", "u", "password", "p"))))
+                .isNotNull();
     }
 
     @Test
-    void rejectsUnknownAndBlankDatabaseFields() {
+    void rejectsUnknownBlankAndMissingDatabaseFields() {
         List<dev.hogwai.platform.spi.Diagnostic> diagnostics = SupplyChainDatabaseConfig.validate(
                 Map.of("url", " ", "unexpected", "value"), "orders");
 
-        assertThat(diagnostics).hasSize(2);
-        assertThat(diagnostics).extracting(dev.hogwai.platform.spi.Diagnostic::message)
+        assertThat(diagnostics).hasSize(4);
+        assertThat(diagnostics).extracting(dev.hogwai.platform.spi.Diagnostic::path,
+                        dev.hogwai.platform.spi.Diagnostic::message)
                 .containsExactlyInAnyOrder(
-                        "unknown database configuration field",
-                        "database configuration field must be a non-blank string");
+                        org.assertj.core.groups.Tuple.tuple("/config/url",
+                                "database configuration field must be a non-blank string"),
+                        org.assertj.core.groups.Tuple.tuple("/config/<key>",
+                                "unknown database configuration field"),
+                        org.assertj.core.groups.Tuple.tuple("/config/user",
+                                "missing required database configuration field"),
+                        org.assertj.core.groups.Tuple.tuple("/config/password",
+                                "missing required database configuration field"));
     }
 
     @Test
@@ -55,10 +72,5 @@ class SupplyChainDatabaseConfigTest {
                 .singleElement()
                 .satisfies(diagnostic -> assertThat(diagnostic.message())
                         .isEqualTo("deliveries configuration must be an object"));
-    }
-
-    private static String environmentOrDefault(String name, String fallback) {
-        String value = System.getenv(name);
-        return value == null || value.isBlank() ? fallback : value;
     }
 }

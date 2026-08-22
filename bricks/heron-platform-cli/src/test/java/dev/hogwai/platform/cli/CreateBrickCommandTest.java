@@ -22,11 +22,14 @@ class CreateBrickCommandTest {
         Path project = tempDirectory.resolve("postgres");
         assertThat(project.resolve("settings.gradle.kts")).exists();
         assertThat(project.resolve("build.gradle.kts")).exists();
-        assertThat(project.resolve("src/main/java/com/acme/postgres/PostgresDataAccessFactory.java")).exists();
-        Path service = project.resolve("src/main/resources/META-INF/services/"
-                + "dev.hogwai.platform.spi.data.access.DataAccessFactory");
-        assertThat(service).exists();
-        assertThat(Files.readString(service)).isEqualTo("com.acme.postgres.PostgresDataAccessFactory\n");
+        Path source = project.resolve("src/main/java/com/acme/postgres/PostgresDataAccessFactory.java");
+        assertThat(source).exists();
+        assertThat(Files.readString(source))
+                .contains("@HeronService(value = DataAccessFactory.class")
+                .contains("id = \"data.postgres\"");
+        assertThat(Files.readString(project.resolve("build.gradle.kts")))
+                .contains("annotationProcessor(\"dev.hogwai.platform:heron-platform-processor:");
+        assertThat(project.resolve("src/main/resources/META-INF/services")).doesNotExist();
     }
 
     @Test
@@ -36,11 +39,12 @@ class CreateBrickCommandTest {
         assertThat(command.call()).isZero();
 
         Path project = tempDirectory.resolve("helidon");
-        assertThat(project.resolve("src/main/java/com/acme/helidon/HelidonHostAdapter.java")).exists();
-        Path service = project.resolve("src/main/resources/META-INF/services/"
-                + "dev.hogwai.platform.spi.host.HostAdapter");
-        assertThat(service).exists();
-        assertThat(Files.readString(service)).isEqualTo("com.acme.helidon.HelidonHostAdapter\n");
+        Path source = project.resolve("src/main/java/com/acme/helidon/HelidonHostAdapter.java");
+        assertThat(source).exists();
+        assertThat(Files.readString(source))
+                .contains("@HeronService(value = HostAdapter.class")
+                .contains("id = \"host.helidon\"");
+        assertThat(project.resolve("src/main/resources/META-INF/services")).doesNotExist();
     }
 
     @Test

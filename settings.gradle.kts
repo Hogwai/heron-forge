@@ -9,6 +9,7 @@ pluginManagement {
         id("net.ltgt.errorprone") version errorpronePluginVersion
         id("org.revapi.revapi-gradle-plugin") version revapiPluginVersion
         id("org.jetbrains.kotlin.jvm") version kotlinPluginVersion
+        id("org.jetbrains.kotlin.kapt") version kotlinPluginVersion
     }
 
     repositories {
@@ -33,6 +34,7 @@ include("core:heron-platform-runtime")
 include("bricks:heron-platform-data-postgresql")
 include("bricks:heron-platform-host-helidon")
 include("bricks:heron-platform-cli")
+include("tools:heron-platform-processor")
 include("examples:external-provider")
 include("examples:kotlin-provider")
 include("examples:factory-demo")

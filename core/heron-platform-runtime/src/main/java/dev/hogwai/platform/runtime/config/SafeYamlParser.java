@@ -84,6 +84,10 @@ public final class SafeYamlParser {
         } catch (IllegalArgumentException _) {
             return parseFailure(diagnostics);
         }
+        root = EnvPlaceholders.resolve(root, diagnostics);
+        if (!diagnostics.isEmpty()) {
+            return invalid(diagnostics);
+        }
         // Deliberately outside the parser/conversion catch: mapper failures are
         // application-schema failures and must not be disguised as YAML errors.
         return ConfigMapper.mapApplication(root);

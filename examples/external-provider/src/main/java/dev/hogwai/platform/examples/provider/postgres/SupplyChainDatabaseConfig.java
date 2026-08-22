@@ -23,6 +23,7 @@ public final class SupplyChainDatabaseConfig {
     public static final String MAX_ROWS = "maxRows";
     public static final String MAX_BYTES = "maxBytes";
     private static final Set<String> DATABASE_FIELDS = Set.of("url", "user", PASSWORD, MAX_ROWS, MAX_BYTES);
+    private static final List<String> REQUIRED_FIELDS = List.of("url", "user", PASSWORD);
     private static final ConfigurationSchema SCHEMA = new ConfigurationSchema(DATABASE_FIELDS, Set.of(),
             Map.of("url", ConfigurationSchema.ScalarKind.STRING,
                     "user", ConfigurationSchema.ScalarKind.STRING,
@@ -54,15 +55,21 @@ public final class SupplyChainDatabaseConfig {
                         "database configuration field must be a non-blank string"));
             }
         }
+        for (String field : REQUIRED_FIELDS) {
+            if (rawConfig.get(field) == null) {
+                diagnostics.add(databaseDiagnostic("/config/" + field,
+                        "missing required database configuration field"));
+            }
+        }
         return List.copyOf(diagnostics);
     }
 
     public static DataAccessConfiguration from(Map<String, Object> rawConfig) {
         Map<String, Object> config = rawConfig == null ? Map.of() : rawConfig;
         return new DataAccessConfiguration(
-                value(config, "url", "HERON_DB_URL", "jdbc:postgresql://localhost:5432/heron_demo"),
-                value(config, "user", "HERON_DB_USER", "heron"),
-                value(config, PASSWORD, "HERON_DB_PASSWORD", "heron"));
+                requiredString(config, "url"),
+                requiredString(config, "user"),
+                requiredString(config, PASSWORD));
     }
 
     /** Returns the dataset limits from the configuration, or the defaults. */
@@ -79,13 +86,14 @@ public final class SupplyChainDatabaseConfig {
         return fallback;
     }
 
-    private static String value(Map<String, Object> config, String field, String environment, String fallback) {
+    private static String requiredString(Map<String, Object> config, String field) {
         Object configured = config.get(field);
         if (configured instanceof String string && !string.isBlank()) {
             return string;
         }
-        String fromEnvironment = System.getenv(environment);
-        return fromEnvironment == null || fromEnvironment.isBlank() ? fallback : fromEnvironment;
+        // Unreachable through create(): validate() rejects a missing or blank
+        // password before the configuration is decoded.
+        throw new IllegalArgumentException("missing required database configuration field: " + field);
     }
 
     private static Diagnostic databaseDiagnostic(String path, String message) {

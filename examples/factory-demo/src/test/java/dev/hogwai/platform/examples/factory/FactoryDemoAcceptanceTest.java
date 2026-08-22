@@ -73,13 +73,13 @@ class FactoryDemoAcceptanceTest {
 
     @Test
     void rejectsUnknownProviderAtLoadWithoutExposingConfiguration() {
-        String yaml = configuration().replace("id: demo.orders", "id: missing.orders");
+        String yaml = configurationWithoutSecret().replace("id: demo.orders", "id: missing.orders");
         assertLoadFailure(yaml, PlatformErrorCode.PROVIDER_NOT_FOUND);
     }
 
     @Test
     void rejectsInvalidJdbcUrlAtLoadWithoutExposingPassword() {
-        String yaml = configuration().replace(DATABASE_URL, "jdbc:invalid");
+        String yaml = configurationWithoutSecret().replace(DATABASE_URL, "jdbc:invalid");
         PlatformException failure = loadFailure(yaml);
         assertThat(failure.code()).isEqualTo(PlatformErrorCode.PROVIDER_CONFIG_ERROR);
         assertThat(failure.getMessage()).doesNotContain("heron");
@@ -152,6 +152,14 @@ class FactoryDemoAcceptanceTest {
         } catch (IOException failure) {
             throw new IllegalStateException("factory-demo configuration could not be read", failure);
         }
+    }
+
+    /** Configuration with the credential placeholders resolved locally for checks that never reach the database. */
+    private static String configurationWithoutSecret() {
+        return configuration()
+                .replace("${HERON_DB_URL}", DATABASE_URL)
+                .replace("${HERON_DB_USER}", "unused-user")
+                .replace("${HERON_DB_PASSWORD}", "unused-password");
     }
 
     private static ByteArrayInputStream stream(String yaml) {

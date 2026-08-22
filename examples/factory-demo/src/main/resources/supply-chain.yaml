@@ -6,9 +6,9 @@ capabilities:
       id: demo.orders
       version: 1.0.0
     config:
-      url: jdbc:postgresql://localhost:5432/heron_demo
-      user: heron
-      password: heron
+      url: ${HERON_DB_URL}
+      user: ${HERON_DB_USER}
+      password: ${HERON_DB_PASSWORD}
       maxRows: 5000
       maxBytes: 5000000
   - id: deliveries
@@ -16,9 +16,9 @@ capabilities:
       id: demo.deliveries
       version: 1.0.0
     config:
-      url: jdbc:postgresql://localhost:5432/heron_demo
-      user: heron
-      password: heron
+      url: ${HERON_DB_URL}
+      user: ${HERON_DB_USER}
+      password: ${HERON_DB_PASSWORD}
       maxRows: 5000
       maxBytes: 5000000
   - id: kotlin-order-summary
@@ -26,9 +26,9 @@ capabilities:
       id: demo.kotlin.order-summary
       version: 1.0.0
     config:
-      url: jdbc:postgresql://localhost:5432/heron_demo
-      user: heron
-      password: heron
+      url: ${HERON_DB_URL}
+      user: ${HERON_DB_USER}
+      password: ${HERON_DB_PASSWORD}
       maxRows: 5000
       maxBytes: 5000000
   - id: exception-detector

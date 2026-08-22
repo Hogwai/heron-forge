@@ -7,6 +7,7 @@ import java.util.Objects;
 import dev.hogwai.platform.examples.provider.model.SupplyChainSchemas;
 import dev.hogwai.platform.examples.provider.postgres.SupplyChainDatabaseConfig;
 import dev.hogwai.platform.examples.provider.support.ExecutionSupport;
+import dev.hogwai.platform.spi.annotation.HeronService;
 import dev.hogwai.platform.spi.CapabilityKind;
 import dev.hogwai.platform.spi.Diagnostic;
 import dev.hogwai.platform.spi.PortId;
@@ -24,6 +25,7 @@ import dev.hogwai.platform.spi.provider.ProviderDescriptor;
 import dev.hogwai.platform.spi.provider.ProviderFactory;
 
 /** Deterministic source of the example delivery records. */
+@HeronService(value = ProviderFactory.class, id = "demo.deliveries")
 public final class DemoDeliveriesProviderFactory implements ProviderFactory {
 
     private static final ProviderDescriptor DESCRIPTOR = new ProviderDescriptor(

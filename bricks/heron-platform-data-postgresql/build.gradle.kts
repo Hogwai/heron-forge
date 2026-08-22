@@ -13,6 +13,7 @@ val archunitVersion = providers.gradleProperty("archunitVersion").get()
 
 dependencies {
     implementation(project(":core:heron-platform-spi"))
+    annotationProcessor(project(":tools:heron-platform-processor"))
     implementation(platform("org.jdbi:jdbi3-bom:$jdbiVersion"))
     implementation("org.jdbi:jdbi3-core")
     implementation("org.jdbi:jdbi3-postgres")

@@ -41,8 +41,13 @@ class DemoDeliveriesProviderFactoryTest {
         assertThat(factory.descriptor().outputPorts().get(new PortId("records")).schema().fields())
                 .extracting(field -> field.id().value())
                 .containsExactly("orderId", "deliveredQuantity", "deliveredAt");
-        assertThat(factory.validate(Map.of())).isEmpty();
-        assertThat(factory.validate(Map.of("url", "jdbc:postgresql://db/heron_demo"))).isEmpty();
+        assertThat(factory.validate(Map.of(
+                "url", "jdbc:postgresql://db/heron_demo", "user", "db-user", "password", "db-password"))).isEmpty();
+        assertThat(factory.validate(Map.of("url", "jdbc:postgresql://db/heron_demo")))
+                .extracting(dev.hogwai.platform.spi.Diagnostic::message)
+                .containsExactlyInAnyOrder(
+                        "missing required database configuration field",
+                        "missing required database configuration field");
     }
 
     @Test

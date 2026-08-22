@@ -1,3 +1,0 @@
-dev.hogwai.platform.examples.provider.orders.DemoOrdersProviderFactory
-dev.hogwai.platform.examples.provider.deliveries.DemoDeliveriesProviderFactory
-dev.hogwai.platform.examples.provider.exceptions.SupplyChainExceptionDetectorFactory

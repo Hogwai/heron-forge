@@ -49,15 +49,15 @@ class DemoOrdersProviderFactoryConcurrencyTest {
                         "required_at", Instant.parse("2025-01-01T00:00:00Z"), "priority", "HIGH"),
                 Map.of("order_id", "ORDER-002", "ordered_quantity", 7L,
                         "required_at", Instant.parse("2025-01-02T00:00:00Z"), "priority", "NORMAL")));
-        BuildContext buildContext = new BuildContext(Clock.systemUTC(), resource -> { },
-                configuration -> access);
-        CapabilityInstance instance = new DemoOrdersProviderFactory().create(Map.of(), buildContext);
+        BuildContext buildContext = new BuildContext(Clock.systemUTC(), _ -> { }, _ -> access);
+        CapabilityInstance instance = new DemoOrdersProviderFactory().create(
+                Map.of("url", "jdbc:postgresql://localhost:5432/heron_demo",
+                        "user", "test-user", "password", "test-password"), buildContext);
         ExecutionContext executionContext = new ExecutionContext("r1", "snap-1",
                 Instant.parse("2099-01-01T00:00:00Z"), () -> false, "c1");
 
         CountDownLatch start = new CountDownLatch(THREADS);
-        ExecutorService executor = Executors.newFixedThreadPool(THREADS);
-        try {
+        try (ExecutorService executor = Executors.newFixedThreadPool(THREADS)) {
             List<Future<MaterializedDataSet>> futures = new ArrayList<>();
             for (int i = 0; i < THREADS; i++) {
                 futures.add(executor.submit(() -> {
@@ -87,8 +87,6 @@ class DemoOrdersProviderFactoryConcurrencyTest {
             // same time, so both executions provably overlapped on the shared instance.
             assertThat(access.maxActiveQueries()).isEqualTo(THREADS);
             assertThat(access.totalQueries()).isEqualTo(THREADS);
-        } finally {
-            executor.shutdownNow();
         }
     }
 

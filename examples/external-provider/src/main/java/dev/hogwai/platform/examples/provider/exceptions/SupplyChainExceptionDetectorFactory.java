@@ -11,6 +11,7 @@ import dev.hogwai.platform.spi.PortId;
 import dev.hogwai.platform.spi.ProviderId;
 import dev.hogwai.platform.spi.ProviderVersion;
 import dev.hogwai.platform.spi.SpiMajor;
+import dev.hogwai.platform.spi.annotation.HeronService;
 import dev.hogwai.platform.spi.error.PlatformErrorCode;
 import dev.hogwai.platform.spi.error.PlatformException;
 import dev.hogwai.platform.spi.provider.BuildContext;
@@ -20,6 +21,7 @@ import dev.hogwai.platform.spi.provider.ProviderDescriptor;
 import dev.hogwai.platform.spi.provider.ProviderFactory;
 
 /** SPI factory for the supply-chain exception detector. */
+@HeronService(value = ProviderFactory.class, id = "supply-chain.exception-detector")
 public final class SupplyChainExceptionDetectorFactory implements ProviderFactory {
 
     private static final ProviderDescriptor DESCRIPTOR = new ProviderDescriptor(
