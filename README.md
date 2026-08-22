@@ -10,24 +10,35 @@ The runtime loads providers, validates application configuration and capability 
 ```mermaid
 flowchart LR
     subgraph ApplicationCode [Application code]
-        app["Application"]
+        app["Application / factory demo"]
         appConfig["Application configuration"]
+    end
+
+    subgraph HeronForge [Heron Forge]
+        cli["heron-platform-cli<br/>start and create commands"]
+        runtime["heron-platform-runtime<br/>Load, validate and execute"]
+        spi["heron-platform-spi<br/>Public provider, host and data contracts"]
+    end
+
+    subgraph Bricks [Pluggable bricks]
+        host["host-helidon<br/>HTTP adapter"]
+        data["data-postgresql<br/>DataAccessFactory"]
     end
 
     subgraph ProviderCode [External provider]
         provider["Provider implementation"]
     end
 
-    subgraph HeronForge [Heron Forge]
-        spi["heron-platform-spi<br/>Public provider contract"]
-        runtime["heron-platform-runtime<br/>Discovery, validation, graph compilation"]
-    end
-
-    app -->|"uses"| runtime
-    appConfig -->|"provides YAML"| runtime
+    app -->|"runs"| cli
+    appConfig -->|"YAML"| cli
+    cli -->|"loads and starts"| runtime
+    cli -.->|"discovers"| host
+    runtime -->|"uses contracts"| spi
+    runtime -.->|"discovers"| provider
     provider -->|"implements"| spi
-    runtime -->|"uses contract"| spi
-    runtime -->|"discovers"| provider
+    host -->|"implements"| spi
+    data -->|"implements"| spi
+    runtime -.->|"discovers"| data
 ```
 
 ### Runtime flow
@@ -39,7 +50,10 @@ flowchart TD
     parseStage --> providerStage
     providerStage --> graphStage["Capability graph compilation<br/>and schema checks"]
     graphStage --> snapshotStage["Runtime snapshot<br/>and resource lifecycle"]
-    snapshotStage -.-> executionStage["Capability execution<br/>(future)"]
+    snapshotStage --> applicationStage["Runtime application<br/>and entrypoints"]
+    applicationStage --> invocationStage["Host invocation<br/>and request validation"]
+    invocationStage --> executionStage["Capability execution<br/>and result projection"]
+    dataInput["Data brick via ServiceLoader"] -.-> providerStage
 ```
 
 ## Requirements
@@ -48,7 +62,7 @@ flowchart TD
 
 ## Building
 
-Use the Gradle wrapper (Gradle 9.6.1):
+Use the Gradle wrapper (Gradle 9.7.0):
 
 ```bash
 ./gradlew build
@@ -113,7 +127,7 @@ The platform is split into core modules (agnostic, framework-independent) and br
 | `core:heron-platform-runtime`           | core    | Runtime implementation                                              | `core:heron-platform-spi`                                                                                                         |
 | `bricks:heron-platform-data-postgresql` | brick   | Jdbi core, PostgreSQL plugin/driver and data implementation         | `core:heron-platform-spi`                                                                                                         |
 | `bricks:heron-platform-host-helidon`    | brick   | Helidon SE 4.5.3 HTTP shell                                         | `core:heron-platform-spi`                                                                                                         |
-| `bricks:heron-platform-cli`             | brick   | picocli standard command-line bootstrap                             | `core:heron-platform-runtime`, `bricks:heron-platform-host-helidon`                                                               |
+| `bricks:heron-platform-cli`             | brick   | picocli standard command-line bootstrap                             | `core:heron-platform-spi`, `core:heron-platform-runtime`                                                                          |
 | `examples:external-provider`            | example | Example external provider                                           | `core:heron-platform-spi`                                                                                                         |
 | `examples:factory-demo`                 | example | Example factory demo                                                | `core:heron-platform-runtime`, `bricks:heron-platform-cli`, `bricks:heron-platform-data-postgresql`, `examples:external-provider` |
 
@@ -121,7 +135,7 @@ The platform is split into core modules (agnostic, framework-independent) and br
 
 - The core (`spi`, `runtime`) is framework-independent: it knows neither Helidon, nor picocli, nor PostgreSQL.
 - The bricks (`data-postgresql`, `host-helidon`, `cli`) are pluggable: a solution squad picks its database brick, its HTTP brick and its launcher.
-- The data contract lives in the framework-independent `core:heron-platform-spi`.`bricks:heron-platform-data-postgresql` is the PostgreSQL brick: its internal Jdbi and PostgreSQL components provide the generic implementation, plugin and driver, and it is discovered by the runtime through `ServiceLoader`.
+- The data contract lives in the framework-independent `core:heron-platform-spi`. `bricks:heron-platform-data-postgresql` is the PostgreSQL brick: its internal Jdbi and PostgreSQL components provide the generic implementation, plugin and driver, and it is discovered by the runtime through `ServiceLoader`.
 - The launcher (`bricks:heron-platform-cli`) is host-agnostic: it discovers the `HostAdapter` implementation through `ServiceLoader`. `bricks:heron-platform-host-helidon` is the HTTP brick that a solution squad wires in. Another host brick can be plugged in without touching the launcher.
 
 The runtime discovers the `DataAccessFactory` implementation on the classpath via `ServiceLoader` and supplies it to providers through `BuildContext`. 
@@ -136,10 +150,10 @@ PostgreSQL integration tests are opt-in with `RUN_POSTGRES_TESTS=true`.
 
 ## Versions & tools
 
-- Gradle 9.6.1 (wrapper)
+- Gradle 9.7.0 (wrapper)
 - Java toolchain 25
 - JUnit Jupiter 5.11.4, AssertJ 3.27.7
-- Jackson Databind 2.19.2; Jackson YAML is test-only
+- Jackson Databind 2.21.1; Jackson YAML is test-only
 - SnakeYAML Engine 3.1.1
 - Jdbi 3.54.0
 - Helidon SE 4.5.3
@@ -164,13 +178,13 @@ The baseline can be installed locally.
 To demonstrate the check, publish the unchanged SPI first:
 
 ```bash
-./gradlew :heron-platform-spi:publishBaselinePublicationToMavenLocal
+./gradlew :core:heron-platform-spi:publishBaselinePublicationToMavenLocal
 ```
 
 Then make an intentional breaking change to the public SPI API and run:
 
 ```bash
-./gradlew :heron-platform-spi:revapi
+./gradlew :core:heron-platform-spi:revapi
 ```
 
 Revapi should fail and report the break. Reverting the API change should make
