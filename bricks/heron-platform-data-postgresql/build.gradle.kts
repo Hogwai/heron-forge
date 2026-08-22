@@ -9,6 +9,7 @@ plugins {
 
 val jdbiVersion = providers.gradleProperty("jdbiVersion").get()
 val postgresqlVersion = providers.gradleProperty("postgresqlVersion").get()
+val hikariVersion = providers.gradleProperty("hikariVersion").get()
 val archunitVersion = providers.gradleProperty("archunitVersion").get()
 
 dependencies {
@@ -17,6 +18,7 @@ dependencies {
     implementation(platform("org.jdbi:jdbi3-bom:$jdbiVersion"))
     implementation("org.jdbi:jdbi3-core")
     implementation("org.jdbi:jdbi3-postgres")
+    implementation("com.zaxxer:HikariCP:$hikariVersion")
     runtimeOnly("org.postgresql:postgresql:$postgresqlVersion")
     testImplementation("com.tngtech.archunit:archunit-junit5:$archunitVersion")
 }

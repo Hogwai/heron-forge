@@ -19,6 +19,8 @@ import dev.hogwai.platform.spi.error.Severity;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.statement.Query;
 
+import com.zaxxer.hikari.HikariDataSource;
+
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
@@ -35,6 +37,7 @@ final class JdbiDataAccess implements DataAccess {
     public static final String REQUEST_MUST_NOT_BE_NULL = "request must not be null";
 
     private final Jdbi jdbi;
+    private final HikariDataSource pooledDataSource;
 
     /**
      * Creates a data access client from a thread-safe Jdbi instance.
@@ -42,7 +45,18 @@ final class JdbiDataAccess implements DataAccess {
      * @param jdbi the Jdbi client
      */
     JdbiDataAccess(Jdbi jdbi) {
+        this(jdbi, null);
+    }
+
+    /**
+     * Creates a pooled data access client.
+     *
+     * @param jdbi             the Jdbi client backed by the pool
+     * @param pooledDataSource the pool closed together with this client
+     */
+    JdbiDataAccess(Jdbi jdbi, HikariDataSource pooledDataSource) {
         this.jdbi = Objects.requireNonNull(jdbi, "jdbi must not be null");
+        this.pooledDataSource = pooledDataSource;
     }
 
     /**
@@ -180,10 +194,16 @@ final class JdbiDataAccess implements DataAccess {
         throw new IllegalArgumentException("Unsupported field type for column %s: %s".formatted(type, column));
     }
 
-    /** Jdbi owns no long-lived handle here, so closing the client is intentionally a no-op. */
+    /**
+     * Closes the backing pool when the client is pooled. Unpooled clients own
+     * no long-lived connection: each handle is created and closed by Jdbi's
+     * withHandle call.
+     */
     @Override
     public void close() {
-        // Each handle is created and closed by Jdbi's withHandle call.
+        if (pooledDataSource != null) {
+            pooledDataSource.close();
+        }
     }
 
     private static void checkContext(QueryContext context) {

@@ -1,11 +1,18 @@
 package dev.hogwai.platform.data.postgres;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import dev.hogwai.platform.data.jdbi.JdbiDataAccessFactory;
+import dev.hogwai.platform.data.jdbi.JdbiPoolOptions;
 import dev.hogwai.platform.spi.Diagnostic;
 import dev.hogwai.platform.spi.data.Field;
 import dev.hogwai.platform.spi.data.FieldId;
@@ -18,6 +25,7 @@ import dev.hogwai.platform.spi.data.access.QueryContext;
 import dev.hogwai.platform.spi.data.access.QueryRequest;
 import dev.hogwai.platform.spi.error.PlatformErrorCode;
 import dev.hogwai.platform.spi.error.PlatformException;
+import org.jdbi.v3.postgres.PostgresPlugin;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 
@@ -236,6 +244,70 @@ class PostgresJdbiDataAccessIntegrationTest {
                 List.of(new Field(new FieldId("name"), "name", new FieldType.StringType(), false, Optional.empty()),
                         new Field(new FieldId(AMOUNT), AMOUNT, new FieldType.Int64Type(), false, Optional.empty())),
                 false);
+    }
+
+    @Test
+    void pooledClientExecutesQueriesAndCloseReleasesThePool() {
+        JdbiDataAccessFactory factory = new JdbiDataAccessFactory(
+                List.of(new PostgresPlugin()), new JdbiPoolOptions(true, 2, 1, 5_000L, 1_800_000L));
+        DataAccess access = factory.open(CONFIG);
+
+        List<Row> rows = access.query(new QueryRequest<>("pooled-row", "SELECT :name AS name, :amount AS amount",
+                Map.of("name", "Ada", AMOUNT, 7L), row -> new Row(row.string("name"), row.longValue(AMOUNT))),
+                ACTIVE);
+        assertThat(rows).containsExactly(new Row("Ada", 7L));
+
+        access.close();
+        assertThatThrownBy(() -> access.query(simpleRequest("post-close"), ACTIVE))
+                .isInstanceOf(PlatformException.class)
+                .hasMessageNotContaining("jdbc:postgresql");
+    }
+
+    @Test
+    void pooledClientServesConcurrentQueriesWithinPoolBounds() throws Exception {
+        JdbiDataAccessFactory factory = new JdbiDataAccessFactory(
+                List.of(new PostgresPlugin()), new JdbiPoolOptions(true, 2, 1, 5_000L, 1_800_000L));
+        try (DataAccess access = factory.open(CONFIG)) {
+            int threads = 8;
+            ExecutorService executor = Executors.newFixedThreadPool(threads);
+            try {
+                List<Future<Long>> futures = new ArrayList<>();
+                for (int index = 0; index < threads; index++) {
+                    futures.add(executor.submit(
+                            () -> access.query(simpleRequest("pooled-concurrent"), ACTIVE).getFirst()));
+                }
+                for (Future<Long> future : futures) {
+                    assertThat(future.get(30, TimeUnit.SECONDS)).isEqualTo(42L);
+                }
+            } finally {
+                executor.shutdownNow();
+            }
+        }
+    }
+
+    @Test
+    void rejectsAnUnavailableDatabaseDuringTheStartupProbeWithoutDetailsWhenPooled() {
+        DataAccessConfiguration unavailable = new DataAccessConfiguration(
+                "jdbc:postgresql://127.0.0.1:1/unavailable", "probe-user", "probe-secret");
+        JdbiDataAccessFactory factory = new JdbiDataAccessFactory(
+                List.of(new PostgresPlugin()), JdbiPoolOptions.defaults());
+
+        assertThatThrownBy(() -> factory.open(unavailable))
+                .isInstanceOf(PlatformException.class)
+                .hasMessageNotContaining("127.0.0.1")
+                .hasMessageNotContaining("probe-user")
+                .hasMessageNotContaining("probe-secret")
+                .satisfies(failure -> {
+                    PlatformException exception = (PlatformException) failure;
+                    assertThat(exception.diagnostics()).singleElement()
+                            .extracting(Diagnostic::message)
+                            .asString()
+                            .isEqualTo("Database startup probe failed.");
+                });
+    }
+
+    private static QueryRequest<Long> simpleRequest(String operation) {
+        return new QueryRequest<>(operation, "SELECT 42 AS value", Map.of(), row -> row.longValue(VALUE));
     }
 
     private static String environmentOrDefault(String name, String fallback) {

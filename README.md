@@ -180,7 +180,7 @@ The launcher fails with a clear `HostException` when no host brick is on the cla
 A provider opens a data client during creation, registers it in the resource tracker, and receives a fresh database handle for each query. 
 The generic Jdbi factory installs no plugins unless they are supplied explicitly, the PostgreSQL factory installs `PostgresPlugin`. 
 Both factories run a `SELECT 1` startup probe and sanitize startup and query failures. 
-The current demonstration has no connection pool. 
+The PostgreSQL factory backs every client with a small HikariCP connection pool (`JdbiPoolOptions.defaults()`, closed together with the client when the snapshot releases it).
 Jdbi applies a per-query timeout from the execution deadline; a cancellation signal cannot actively interrupt a server call that is already blocked without a separate statement-cancellation mechanism. 
 PostgreSQL integration tests are opt-in with `RUN_POSTGRES_TESTS=true`.
 
