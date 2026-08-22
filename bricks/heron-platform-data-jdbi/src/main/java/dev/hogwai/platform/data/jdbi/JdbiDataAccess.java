@@ -84,7 +84,7 @@ final class JdbiDataAccess implements DataAccess {
             return jdbi.withHandle(handle -> {
                 Query query = handle.createQuery(request.sql()).bindMap(request.parameters());
                 query.setQueryTimeout(queryTimeoutSeconds);
-                List<T> rows = query.map((resultSet, statementContext) -> {
+                List<T> rows = query.map((resultSet, _) -> {
                     checkContext(context);
                     return request.mapper().map(new JdbiDataRow(resultSet));
                 }).list();
