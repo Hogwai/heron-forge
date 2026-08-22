@@ -21,6 +21,16 @@ capabilities:
       password: heron
       maxRows: 5000
       maxBytes: 5000000
+  - id: kotlin-order-summary
+    provider:
+      id: demo.kotlin.order-summary
+      version: 1.0.0
+    config:
+      url: jdbc:postgresql://localhost:5432/heron_demo
+      user: heron
+      password: heron
+      maxRows: 5000
+      maxBytes: 5000000
   - id: exception-detector
     provider:
       id: supply-chain.exception-detector
@@ -41,3 +51,7 @@ endpoints:
     method: GET
     path: /exceptions
     target: exception-detector
+  - id: kotlin-order-summary
+    method: GET
+    path: /kotlin-order-summary
+    target: kotlin-order-summary

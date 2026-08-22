@@ -56,6 +56,15 @@ class FactoryDemoAcceptanceTest {
                     "\"reason\":\"Latest delivery is after the required date plus the configured tolerance.\"",
                     "\"recommendedAction\":\"Arrange the missing quantity or approve an allocation change.\"");
 
+            HttpResponse<String> kotlinOrderSummary = get(client, baseUri.resolve("/kotlin-order-summary"));
+            assertThat(kotlinOrderSummary.statusCode()).isEqualTo(200);
+            assertJsonContentType(kotlinOrderSummary);
+            assertThat(kotlinOrderSummary.body()).contains(
+                    "\"rowCount\":3",
+                    "\"deliveredQuantity\"",
+                    "\"deliveryPercent\"",
+                    "\"status\":\"COMPLETE\"");
+
             String lowerThresholdYaml = yaml.replace("minimumDeliveryRatio: 0.8", "minimumDeliveryRatio: 0.4");
             assertThat(lowerThresholdYaml).contains("minimumDeliveryRatio: 0.4");
             assertChangedThreshold(client, lowerThresholdYaml);

@@ -119,6 +119,8 @@ Stop PostgreSQL with `docker compose -f examples/factory-demo/docker-compose.yml
 `factory-demo` has no `main`, scheduler, retry loop, or custom runner. 
 Helidon and picocli are supplied by the standard shell.
 
+`examples:external-provider` contains the Java supply-chain providers. `examples:kotlin-provider` is a separate Kotlin/JVM module containing `demo.kotlin.order-summary`, a PostgreSQL-backed aggregate provider that joins orders and deliveries to expose delivery status and percentage. It uses the `DataAccess` contract, resource tracking, and `ServiceLoader` registration, and is included in `factory-demo` without replacing the Java providers.
+
 ## Modules
 
 The platform is split into core modules (agnostic, framework-independent) and bricks (pluggable components that a solution squad wires in).
@@ -131,7 +133,8 @@ The platform is split into core modules (agnostic, framework-independent) and br
 | `bricks:heron-platform-host-helidon`    | brick   | Helidon SE 4.5.3 HTTP shell                                         | `core:heron-platform-spi`                                                                                                         |
 | `bricks:heron-platform-cli`             | brick   | picocli standard command-line bootstrap                             | `core:heron-platform-spi`, `core:heron-platform-runtime`                                                                          |
 | `examples:external-provider`            | example | Example external provider                                           | `core:heron-platform-spi`                                                                                                         |
-| `examples:factory-demo`                 | example | Example factory demo                                                | `core:heron-platform-runtime`, `bricks:heron-platform-cli`, `bricks:heron-platform-data-postgresql`, `examples:external-provider` |
+| `examples:kotlin-provider`              | example | Kotlin/JVM PostgreSQL-backed provider                               | `core:heron-platform-spi`                                                                                                         |
+| `examples:factory-demo`                 | example | Example factory demo                                                | `core:heron-platform-runtime`, `bricks:heron-platform-cli`, `bricks:heron-platform-data-postgresql`, `examples:external-provider`, `examples:kotlin-provider` |
 
 ## Boundaries
 
