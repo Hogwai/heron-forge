@@ -1,37 +1,39 @@
 package dev.hogwai.platform.examples.provider.exceptions;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-import dev.hogwai.platform.spi.data.access.DataAccess;
-import dev.hogwai.platform.spi.data.access.DataAccessFactory;
-import dev.hogwai.platform.spi.data.access.QueryContext;
-import dev.hogwai.platform.spi.data.access.QueryRequest;
 import dev.hogwai.platform.examples.provider.model.SupplyChainData;
 import dev.hogwai.platform.examples.provider.model.SupplyChainSchemas;
 import dev.hogwai.platform.spi.CapabilityKind;
-import dev.hogwai.platform.spi.PlatformErrorCode;
-import dev.hogwai.platform.spi.PlatformException;
 import dev.hogwai.platform.spi.PortId;
 import dev.hogwai.platform.spi.ProviderVersion;
 import dev.hogwai.platform.spi.SpiMajor;
+import dev.hogwai.platform.spi.data.DataSetLimits;
 import dev.hogwai.platform.spi.data.FieldId;
 import dev.hogwai.platform.spi.data.MaterializedDataSet;
 import dev.hogwai.platform.spi.data.Schema;
 import dev.hogwai.platform.spi.data.SchemaRecord;
+import dev.hogwai.platform.spi.data.access.DataAccess;
+import dev.hogwai.platform.spi.data.access.DataAccessFactory;
+import dev.hogwai.platform.spi.data.access.QueryContext;
+import dev.hogwai.platform.spi.data.access.QueryRequest;
+import dev.hogwai.platform.spi.error.PlatformErrorCode;
+import dev.hogwai.platform.spi.error.PlatformException;
 import dev.hogwai.platform.spi.execution.CancellationToken;
 import dev.hogwai.platform.spi.execution.ExecutionContext;
 import dev.hogwai.platform.spi.provider.BuildContext;
 import dev.hogwai.platform.spi.provider.CapabilityInputs;
 import dev.hogwai.platform.spi.provider.CapabilityInstance;
 import dev.hogwai.platform.spi.provider.ProviderDescriptor;
-import java.time.Clock;
-import java.time.Instant;
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class SupplyChainExceptionDetectorFactoryTest {
 
@@ -40,6 +42,34 @@ class SupplyChainExceptionDetectorFactoryTest {
         @Override
         public <T> List<T> query(QueryRequest<T> request, QueryContext context) {
             return List.of();
+        }
+        @Override
+        public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
+                Schema schema, Map<String, String> columnByField) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
+                Map<String, ?> parameters, Schema schema, Map<String, String> columnByField) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
+                Schema schema, Map<String, String> columnByField, DataSetLimits limits) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
+                Map<String, ?> parameters, Schema schema, Map<String, String> columnByField, DataSetLimits limits) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public int execute(QueryContext context, String operation, String sql, Map<String, ?> parameters) {
+            throw new UnsupportedOperationException();
         }
 
         @Override
@@ -79,14 +109,14 @@ class SupplyChainExceptionDetectorFactoryTest {
                 new PortId("orders"), orders,
                 new PortId("deliveries"), deliveries)), context());
 
-        assertThat(result.records()).extracting(record -> record.value(new FieldId("exceptionType")))
+        assertThat(result.records()).extracting(schemaRecord -> schemaRecord.value(new FieldId("exceptionType")))
                 .contains("LATE_DELIVERY", "INSUFFICIENT_QUANTITY", "PRIORITY_RISK");
-        assertThat(result.records()).allSatisfy(record -> {
-            assertThat(record.value(new FieldId("orderId"))).isNotNull();
-            assertThat(record.value(new FieldId("reason"))).asString().isNotBlank();
-            assertThat(record.value(new FieldId("recommendedAction"))).asString().isNotBlank();
+        assertThat(result.records()).allSatisfy(schemaRecord -> {
+            assertThat(schemaRecord.value(new FieldId("orderId"))).isNotNull();
+            assertThat(schemaRecord.value(new FieldId("reason"))).asString().isNotBlank();
+            assertThat(schemaRecord.value(new FieldId("recommendedAction"))).asString().isNotBlank();
         });
-        assertThat(result.records()).noneMatch(record -> "OK-001".equals(record.value(new FieldId("orderId"))));
+        assertThat(result.records()).noneMatch(schemaRecord -> "OK-001".equals(schemaRecord.value(new FieldId("orderId"))));
     }
 
     @Test

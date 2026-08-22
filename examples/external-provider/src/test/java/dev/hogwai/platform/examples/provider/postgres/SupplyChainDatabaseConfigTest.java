@@ -1,18 +1,19 @@
 package dev.hogwai.platform.examples.provider.postgres;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import dev.hogwai.platform.spi.data.access.DataAccessConfiguration;
+import org.junit.jupiter.api.Test;
+
 import java.util.List;
 import java.util.Map;
-import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class SupplyChainDatabaseConfigTest {
 
     @Test
     void exposesTheDatabaseConfigurationSchema() {
         assertThat(SupplyChainDatabaseConfig.databaseConfigSchema().allowedFields())
-                .containsExactlyInAnyOrder("url", "user", "password");
+                .containsExactlyInAnyOrder("url", "user", "password", "maxRows", "maxBytes");
         assertThat(SupplyChainDatabaseConfig.databaseConfigSchema().requiredFields()).isEmpty();
     }
 

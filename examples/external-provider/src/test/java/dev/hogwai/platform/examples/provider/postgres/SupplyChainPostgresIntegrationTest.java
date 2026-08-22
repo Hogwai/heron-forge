@@ -1,33 +1,39 @@
 package dev.hogwai.platform.examples.provider.postgres;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
-import dev.hogwai.platform.spi.data.access.DataAccess;
-import dev.hogwai.platform.spi.data.access.DataAccessFactory;
-import dev.hogwai.platform.spi.data.access.DataAccessConfiguration;
-import dev.hogwai.platform.spi.data.access.QueryContext;
-import dev.hogwai.platform.spi.data.access.QueryRequest;
-import dev.hogwai.platform.data.postgres.PostgresJdbiDataAccessFactory;
-import dev.hogwai.platform.examples.provider.deliveries.DemoDeliveriesProviderFactory;
-import dev.hogwai.platform.examples.provider.exceptions.SupplyChainExceptionDetectorFactory;
-import dev.hogwai.platform.examples.provider.orders.DemoOrdersProviderFactory;
-import dev.hogwai.platform.spi.PlatformException;
-import dev.hogwai.platform.spi.PortId;
-import dev.hogwai.platform.spi.data.FieldId;
-import dev.hogwai.platform.spi.data.MaterializedDataSet;
-import dev.hogwai.platform.spi.execution.ExecutionContext;
-import dev.hogwai.platform.spi.provider.BuildContext;
-import dev.hogwai.platform.spi.provider.CapabilityInputs;
-import dev.hogwai.platform.spi.provider.CapabilityInstance;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import dev.hogwai.platform.data.postgres.PostgresJdbiDataAccessFactory;
+import dev.hogwai.platform.examples.provider.deliveries.DemoDeliveriesProviderFactory;
+import dev.hogwai.platform.examples.provider.exceptions.SupplyChainExceptionDetectorFactory;
+import dev.hogwai.platform.examples.provider.orders.DemoOrdersProviderFactory;
+import dev.hogwai.platform.examples.provider.support.FakeDataAccessSupport;
+import dev.hogwai.platform.spi.Diagnostic;
+import dev.hogwai.platform.spi.PortId;
+import dev.hogwai.platform.spi.data.DataSetLimits;
+import dev.hogwai.platform.spi.data.FieldId;
+import dev.hogwai.platform.spi.data.MaterializedDataSet;
+import dev.hogwai.platform.spi.data.Schema;
+import dev.hogwai.platform.spi.data.SchemaRecord;
+import dev.hogwai.platform.spi.data.access.DataAccess;
+import dev.hogwai.platform.spi.data.access.DataAccessConfiguration;
+import dev.hogwai.platform.spi.data.access.DataAccessFactory;
+import dev.hogwai.platform.spi.data.access.QueryContext;
+import dev.hogwai.platform.spi.data.access.QueryRequest;
+import dev.hogwai.platform.spi.error.PlatformException;
+import dev.hogwai.platform.spi.execution.ExecutionContext;
+import dev.hogwai.platform.spi.provider.BuildContext;
+import dev.hogwai.platform.spi.provider.CapabilityInputs;
+import dev.hogwai.platform.spi.provider.CapabilityInstance;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /** Real PostgreSQL integration test, opt-in because it requires Compose. */
 @EnabledIfEnvironmentVariable(named = "RUN_POSTGRES_TESTS", matches = "true")
@@ -49,9 +55,9 @@ class SupplyChainPostgresIntegrationTest {
 
             assertThat(orders.rowCount()).isEqualTo(3);
             assertThat(deliveries.rowCount()).isEqualTo(5);
-            assertThat(orders.records()).extracting(record -> record.value(new FieldId("orderId")))
+            assertThat(orders.records()).extracting(schemaRecord -> schemaRecord.value(new FieldId("orderId")))
                     .containsExactly("LATE-001", "OK-001", "SHORT-001");
-            assertThat(deliveries.records()).extracting(record -> record.value(new FieldId("orderId")))
+            assertThat(deliveries.records()).extracting(schemaRecord -> schemaRecord.value(new FieldId("orderId")))
                     .contains("LATE-001", "SHORT-001", "OK-001");
 
             CapabilityInstance detector = new SupplyChainExceptionDetectorFactory().create(Map.of(
@@ -62,10 +68,10 @@ class SupplyChainPostgresIntegrationTest {
                     new PortId("orders"), orders,
                     new PortId("deliveries"), deliveries)), context());
 
-            assertThat(exceptions.records()).extracting(record -> record.value(new FieldId("exceptionType")))
+            assertThat(exceptions.records()).extracting(schemaRecord -> schemaRecord.value(new FieldId("exceptionType")))
                     .contains("LATE_DELIVERY", "INSUFFICIENT_QUANTITY", "PRIORITY_RISK");
-            assertThat(exceptions.records()).noneMatch(record -> "OK-001"
-                    .equals(record.value(new FieldId("orderId"))));
+            assertThat(exceptions.records()).noneMatch(schemaRecord -> "OK-001"
+                    .equals(schemaRecord.value(new FieldId("orderId"))));
         } finally {
             closeInReverseOrder(resources);
         }
@@ -83,8 +89,8 @@ class SupplyChainPostgresIntegrationTest {
             closeInReverseOrder(resources);
         }
         assertThat(resources).hasSize(1);
-        assertThat(resources.get(0)).isInstanceOf(TrackingDataAccess.class);
-        assertThat(((TrackingDataAccess) resources.get(0)).closed()).isTrue();
+        assertThat(resources.getFirst()).isInstanceOf(TrackingDataAccess.class);
+        assertThat(((TrackingDataAccess) resources.getFirst()).closed()).isTrue();
     }
 
     @Test
@@ -95,7 +101,7 @@ class SupplyChainPostgresIntegrationTest {
                 .satisfies(failure -> {
                     PlatformException exception = (PlatformException) failure;
                     assertThat(exception.getMessage()).doesNotContain("probe-password", "127.0.0.1");
-                    assertThat(exception.diagnostics()).extracting(diagnostic -> diagnostic.message())
+                    assertThat(exception.diagnostics()).extracting(Diagnostic::message)
                             .allSatisfy(message -> assertThat(message).doesNotContain("probe-password", "127.0.0.1"));
                 });
     }
@@ -116,6 +122,39 @@ class SupplyChainPostgresIntegrationTest {
         @Override
         public <T> List<T> query(QueryRequest<T> request, QueryContext context) {
             return delegate.query(request, context);
+        }
+        @Override
+        public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
+                Schema schema, Map<String, String> columnByField) {
+            return queryToDataSet(context, operation, sql, Map.of(), schema, columnByField,
+                    FakeDataAccessSupport.DEFAULT_LIMITS);
+        }
+
+        @Override
+        public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
+                Schema schema, Map<String, String> columnByField, DataSetLimits limits) {
+            return queryToDataSet(context, operation, sql, Map.of(), schema, columnByField, limits);
+        }
+
+        @Override
+        public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
+                Map<String, ?> parameters, Schema schema, Map<String, String> columnByField) {
+            return queryToDataSet(context, operation, sql, parameters, schema, columnByField,
+                    FakeDataAccessSupport.DEFAULT_LIMITS);
+        }
+
+        @Override
+        public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
+                Map<String, ?> parameters, Schema schema, Map<String, String> columnByField, DataSetLimits limits) {
+            QueryRequest<SchemaRecord> request = new QueryRequest<>(operation, sql, parameters,
+                    row -> FakeDataAccessSupport.toRecord(row, schema, columnByField));
+            List<SchemaRecord> records = query(request, context);
+            return FakeDataAccessSupport.dataSet(schema, operation, records, limits);
+        }
+
+        @Override
+        public int execute(QueryContext context, String operation, String sql, Map<String, ?> parameters) {
+            throw new UnsupportedOperationException();
         }
 
         @Override

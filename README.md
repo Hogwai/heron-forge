@@ -72,8 +72,8 @@ acceptance checks, build the shell distribution, and start the application:
 ```bash
 docker compose -f examples/factory-demo/docker-compose.yml up -d
 RUN_POSTGRES_TESTS=true ./gradlew :examples:factory-demo:test
-./gradlew :heron-platform-cli:installDist
-./heron-platform-cli/build/install/heron-platform-cli/bin/heron start \
+./gradlew :examples:factory-demo:installDist
+./examples/factory-demo/build/install/factory-demo/bin/heron start \
   --config examples/factory-demo/src/main/resources/supply-chain.yaml
 ```
 
@@ -88,35 +88,49 @@ and picocli are supplied by the standard shell.
 
 ## Modules
 
-| Module                              | Description                                         | Depends on                                                                   |
-|-------------------------------------|-----------------------------------------------------|------------------------------------------------------------------------------|
-| `heron-platform-spi`                | Service provider interfaces and data access contract | N/A                                                                         |
-| `heron-platform-data`               | Jdbi core, PostgreSQL plugin/driver and data implementation | `heron-platform-spi`                                                    |
-| `heron-platform-runtime`            | Runtime implementation                              | `heron-platform-spi`, `heron-platform-host-api`, `heron-platform-data`      |
-| `heron-platform-host-api`           | Framework-independent host contract                 | N/A                                                                          |
-| `heron-platform-host-helidon`       | Helidon SE 4.5.3 HTTP shell                         | `heron-platform-host-api`                                                    |
-| `heron-platform-cli`                | picocli standard command-line bootstrap             | `heron-platform-runtime`, `heron-platform-host-helidon`                     |
-| `examples:external-provider`        | Example external provider                           | `heron-platform-spi`                                                        |
-| `examples:factory-demo`             | Example factory demo                                | `heron-platform-runtime`, `heron-platform-cli`, `heron-platform-host-helidon`, `examples:external-provider` |
+The platform is split into **core** modules (agnostic, framework-independent)
+and **bricks** (pluggable components that a solution squad wires in).
+
+| Module                              | Kind   | Description                                         | Depends on                                                                   |
+|-------------------------------------|--------|-----------------------------------------------------|------------------------------------------------------------------------------|
+| `core:heron-platform-spi`           | core   | Service provider interfaces, host contract and data access contract | N/A                                                              |
+| `core:heron-platform-runtime`       | core   | Runtime implementation                              | `core:heron-platform-spi`                                                   |
+| `bricks:heron-platform-data-postgresql` | brick | Jdbi core, PostgreSQL plugin/driver and data implementation | `core:heron-platform-spi`                                            |
+| `bricks:heron-platform-host-helidon`    | brick | Helidon SE 4.5.3 HTTP shell                         | `core:heron-platform-spi`                                                    |
+| `bricks:heron-platform-cli`         | brick  | picocli standard command-line bootstrap             | `core:heron-platform-runtime`, `bricks:heron-platform-host-helidon`         |
+| `examples:external-provider`        | example| Example external provider                           | `core:heron-platform-spi`                                                   |
+| `examples:factory-demo`             | example| Example factory demo                                | `core:heron-platform-runtime`, `bricks:heron-platform-cli`, `bricks:heron-platform-data-postgresql`, `examples:external-provider` |
 
 ## Boundaries
 
-- The core (`spi`, `runtime`, `host-api`) is framework-independent.
-- The standard shell (`host-helidon`, `cli`) owns HTTP and CLI framework dependencies.
-- The data contract lives in the framework-independent `heron-platform-spi`.
-  `heron-platform-data` is the single data module: its internal Jdbi and
-  PostgreSQL components provide the generic implementation, plugin and driver.
+- The core (`spi`, `runtime`) is framework-independent: it knows neither
+  Helidon, nor picocli, nor PostgreSQL.
+- The bricks (`data-postgresql`, `host-helidon`, `cli`) are pluggable: a
+  solution squad picks its database brick, its HTTP brick and its launcher.
+- The data contract lives in the framework-independent `core:heron-platform-spi`.
+  `bricks:heron-platform-data-postgresql` is the PostgreSQL brick: its internal
+  Jdbi and PostgreSQL components provide the generic implementation, plugin and
+  driver, and it is discovered by the runtime through `ServiceLoader`.
+- The launcher (`bricks:heron-platform-cli`) is host-agnostic: it discovers the
+  `HostAdapter` implementation through `ServiceLoader`. `bricks:heron-platform-host-helidon`
+  is the HTTP brick that a solution squad wires in; another host brick can be
+  plugged in without touching the launcher.
 
-The runtime explicitly wires `PostgresJdbiDataAccessFactory` as its default
-PostgreSQL implementation and supplies it to providers through `BuildContext`.
-A provider opens a data client during creation, registers it in the resource
-tracker, and receives a fresh database handle for each query. The generic Jdbi
-factory installs no plugins unless they are supplied explicitly; the PostgreSQL
-factory installs `PostgresPlugin`. Both factories run a `SELECT 1` startup probe
-and sanitize startup and query failures. The current demonstration has no
-connection pool. Jdbi applies a per-query timeout from the execution deadline; a
-cancellation signal cannot actively interrupt a server call that is already
-blocked without a separate statement-cancellation mechanism. PostgreSQL
+The runtime discovers the `DataAccessFactory` implementation on the classpath
+via `ServiceLoader` and supplies it to providers through `BuildContext`. A
+configuration that never touches data access loads even without a data brick;
+a provider that opens a data client fails with `DATA_ACCESS_UNAVAILABLE` when
+no brick is present. The launcher fails with a clear `HostException` when no
+host brick is on the classpath. A provider opens a data client during creation,
+registers it in the resource tracker, and receives a fresh database handle for
+each query. The generic Jdbi factory installs no plugins unless they are
+supplied explicitly; the PostgreSQL factory installs `PostgresPlugin`. Both
+factories run a `SELECT 1` startup probe and sanitize startup and query
+failures. The current demonstration has no connection pool. Jdbi applies a
+per-query timeout from the execution deadline; a cancellation signal cannot
+actively interrupt a server call that is already blocked without a separate
+statement-cancellation
+mechanism. PostgreSQL
 integration tests are opt-in with `RUN_POSTGRES_TESTS=true`.
 
 ## Versions & tools

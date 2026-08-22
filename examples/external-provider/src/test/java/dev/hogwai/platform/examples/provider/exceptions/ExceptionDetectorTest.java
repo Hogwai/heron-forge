@@ -1,21 +1,22 @@
 package dev.hogwai.platform.examples.provider.exceptions;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import dev.hogwai.platform.spi.PortId;
 import dev.hogwai.platform.examples.provider.model.SupplyChainData;
 import dev.hogwai.platform.examples.provider.model.SupplyChainSchemas;
+import dev.hogwai.platform.spi.PortId;
 import dev.hogwai.platform.spi.data.FieldId;
 import dev.hogwai.platform.spi.data.MaterializedDataSet;
 import dev.hogwai.platform.spi.execution.ExecutionContext;
 import dev.hogwai.platform.spi.provider.CapabilityInputs;
+import org.junit.jupiter.api.Test;
+
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
-import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class ExceptionDetectorTest {
 
@@ -66,7 +67,7 @@ class ExceptionDetectorTest {
         return detector.execute(CapabilityInputs.of(Map.of(
                 new PortId("orders"), orders,
                 new PortId("deliveries"), deliveries)), context()).records().stream()
-                .map(record -> (String) record.value(new FieldId("exceptionType")))
+                .map(schemaRecord -> (String) schemaRecord.value(new FieldId("exceptionType")))
                 .toList();
     }
 

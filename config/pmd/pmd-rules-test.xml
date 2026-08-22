@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<ruleset name="Heron Forge PMD test rules"
+    xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+
+    <description>
+        PMD rules for test sources. CyclomaticComplexity is intentionally
+        excluded because tests frequently exercise many branches and the metric
+        adds noise without guarding production quality.
+    </description>
+
+    <rule ref="category/java/design.xml/NPathComplexity">
+        <properties>
+            <property name="reportLevel" value="300"/>
+        </properties>
+    </rule>
+</ruleset>

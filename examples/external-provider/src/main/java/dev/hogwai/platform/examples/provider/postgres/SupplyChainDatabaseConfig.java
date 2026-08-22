@@ -1,10 +1,12 @@
 package dev.hogwai.platform.examples.provider.postgres;
 
-import dev.hogwai.platform.spi.data.access.DataAccessConfiguration;
 import dev.hogwai.platform.spi.Diagnostic;
-import dev.hogwai.platform.spi.PlatformErrorCode;
-import dev.hogwai.platform.spi.Severity;
+import dev.hogwai.platform.spi.data.DataSetLimits;
+import dev.hogwai.platform.spi.data.access.DataAccessConfiguration;
+import dev.hogwai.platform.spi.error.PlatformErrorCode;
+import dev.hogwai.platform.spi.error.Severity;
 import dev.hogwai.platform.spi.provider.ConfigurationSchema;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -13,12 +15,20 @@ import java.util.Set;
 /** PostgreSQL configuration shared by the source providers. */
 @SuppressWarnings("PMD.CyclomaticComplexity")
 public final class SupplyChainDatabaseConfig {
+    private SupplyChainDatabaseConfig() {
+        /* This utility class should not be instantiated */
+    }
 
-    private static final Set<String> DATABASE_FIELDS = Set.of("url", "user", "password");
+    public static final String PASSWORD = "password";
+    public static final String MAX_ROWS = "maxRows";
+    public static final String MAX_BYTES = "maxBytes";
+    private static final Set<String> DATABASE_FIELDS = Set.of("url", "user", PASSWORD, MAX_ROWS, MAX_BYTES);
     private static final ConfigurationSchema SCHEMA = new ConfigurationSchema(DATABASE_FIELDS, Set.of(),
             Map.of("url", ConfigurationSchema.ScalarKind.STRING,
                     "user", ConfigurationSchema.ScalarKind.STRING,
-                    "password", ConfigurationSchema.ScalarKind.STRING), Map.of());
+                    PASSWORD, ConfigurationSchema.ScalarKind.STRING,
+                    MAX_ROWS, ConfigurationSchema.ScalarKind.INTEGER,
+                    MAX_BYTES, ConfigurationSchema.ScalarKind.INTEGER), Map.of());
 
     public static ConfigurationSchema databaseConfigSchema() {
         return SCHEMA;
@@ -31,10 +41,16 @@ public final class SupplyChainDatabaseConfig {
         }
         List<Diagnostic> diagnostics = new ArrayList<>();
         for (Map.Entry<String, Object> entry : rawConfig.entrySet()) {
-            if (!DATABASE_FIELDS.contains(entry.getKey())) {
+            String key = entry.getKey();
+            if (!DATABASE_FIELDS.contains(key)) {
                 diagnostics.add(databaseDiagnostic("/config/<key>", "unknown database configuration field"));
+            } else if (key.equals(MAX_ROWS) || key.equals(MAX_BYTES)) {
+                if (!(entry.getValue() instanceof Number value) || value.longValue() <= 0) {
+                    diagnostics.add(databaseDiagnostic("/config/" + key,
+                            "dataset limit must be a positive integer"));
+                }
             } else if (!(entry.getValue() instanceof String value) || value.isBlank()) {
-                diagnostics.add(databaseDiagnostic("/config/" + entry.getKey(),
+                diagnostics.add(databaseDiagnostic("/config/" + key,
                         "database configuration field must be a non-blank string"));
             }
         }
@@ -46,7 +62,21 @@ public final class SupplyChainDatabaseConfig {
         return new DataAccessConfiguration(
                 value(config, "url", "HERON_DB_URL", "jdbc:postgresql://localhost:5432/heron_demo"),
                 value(config, "user", "HERON_DB_USER", "heron"),
-                value(config, "password", "HERON_DB_PASSWORD", "heron"));
+                value(config, PASSWORD, "HERON_DB_PASSWORD", "heron"));
+    }
+
+    /** Returns the dataset limits from the configuration, or the defaults. */
+    public static DataSetLimits limits(Map<String, Object> rawConfig) {
+        Map<String, Object> config = rawConfig == null ? Map.of() : rawConfig;
+        return new DataSetLimits(longValue(config, MAX_ROWS, 1_000), longValue(config, MAX_BYTES, 1_000_000));
+    }
+
+    private static long longValue(Map<String, Object> config, String field, long fallback) {
+        Object configured = config.get(field);
+        if (configured instanceof Number number && number.longValue() > 0) {
+            return number.longValue();
+        }
+        return fallback;
     }
 
     private static String value(Map<String, Object> config, String field, String environment, String fallback) {

@@ -3,10 +3,10 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":heron-platform-spi"))
-    testImplementation(project(":heron-platform-data"))
+    implementation(project(":core:heron-platform-spi"))
+    testImplementation(project(":bricks:heron-platform-data-postgresql"))
 }
 
-tasks.named<org.gradle.api.tasks.testing.Test>("test") {
+tasks.named<Test>("test") {
     inputs.property("RUN_POSTGRES_TESTS", providers.environmentVariable("RUN_POSTGRES_TESTS").orElse(""))
 }

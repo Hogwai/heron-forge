@@ -1,8 +1,8 @@
 package dev.hogwai.platform.examples.provider.exceptions;
 
 import dev.hogwai.platform.spi.Diagnostic;
-import dev.hogwai.platform.spi.PlatformErrorCode;
-import dev.hogwai.platform.spi.Severity;
+import dev.hogwai.platform.spi.error.PlatformErrorCode;
+import dev.hogwai.platform.spi.error.Severity;
 import dev.hogwai.platform.spi.provider.ConfigurationSchema;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -24,6 +24,7 @@ final class DetectorConfig {
             Map.of(LATE_TOLERANCE, ConfigurationSchema.ScalarKind.INTEGER,
                     DELIVERY_RATIO, ConfigurationSchema.ScalarKind.NUMBER,
                     PRIORITY_RISK, ConfigurationSchema.ScalarKind.INTEGER), Map.of());
+    public static final String CONFIG = "/config/";
 
     private final long lateToleranceDays;
     private final BigDecimal minimumDeliveryRatio;
@@ -73,36 +74,36 @@ final class DetectorConfig {
             java.util.function.LongPredicate predicate) {
         Object value = config.get(field);
         BigDecimal decimal = value instanceof Number number ? decimalOrNull(number) : null;
-        if (decimal == null || !isIntegral(decimal)
+        if (decimal == null || isNotIntegral(decimal)
                 || decimal.compareTo(BigDecimal.valueOf(Long.MIN_VALUE)) < 0
                 || decimal.compareTo(BigDecimal.valueOf(Long.MAX_VALUE)) > 0
                 || !predicate.test(decimal.longValue())) {
-            diagnostics.add(error("/config/" + field, "configuration field must be a valid non-negative integer"));
+            diagnostics.add(error(CONFIG + field, "configuration field must be a valid non-negative integer"));
         }
     }
 
     private static void validateRatio(Map<String, Object> config, List<Diagnostic> diagnostics) {
         Object value = config.get(DELIVERY_RATIO);
         if (!(value instanceof Number number)) {
-            diagnostics.add(error("/config/" + DELIVERY_RATIO,
+            diagnostics.add(error(CONFIG + DELIVERY_RATIO,
                     "configuration field must be a number between 0 and 1"));
             return;
         }
         BigDecimal ratio = decimalOrNull(number);
         if (ratio == null || ratio.signum() <= 0 || ratio.compareTo(BigDecimal.ONE) > 0) {
-            diagnostics.add(error("/config/" + DELIVERY_RATIO,
+            diagnostics.add(error(CONFIG + DELIVERY_RATIO,
                     "configuration field must be greater than 0 and at most 1"));
         }
     }
 
-    private static boolean isIntegral(BigDecimal decimal) {
-        return decimal.stripTrailingZeros().scale() <= 0;
+    private static boolean isNotIntegral(BigDecimal decimal) {
+        return decimal.stripTrailingZeros().scale() > 0;
     }
 
     private static long numberAsLong(Object value) {
         Number number = (Number) value;
         BigDecimal decimal = numberAsDecimal(number);
-        if (!isIntegral(decimal) || decimal.compareTo(BigDecimal.valueOf(Long.MIN_VALUE)) < 0
+        if (isNotIntegral(decimal) || decimal.compareTo(BigDecimal.valueOf(Long.MIN_VALUE)) < 0
                 || decimal.compareTo(BigDecimal.valueOf(Long.MAX_VALUE)) > 0) {
             throw new IllegalArgumentException("expected integral threshold");
         }
@@ -119,7 +120,7 @@ final class DetectorConfig {
     private static BigDecimal decimalOrNull(Number number) {
         try {
             return numberAsDecimal(number);
-        } catch (NumberFormatException exception) {
+        } catch (NumberFormatException _) {
             return null;
         }
     }

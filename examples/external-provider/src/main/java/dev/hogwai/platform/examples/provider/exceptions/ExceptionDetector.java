@@ -3,15 +3,16 @@ package dev.hogwai.platform.examples.provider.exceptions;
 import dev.hogwai.platform.examples.provider.model.SupplyChainData;
 import dev.hogwai.platform.examples.provider.model.SupplyChainSchemas;
 import dev.hogwai.platform.examples.provider.support.ExecutionSupport;
-import dev.hogwai.platform.spi.PlatformErrorCode;
-import dev.hogwai.platform.spi.PlatformException;
 import dev.hogwai.platform.spi.PortId;
 import dev.hogwai.platform.spi.data.MaterializedDataSet;
 import dev.hogwai.platform.spi.data.Schema;
 import dev.hogwai.platform.spi.data.SchemaRecord;
+import dev.hogwai.platform.spi.error.PlatformErrorCode;
+import dev.hogwai.platform.spi.error.PlatformException;
 import dev.hogwai.platform.spi.execution.ExecutionContext;
 import dev.hogwai.platform.spi.provider.CapabilityInputs;
 import dev.hogwai.platform.spi.provider.CapabilityInstance;
+
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.DateTimeException;
@@ -27,6 +28,7 @@ import java.util.Objects;
 @SuppressWarnings("PMD.CyclomaticComplexity")
 final class ExceptionDetector implements CapabilityInstance {
 
+    public static final String ORDER_ID = "orderId";
     private final DetectorConfig config;
     private final Clock clock;
 
@@ -55,7 +57,7 @@ final class ExceptionDetector implements CapabilityInstance {
         Map<String, List<SchemaRecord>> grouped = new LinkedHashMap<>();
         for (SchemaRecord delivery : deliveries) {
             ExecutionSupport.checkExecution(context);
-            grouped.computeIfAbsent(SupplyChainData.string(delivery, "orderId"), ignored -> new ArrayList<>())
+            grouped.computeIfAbsent(SupplyChainData.string(delivery, ORDER_ID), ignored -> new ArrayList<>())
                     .add(delivery);
         }
         return grouped;
@@ -70,7 +72,7 @@ final class ExceptionDetector implements CapabilityInstance {
 
     private void evaluateOrder(SchemaRecord order, Map<String, List<SchemaRecord>> deliveries,
             List<SchemaRecord> exceptions, Instant now) {
-        String orderId = SupplyChainData.string(order, "orderId");
+        String orderId = SupplyChainData.string(order, ORDER_ID);
         long ordered = SupplyChainData.longValue(order, "orderedQuantity");
         Instant requiredAt = SupplyChainData.instant(order, "requiredAt");
         List<SchemaRecord> orderDeliveries = deliveries.getOrDefault(orderId, List.of());
@@ -109,14 +111,14 @@ final class ExceptionDetector implements CapabilityInstance {
         }
         try {
             return !requiredAt.isAfter(now.plus(config.priorityRiskDays(), ChronoUnit.DAYS));
-        } catch (ArithmeticException | DateTimeException exception) {
+        } catch (ArithmeticException | DateTimeException _) {
             return true;
         }
     }
 
     private SchemaRecord exception(String orderId, String type, String severity, String reason, String action) {
-        return SupplyChainData.schemaRecord(SupplyChainSchemas.exceptions(), Map.<String, Object>of(
-                "orderId", orderId, "exceptionType", type, "severity", severity,
+        return SupplyChainData.schemaRecord(SupplyChainSchemas.exceptions(), Map.of(
+                ORDER_ID, orderId, "exceptionType", type, "severity", severity,
                 "reason", reason, "recommendedAction", action));
     }
 }

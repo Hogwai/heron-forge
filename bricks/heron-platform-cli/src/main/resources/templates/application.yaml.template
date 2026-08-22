@@ -1,0 +1,12 @@
+apiVersion: heron.dev/v1
+application: {{projectName}}
+capabilities:
+  - id: hello
+    provider:
+      id: {{basePackage}}.hello
+      version: 1.0.0
+endpoints:
+  - id: hello-api
+    method: GET
+    path: /hello
+    target: hello

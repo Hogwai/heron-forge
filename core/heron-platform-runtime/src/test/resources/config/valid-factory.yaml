@@ -1,0 +1,20 @@
+apiVersion: heron.dev/v1
+application: factory-demo
+capabilities:
+  - id: orders
+    provider:
+      id: acme
+      version: 1.2.3
+    config:
+      host: localhost
+      port: 8080
+      retries: 3
+      tags: [a, b]
+  - id: enrich
+    provider:
+      id: acme
+      version: 1.2.3
+    inputs:
+      in:
+        capability: orders
+        port: out

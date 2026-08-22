@@ -13,6 +13,7 @@ public final class SupplyChainSchemas {
     private static final Schema ORDERS = createOrders();
     private static final Schema DELIVERIES = createDeliveries();
     private static final Schema EXCEPTIONS = createExceptions();
+    public static final String ORDER_ID = "orderId";
 
     private SupplyChainSchemas() {
     }
@@ -28,7 +29,7 @@ public final class SupplyChainSchemas {
 
     private static Schema createOrders() {
         return new Schema("supply-chain.orders", 1, List.of(
-                field("orderId", new FieldType.StringType()),
+                field(ORDER_ID, new FieldType.StringType()),
                 field("orderedQuantity", new FieldType.Int64Type()),
                 field("requiredAt", new FieldType.InstantType()),
                 field("priority", new FieldType.StringType())), false);
@@ -45,7 +46,7 @@ public final class SupplyChainSchemas {
 
     private static Schema createDeliveries() {
         return new Schema("supply-chain.deliveries", 1, List.of(
-                field("orderId", new FieldType.StringType()),
+                field(ORDER_ID, new FieldType.StringType()),
                 field("deliveredQuantity", new FieldType.Int64Type()),
                 field("deliveredAt", new FieldType.InstantType())), false);
     }
@@ -61,7 +62,7 @@ public final class SupplyChainSchemas {
 
     private static Schema createExceptions() {
         return new Schema("supply-chain.exceptions", 1, List.of(
-                field("orderId", new FieldType.StringType()),
+                field(ORDER_ID, new FieldType.StringType()),
                 field("exceptionType", new FieldType.StringType()),
                 field("severity", new FieldType.StringType()),
                 field("reason", new FieldType.StringType()),

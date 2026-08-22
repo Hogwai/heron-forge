@@ -24,11 +24,10 @@ dependencyResolutionManagement {
 
 rootProject.name = "heron-forge"
 
-include("heron-platform-spi")
-include("heron-platform-runtime")
-include("heron-platform-host-api")
-include("heron-platform-host-helidon")
-include("heron-platform-cli")
-include("heron-platform-data")
+include("core:heron-platform-spi")
+include("core:heron-platform-runtime")
+include("bricks:heron-platform-data-postgresql")
+include("bricks:heron-platform-host-helidon")
+include("bricks:heron-platform-cli")
 include("examples:external-provider")
 include("examples:factory-demo")

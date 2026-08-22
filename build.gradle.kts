@@ -1,12 +1,3 @@
-import org.gradle.api.plugins.JavaPluginExtension
-import org.gradle.api.plugins.quality.CheckstyleExtension
-import org.gradle.api.plugins.quality.PmdExtension
-import org.gradle.api.tasks.compile.JavaCompile
-import org.gradle.api.tasks.javadoc.Javadoc
-import org.gradle.api.tasks.testing.Test
-import org.gradle.testing.jacoco.plugins.JacocoPluginExtension
-import org.gradle.testing.jacoco.tasks.JacocoReport
-
 // Revapi Gradle integration: the `org.revapi.revapi-gradle-plugin` embeds
 // `org.revapi:revapi-java:0.19.1` on its own classpath and exposes no
 // extension to select the analyzer version. We therefore add the analyzer to
@@ -89,6 +80,12 @@ subprojects {
         isConsoleOutput = true
     }
 
+    // Test sources use a dedicated ruleset that excludes CyclomaticComplexity,
+    // which adds noise on tests without guarding production quality.
+    tasks.named<Pmd>("pmdTest") {
+        ruleSetFiles = files("${rootDir}/config/pmd/pmd-rules-test.xml")
+    }
+
     configure<JacocoPluginExtension> {
         toolVersion = jacocoVersion
     }
@@ -108,5 +105,67 @@ subprojects {
     // `check` must include tests, static analysis and coverage reporting.
     tasks.named("check") {
         dependsOn(tasks.named("jacocoTestReport"))
+    }
+}
+
+tasks.register("createApp") {
+    group = "heron"
+    description = "Scaffold a new Heron application project"
+    val projectName = providers.gradleProperty("name").orElse("my-app")
+    val basePackage = providers.gradleProperty("package")
+    doLast {
+        val name = projectName.get()
+        require(name.isNotBlank()) { "project name must not be blank" }
+        require(!name.contains("/") && !name.contains("\\") && name != "." && name != "..") {
+            "project name must be a simple directory name"
+        }
+        val pkg = if (basePackage.isPresent && basePackage.get().isNotBlank()) {
+            basePackage.get()
+        } else {
+            name.lowercase(java.util.Locale.ROOT).replace("[^a-z0-9]".toRegex(), "").ifEmpty { "app" }
+        }
+        val target = rootProject.layout.projectDirectory.dir(name).asFile.toPath()
+        require(!java.nio.file.Files.exists(target) || java.nio.file.Files.list(target).findAny().isEmpty) {
+            "target directory '$name' already exists and is not empty"
+        }
+        java.nio.file.Files.createDirectories(target)
+        val propsFile = rootProject.file("bricks/heron-platform-cli/src/main/resources/heron-platform.properties")
+        val props = java.util.Properties()
+        propsFile.inputStream().use { props.load(it) }
+        val model = mapOf(
+            "projectName" to name,
+            "basePackage" to pkg,
+            "platformVersion" to props.getProperty("platform.version"),
+            "slf4jVersion" to props.getProperty("slf4j.version")
+        )
+        val templatesDir = rootProject.file("bricks/heron-platform-cli/src/main/resources/templates")
+        for (templateName in listOf(
+            "settings.gradle.kts.template",
+            "build.gradle.kts.template",
+            "application.yaml.template",
+            "ProviderFactory.template",
+            "HelloProviderFactory.java.template"
+        )) {
+            val rendered = templatesDir.resolve(templateName).readText(Charsets.UTF_8).let { template ->
+                model.entries.fold(template) { acc, (k, v) -> acc.replace("{{$k}}", v) }
+            }
+            val relative = templateName.removeSuffix(".template")
+            val out = when (templateName) {
+                "HelloProviderFactory.java.template" ->
+                    target.resolve("src/main/java/${pkg.replace('.', '/')}/$relative")
+                "application.yaml.template" ->
+                    target.resolve("src/main/resources/$relative")
+                "ProviderFactory.template" ->
+                    target.resolve("src/main/resources/META-INF/services/dev.hogwai.platform.spi.provider.ProviderFactory")
+                else -> target.resolve(relative)
+            }
+            java.nio.file.Files.createDirectories(out.parent)
+            java.nio.file.Files.writeString(out, rendered, Charsets.UTF_8)
+        }
+        println("Created Heron project '$name'")
+        println("Next steps:")
+        println("  cd $name")
+        println("  ./gradlew installDist")
+        println("  ./build/install/$name/bin/$name start --config src/main/resources/application.yaml")
     }
 }

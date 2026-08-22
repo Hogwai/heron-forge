@@ -1,8 +1,8 @@
 package dev.hogwai.platform.examples.provider.support;
 
 import dev.hogwai.platform.spi.data.access.QueryContext;
-import dev.hogwai.platform.spi.PlatformErrorCode;
-import dev.hogwai.platform.spi.PlatformException;
+import dev.hogwai.platform.spi.error.PlatformErrorCode;
+import dev.hogwai.platform.spi.error.PlatformException;
 import dev.hogwai.platform.spi.execution.ExecutionContext;
 import java.time.Clock;
 import java.util.List;

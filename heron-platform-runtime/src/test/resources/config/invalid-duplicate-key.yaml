@@ -1,7 +1,0 @@
-apiVersion: platform.dev/v1alpha1
-kind: Application
-metadata:
-  name: factory-demo
-  name: duplicate
-spec:
-  capabilities: []

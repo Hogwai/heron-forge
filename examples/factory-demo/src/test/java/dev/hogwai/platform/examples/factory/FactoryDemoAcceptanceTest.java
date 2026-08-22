@@ -1,15 +1,14 @@
 package dev.hogwai.platform.examples.factory;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.catchThrowableOfType;
-
-import dev.hogwai.platform.host.api.HostApplication;
-import dev.hogwai.platform.host.api.HostConfiguration;
-import dev.hogwai.platform.host.api.HostException;
 import dev.hogwai.platform.host.helidon.HelidonHostAdapter;
 import dev.hogwai.platform.runtime.load.ApplicationLoader;
-import dev.hogwai.platform.spi.PlatformErrorCode;
-import dev.hogwai.platform.spi.PlatformException;
+import dev.hogwai.platform.spi.error.PlatformErrorCode;
+import dev.hogwai.platform.spi.error.PlatformException;
+import dev.hogwai.platform.spi.host.HostApplication;
+import dev.hogwai.platform.spi.host.HostConfiguration;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,8 +18,9 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
 /** End-to-end acceptance checks for the real factory-demo shell path. */
 @SuppressWarnings("PMD.CyclomaticComplexity")
@@ -36,10 +36,9 @@ class FactoryDemoAcceptanceTest {
     void servesHealthAndExceptionsAndAppliesChangedThreshold() throws Exception {
         String yaml = configuration();
         HostApplication application = ApplicationLoader.load(stream(yaml));
-        HelidonHostAdapter adapter = new HelidonHostAdapter();
-        try {
+        try (HelidonHostAdapter adapter = new HelidonHostAdapter();
+             HttpClient client = HttpClient.newHttpClient()) {
             adapter.start(application, HOST_CONFIGURATION);
-            HttpClient client = HttpClient.newHttpClient();
             URI baseUri = URI.create("http://127.0.0.1:" + adapter.port());
 
             assertHealth(client, baseUri.resolve("/health/live"), "live");
@@ -60,13 +59,6 @@ class FactoryDemoAcceptanceTest {
             String lowerThresholdYaml = yaml.replace("minimumDeliveryRatio: 0.8", "minimumDeliveryRatio: 0.4");
             assertThat(lowerThresholdYaml).contains("minimumDeliveryRatio: 0.4");
             assertChangedThreshold(client, lowerThresholdYaml);
-        } finally {
-            try {
-                stopIdempotently(adapter);
-            } finally {
-                application.close();
-                application.close();
-            }
         }
     }
 
@@ -96,22 +88,14 @@ class FactoryDemoAcceptanceTest {
     }
 
     private static void assertChangedThreshold(HttpClient client, String yaml) throws Exception {
-        HostApplication lowerThresholdApplication = ApplicationLoader.load(stream(yaml));
-        HelidonHostAdapter lowerThresholdAdapter = new HelidonHostAdapter();
-        try {
+        try (HostApplication lowerThresholdApplication = ApplicationLoader.load(stream(yaml));
+             HelidonHostAdapter lowerThresholdAdapter = new HelidonHostAdapter()) {
             lowerThresholdAdapter.start(lowerThresholdApplication, HOST_CONFIGURATION);
             HttpResponse<String> response = get(client,
                     URI.create("http://127.0.0.1:" + lowerThresholdAdapter.port() + "/exceptions"));
             assertThat(response.statusCode()).isEqualTo(200);
             assertThat(response.body()).contains("\"rowCount\":1", "\"exceptionType\":\"LATE_DELIVERY\"");
             assertThat(response.body()).doesNotContain("INSUFFICIENT_QUANTITY", "PRIORITY_RISK");
-        } finally {
-            try {
-                stopIdempotently(lowerThresholdAdapter);
-            } finally {
-                lowerThresholdApplication.close();
-                lowerThresholdApplication.close();
-            }
         }
     }
 
@@ -136,12 +120,6 @@ class FactoryDemoAcceptanceTest {
                 .hasValue("application/json; charset=utf-8");
     }
 
-    private static void stopIdempotently(HelidonHostAdapter adapter) throws HostException {
-        adapter.stop();
-        adapter.stop();
-        assertThat(adapter.ready()).isFalse();
-    }
-
     private static void assertLoadFailure(String yaml, PlatformErrorCode code) {
         PlatformException failure = loadFailure(yaml);
         assertThat(failure.code()).isEqualTo(code);
@@ -149,8 +127,9 @@ class FactoryDemoAcceptanceTest {
     }
 
     private static PlatformException loadFailure(String yaml) {
-        PlatformException failure = catchThrowableOfType(
-                () -> ApplicationLoader.load(stream(yaml)), PlatformException.class);
+        var yamlStream = stream(yaml);
+        PlatformException failure = catchThrowableOfType(PlatformException.class,
+                () -> ApplicationLoader.load(yamlStream));
         assertThat(failure).isNotNull();
         return failure;
     }

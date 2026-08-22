@@ -1,0 +1,8 @@
+apiVersion: heron.dev/v1
+application: factory-demo
+capabilities:
+  - id: orders
+    provider:
+      id: acme
+      version: 1.2.3
+    unknownField: true

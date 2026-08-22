@@ -1,25 +1,22 @@
 plugins {
     `java-library`
+    application
+}
+
+application {
+    mainClass.set("dev.hogwai.platform.cli.HeronLauncher")
+    applicationName = "heron"
 }
 
 dependencies {
-    implementation(project(":heron-platform-runtime"))
-    implementation(project(":heron-platform-cli"))
+    implementation(project(":core:heron-platform-runtime"))
+    implementation(project(":bricks:heron-platform-cli"))
+    implementation(project(":bricks:heron-platform-data-postgresql"))
+    implementation(project(":bricks:heron-platform-host-helidon"))
     implementation(project(":examples:external-provider"))
-    testImplementation(project(":heron-platform-host-helidon"))
+    runtimeOnly("org.slf4j:slf4j-simple:${providers.gradleProperty("slf4jVersion").get()}")
 }
 
-tasks.named<org.gradle.api.tasks.testing.Test>("test") {
+tasks.named<Test>("test") {
     inputs.property("RUN_POSTGRES_TESTS", providers.environmentVariable("RUN_POSTGRES_TESTS").orElse(""))
-}
-
-// The standard shell must see this example's trusted ServiceLoader provider
-// when its distribution is used with the factory-demo configuration.
-project(":heron-platform-cli") {
-    tasks.named<org.gradle.jvm.application.tasks.CreateStartScripts>("startScripts") {
-        applicationName = "heron"
-    }
-    dependencies {
-        runtimeOnly(project(":examples:external-provider"))
-    }
 }

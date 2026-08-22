@@ -1,0 +1,10 @@
+dev.hogwai.platform.runtime.compile.provider.OrdersProviderFactory
+dev.hogwai.platform.runtime.compile.provider.LateOrdersProviderFactory
+dev.hogwai.platform.runtime.compile.provider.WrongVersionProviderFactory
+dev.hogwai.platform.runtime.compile.provider.WrongSpiProviderFactory
+dev.hogwai.platform.runtime.compile.provider.WrongKindProviderFactory
+dev.hogwai.platform.runtime.compile.provider.InvalidConfigProviderFactory
+dev.hogwai.platform.runtime.compile.provider.IncompatibleSchemaProviderFactory
+dev.hogwai.platform.runtime.compile.provider.MultiInputProviderFactory
+dev.hogwai.platform.runtime.compile.provider.WarningProviderFactory
+dev.hogwai.platform.runtime.compile.provider.DuplicateCycleDiagnosticProviderFactory

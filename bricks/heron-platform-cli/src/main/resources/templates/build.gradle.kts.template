@@ -1,0 +1,21 @@
+plugins {
+    application
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+dependencies {
+    implementation("dev.hogwai.platform:heron-platform-spi:{{platformVersion}}")
+    implementation("dev.hogwai.platform:heron-platform-runtime:{{platformVersion}}")
+    implementation("dev.hogwai.platform:heron-platform-cli:{{platformVersion}}")
+    implementation("dev.hogwai.platform:heron-platform-data-postgresql:{{platformVersion}}")
+    implementation("dev.hogwai.platform:heron-platform-host-helidon:{{platformVersion}}")
+    runtimeOnly("org.slf4j:slf4j-simple:{{slf4jVersion}}")
+}
+
+application {
+    mainClass.set("dev.hogwai.platform.cli.HeronLauncher")
+}

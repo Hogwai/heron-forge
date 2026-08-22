@@ -1,26 +1,32 @@
 package dev.hogwai.platform.examples.provider.orders;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
-import dev.hogwai.platform.spi.data.access.DataAccess;
-import dev.hogwai.platform.spi.data.access.DataAccessFactory;
-import dev.hogwai.platform.spi.data.access.DataRow;
-import dev.hogwai.platform.spi.data.access.QueryContext;
-import dev.hogwai.platform.spi.data.access.QueryRequest;
-import dev.hogwai.platform.spi.CapabilityKind;
-import dev.hogwai.platform.spi.ProviderVersion;
-import dev.hogwai.platform.spi.SpiMajor;
-import dev.hogwai.platform.spi.PortId;
-import dev.hogwai.platform.spi.data.FieldId;
-import dev.hogwai.platform.spi.provider.BuildContext;
-import dev.hogwai.platform.spi.provider.ProviderDescriptor;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import dev.hogwai.platform.examples.provider.support.FakeDataAccessSupport;
+import dev.hogwai.platform.spi.CapabilityKind;
+import dev.hogwai.platform.spi.PortId;
+import dev.hogwai.platform.spi.ProviderVersion;
+import dev.hogwai.platform.spi.SpiMajor;
+import dev.hogwai.platform.spi.data.DataSetLimits;
+import dev.hogwai.platform.spi.data.FieldId;
+import dev.hogwai.platform.spi.data.MaterializedDataSet;
+import dev.hogwai.platform.spi.data.Schema;
+import dev.hogwai.platform.spi.data.SchemaRecord;
+import dev.hogwai.platform.spi.data.access.DataAccess;
+import dev.hogwai.platform.spi.data.access.DataAccessFactory;
+import dev.hogwai.platform.spi.data.access.DataRow;
+import dev.hogwai.platform.spi.data.access.QueryContext;
+import dev.hogwai.platform.spi.data.access.QueryRequest;
+import dev.hogwai.platform.spi.provider.BuildContext;
+import dev.hogwai.platform.spi.provider.ProviderDescriptor;
 import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class DemoOrdersProviderFactoryTest {
 
@@ -51,8 +57,8 @@ class DemoOrdersProviderFactoryTest {
                         "required_at", Instant.parse("2025-01-02T00:00:00Z"), "priority", "NORMAL")));
         QueryContext queryContext = new QueryContext(Instant.parse("2099-01-01T00:00:00Z"), () -> false);
 
-        var first = OrdersQuery.read(access, queryContext);
-        var second = OrdersQuery.read(access, queryContext);
+        var first = OrdersQuery.read(access, queryContext, FakeDataAccessSupport.DEFAULT_LIMITS);
+        var second = OrdersQuery.read(access, queryContext, FakeDataAccessSupport.DEFAULT_LIMITS);
 
         assertThat(access.requests()).hasSize(2);
         assertThat(access.requests()).allSatisfy(request -> {
@@ -62,11 +68,11 @@ class DemoOrdersProviderFactoryTest {
             assertThat(request.parameters()).isEmpty();
         });
         assertThat(access.contexts()).containsExactly(queryContext, queryContext);
-        assertThat(first.records()).extracting(record -> record.value(new FieldId("orderId")))
+        assertThat(first.records()).extracting(schemaRecord -> schemaRecord.value(new FieldId("orderId")))
                 .containsExactly("ORDER-001", "ORDER-002");
-        assertThat(first.records()).extracting(record -> record.value(new FieldId("orderedQuantity")))
+        assertThat(first.records()).extracting(schemaRecord -> schemaRecord.value(new FieldId("orderedQuantity")))
                 .containsExactly(12L, 7L);
-        assertThat(second.records()).extracting(record -> record.value(new FieldId("orderId")))
+        assertThat(second.records()).extracting(schemaRecord -> schemaRecord.value(new FieldId("orderId")))
                 .containsExactly("ORDER-001", "ORDER-002");
     }
 
@@ -98,6 +104,40 @@ class DemoOrdersProviderFactoryTest {
             requests.add(request);
             contexts.add(context);
             return values.stream().map(value -> request.mapper().map(new MapDataRow(value))).toList();
+        }
+
+        @Override
+        public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
+                Schema schema, Map<String, String> columnByField) {
+            return queryToDataSet(context, operation, sql, Map.of(), schema, columnByField,
+                    FakeDataAccessSupport.DEFAULT_LIMITS);
+        }
+
+        @Override
+        public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
+                Schema schema, Map<String, String> columnByField, DataSetLimits limits) {
+            return queryToDataSet(context, operation, sql, Map.of(), schema, columnByField, limits);
+        }
+
+        @Override
+        public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
+                Map<String, ?> parameters, Schema schema, Map<String, String> columnByField) {
+            return queryToDataSet(context, operation, sql, parameters, schema, columnByField,
+                    FakeDataAccessSupport.DEFAULT_LIMITS);
+        }
+
+        @Override
+        public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
+                Map<String, ?> parameters, Schema schema, Map<String, String> columnByField, DataSetLimits limits) {
+            QueryRequest<SchemaRecord> request = new QueryRequest<>(operation, sql, parameters,
+                    row -> FakeDataAccessSupport.toRecord(row, schema, columnByField));
+            List<SchemaRecord> records = query(request, context);
+            return FakeDataAccessSupport.dataSet(schema, operation, records, limits);
+        }
+
+        @Override
+        public int execute(QueryContext context, String operation, String sql, Map<String, ?> parameters) {
+            throw new UnsupportedOperationException();
         }
 
         @Override

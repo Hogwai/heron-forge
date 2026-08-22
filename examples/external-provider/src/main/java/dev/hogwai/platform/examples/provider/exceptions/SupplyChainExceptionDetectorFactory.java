@@ -1,21 +1,23 @@
 package dev.hogwai.platform.examples.provider.exceptions;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
 import dev.hogwai.platform.examples.provider.model.SupplyChainSchemas;
 import dev.hogwai.platform.spi.CapabilityKind;
 import dev.hogwai.platform.spi.Diagnostic;
-import dev.hogwai.platform.spi.PlatformErrorCode;
 import dev.hogwai.platform.spi.PortId;
 import dev.hogwai.platform.spi.ProviderId;
 import dev.hogwai.platform.spi.ProviderVersion;
 import dev.hogwai.platform.spi.SpiMajor;
+import dev.hogwai.platform.spi.error.PlatformErrorCode;
+import dev.hogwai.platform.spi.error.PlatformException;
 import dev.hogwai.platform.spi.provider.BuildContext;
 import dev.hogwai.platform.spi.provider.CapabilityInstance;
 import dev.hogwai.platform.spi.provider.PortDescriptor;
 import dev.hogwai.platform.spi.provider.ProviderDescriptor;
 import dev.hogwai.platform.spi.provider.ProviderFactory;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
 /** SPI factory for the supply-chain exception detector. */
 public final class SupplyChainExceptionDetectorFactory implements ProviderFactory {
@@ -32,6 +34,7 @@ public final class SupplyChainExceptionDetectorFactory implements ProviderFactor
 
     /** Creates the detector factory. */
     public SupplyChainExceptionDetectorFactory() {
+        // intentionally empty
     }
 
     @Override
@@ -49,7 +52,7 @@ public final class SupplyChainExceptionDetectorFactory implements ProviderFactor
         Objects.requireNonNull(context, "context must not be null");
         List<Diagnostic> diagnostics = validate(rawConfig);
         if (!diagnostics.isEmpty()) {
-            throw new dev.hogwai.platform.spi.PlatformException(PlatformErrorCode.PROVIDER_CONFIG_ERROR, diagnostics);
+            throw new PlatformException(PlatformErrorCode.PROVIDER_CONFIG_ERROR, diagnostics);
         }
         return new ExceptionDetector(DetectorConfig.from(rawConfig), context.clock());
     }

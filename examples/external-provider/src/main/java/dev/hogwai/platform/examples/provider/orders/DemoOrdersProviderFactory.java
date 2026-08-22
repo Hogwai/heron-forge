@@ -1,34 +1,40 @@
 package dev.hogwai.platform.examples.provider.orders;
 
-import dev.hogwai.platform.spi.data.access.DataAccess;
-import dev.hogwai.platform.spi.data.access.QueryContext;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
 import dev.hogwai.platform.examples.provider.model.SupplyChainSchemas;
 import dev.hogwai.platform.examples.provider.postgres.SupplyChainDatabaseConfig;
 import dev.hogwai.platform.examples.provider.support.ExecutionSupport;
 import dev.hogwai.platform.spi.CapabilityKind;
 import dev.hogwai.platform.spi.Diagnostic;
-import dev.hogwai.platform.spi.PlatformErrorCode;
-import dev.hogwai.platform.spi.PlatformException;
 import dev.hogwai.platform.spi.PortId;
 import dev.hogwai.platform.spi.ProviderId;
 import dev.hogwai.platform.spi.ProviderVersion;
 import dev.hogwai.platform.spi.SpiMajor;
+import dev.hogwai.platform.spi.data.access.DataAccess;
+import dev.hogwai.platform.spi.data.access.QueryContext;
+import dev.hogwai.platform.spi.error.PlatformErrorCode;
+import dev.hogwai.platform.spi.error.PlatformException;
 import dev.hogwai.platform.spi.provider.BuildContext;
 import dev.hogwai.platform.spi.provider.CapabilityInstance;
+import dev.hogwai.platform.spi.provider.PortDescriptor;
 import dev.hogwai.platform.spi.provider.ProviderDescriptor;
 import dev.hogwai.platform.spi.provider.ProviderFactory;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
 /** Deterministic source of the example order records. */
 public final class DemoOrdersProviderFactory implements ProviderFactory {
 
     private static final ProviderDescriptor DESCRIPTOR = new ProviderDescriptor(
-            new ProviderId("demo.orders"), ProviderVersion.parse("1.0.0"), CapabilityKind.SOURCE, SpiMajor.V1,
-            Map.of(), Map.of(new PortId("records"), new dev.hogwai.platform.spi.provider.PortDescriptor(
-                    new PortId("records"), SupplyChainSchemas.orders(), true)),
-            SupplyChainDatabaseConfig.databaseConfigSchema());
+            new ProviderId("demo.orders"),
+            ProviderVersion.parse("1.0.0"),
+            CapabilityKind.SOURCE,
+            SpiMajor.V1,
+            Map.of(),
+            Map.of(new PortId("records"), new PortDescriptor(new PortId("records"), SupplyChainSchemas.orders(), true)),
+            SupplyChainDatabaseConfig.databaseConfigSchema()
+    );
 
     /** Creates the orders factory. */
     public DemoOrdersProviderFactory() {
@@ -68,7 +74,7 @@ public final class DemoOrdersProviderFactory implements ProviderFactory {
             Objects.requireNonNull(inputs, "inputs must not be null");
             QueryContext queryContext = new QueryContext(executionContext.deadline(),
                     executionContext.cancellationToken()::isCancellationRequested);
-            return OrdersQuery.read(dataAccess, queryContext);
+            return OrdersQuery.read(dataAccess, queryContext, SupplyChainDatabaseConfig.limits(rawConfig));
         };
     }
 }

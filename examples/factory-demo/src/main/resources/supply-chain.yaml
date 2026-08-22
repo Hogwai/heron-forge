@@ -1,45 +1,43 @@
-apiVersion: platform.dev/v1alpha1
-kind: Application
-metadata:
-  name: supply-chain-demo
-spec:
-  capabilities:
-    - id: orders
-      type: source
-      provider:
-        id: demo.orders
-        version: 1.0.0
-      config:
-        url: jdbc:postgresql://localhost:5432/heron_demo
-        user: heron
-        password: heron
-    - id: deliveries
-      type: source
-      provider:
-        id: demo.deliveries
-        version: 1.0.0
-      config:
-        url: jdbc:postgresql://localhost:5432/heron_demo
-        user: heron
-        password: heron
-    - id: exception-detector
-      type: transform
-      provider:
-        id: supply-chain.exception-detector
-        version: 1.0.0
-      config:
-        lateToleranceDays: 1
-        minimumDeliveryRatio: 0.8
-        priorityRiskDays: 3
-      inputs:
-        orders:
-          capability: orders
-          port: records
-        deliveries:
-          capability: deliveries
-          port: records
-  entrypoints:
-    - id: supply-chain-exceptions
-      method: GET
-      path: /exceptions
-      target: exception-detector
+apiVersion: heron.dev/v1
+application: supply-chain-demo
+capabilities:
+  - id: orders
+    provider:
+      id: demo.orders
+      version: 1.0.0
+    config:
+      url: jdbc:postgresql://localhost:5432/heron_demo
+      user: heron
+      password: heron
+      maxRows: 5000
+      maxBytes: 5000000
+  - id: deliveries
+    provider:
+      id: demo.deliveries
+      version: 1.0.0
+    config:
+      url: jdbc:postgresql://localhost:5432/heron_demo
+      user: heron
+      password: heron
+      maxRows: 5000
+      maxBytes: 5000000
+  - id: exception-detector
+    provider:
+      id: supply-chain.exception-detector
+      version: 1.0.0
+    config:
+      lateToleranceDays: 1
+      minimumDeliveryRatio: 0.8
+      priorityRiskDays: 3
+    inputs:
+      orders:
+        capability: orders
+        port: records
+      deliveries:
+        capability: deliveries
+        port: records
+endpoints:
+  - id: supply-chain-exceptions
+    method: GET
+    path: /exceptions
+    target: exception-detector
