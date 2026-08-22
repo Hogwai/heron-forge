@@ -87,6 +87,7 @@ HERON=bricks/heron-platform-cli/build/install/heron/bin/heron
 
 $HERON create app my-app                       # runnable application starter
 $HERON create provider orders --package com.acme.orders   # provider plugin library
+$HERON create provider orders --package com.acme.orders --language=KOTLIN  # Kotlin/JVM provider
 $HERON create brick pg-store --type=data       # data-access brick skeleton
 $HERON create brick web --type=host            # host adapter brick skeleton
 ```
@@ -94,6 +95,7 @@ $HERON create brick web --type=host            # host adapter brick skeleton
 `heron create` without arguments starts an interactive wizard in a terminal, or prints the direct usage with exit status 2 when no terminal is available.
 Project names must match `[a-z][a-z0-9-]*`.
 Generated builds resolve `dev.hogwai.platform:heron-platform-*` from `mavenLocal()`, so run `./gradlew publishToMavenLocal` first during the POC phase.
+Provider generation defaults to Java. Use `--language=KOTLIN` to generate a Kotlin/JVM provider that implements the Java SPI and registers through `ServiceLoader`.
 
 ## Factory demo consumer path
 
@@ -158,6 +160,7 @@ PostgreSQL integration tests are opt-in with `RUN_POSTGRES_TESTS=true`.
 - Jdbi 3.54.0
 - Helidon SE 4.5.3
 - picocli 4.7.7
+- Kotlin/JVM 2.4.10 (generated providers only)
 - SLF4J 2.0.16
 - Revapi 0.19.1 (SPI module only; compatible with gradle-revapi 1.8.0)
 - JMH 1.37 (runtime module only)

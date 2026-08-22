@@ -15,6 +15,8 @@ class PlatformVersionsTest {
                 .containsEntry("platformVersion", PlatformVersions.value("platform.version"))
                 .containsEntry("junitJupiterVersion", PlatformVersions.value("junit.jupiter.version"))
                 .containsEntry("assertjVersion", PlatformVersions.value("assertj.version"))
-                .containsEntry("javaToolchainVersion", PlatformVersions.value("java.toolchain.version"));
+                .containsEntry("javaToolchainVersion", PlatformVersions.value("java.toolchain.version"))
+                .containsEntry("kotlinPluginVersion", PlatformVersions.value("kotlin.plugin.version"))
+                .containsEntry("platformSpiVersion", PlatformVersions.value("platform.spi.version"));
     }
 }

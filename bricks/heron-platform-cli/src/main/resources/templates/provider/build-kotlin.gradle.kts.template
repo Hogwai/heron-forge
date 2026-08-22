@@ -1,5 +1,5 @@
 plugins {
-    `java-library`
+    kotlin("jvm") version "{{kotlinPluginVersion}}"
     `maven-publish`
 }
 
@@ -8,10 +8,8 @@ repositories {
     mavenCentral()
 }
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of({{javaToolchainVersion}})
-    }
+kotlin {
+    jvmToolchain({{javaToolchainVersion}})
 }
 
 dependencies {

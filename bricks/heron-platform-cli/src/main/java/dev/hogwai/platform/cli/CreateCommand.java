@@ -55,8 +55,9 @@ public final class CreateCommand implements Callable<Integer> {
     private int createProvider() {
         CreateProviderCommand command = new CreateProviderCommand(baseDirectory);
         command.name = console.readLine("Provider name: ").trim();
-        command.packageName = console.readLine("Java package (optional): ").trim();
+        command.packageName = console.readLine("Base package (optional): ").trim();
         command.kind = console.readLine("Capability kind [SOURCE/TRANSFORM] (default SOURCE): ").trim();
+        command.language = console.readLine("Language [JAVA/KOTLIN] (default JAVA): ").trim();
         return command.call();
     }
 
@@ -71,7 +72,8 @@ public final class CreateCommand implements Callable<Integer> {
     private void printExamples() {
         console.println("Usage:");
         console.println("  heron create app <name> [--package=<package>]");
-        console.println("  heron create provider <name> [--package=<package>] [--kind=SOURCE|TRANSFORM]");
+        console.println("  heron create provider <name> [--package=<package>] [--kind=SOURCE|TRANSFORM]"
+                + " [--language=JAVA|KOTLIN]");
         console.println("  heron create brick <name> --type=data|host");
     }
 }

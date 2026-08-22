@@ -1,0 +1,24 @@
+package {{basePackage}}
+
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Test
+import java.util.ServiceLoader
+import dev.hogwai.platform.spi.provider.ProviderFactory
+
+class {{className}}ProviderFactoryTest {
+
+    @Test
+    fun describesTheGeneratedCapability() {
+        val factory = {{className}}ProviderFactory()
+
+        assertThat(factory.descriptor().providerId().value)
+            .isEqualTo("{{basePackage}}.{{projectName}}")
+        assertThat(factory.descriptor().capabilityKind().name).isEqualTo("{{kind}}")
+    }
+
+    @Test
+    fun registersTheFactoryWithServiceLoader() {
+        assertThat(ServiceLoader.load(ProviderFactory::class.java).toList())
+            .anyMatch { it is {{className}}ProviderFactory }
+    }
+}

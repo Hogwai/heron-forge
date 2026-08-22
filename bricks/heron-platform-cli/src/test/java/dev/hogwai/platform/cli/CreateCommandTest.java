@@ -25,6 +25,7 @@ class CreateCommandTest {
         assertThat(status).isEqualTo(2);
         assertThat(console.output()).contains("heron create app <name>")
                 .contains("heron create provider <name>")
+                .contains("[--language=JAVA|KOTLIN]")
                 .contains("heron create brick <name> --type=data|host");
     }
 
@@ -38,6 +39,18 @@ class CreateCommandTest {
         assertThat(tempDirectory.resolve("demo/src/main/resources/application.yaml")).exists();
         assertThat(Files.readString(tempDirectory.resolve("demo/src/main/resources/application.yaml")))
                 .contains("application: demo");
+    }
+
+    @Test
+    void interactiveWizardCreatesAKotlinProvider() {
+        RecordingConsole console = new RecordingConsole(true,
+                "provider", "orders", "com.acme.orders", "SOURCE", "KOTLIN");
+
+        int status = new CommandLine(new CreateCommand(tempDirectory, console)).execute();
+
+        assertThat(status).isZero();
+        assertThat(tempDirectory.resolve(
+                "orders/src/main/kotlin/com/acme/orders/OrdersProviderFactory.kt")).exists();
     }
 
     private static final class RecordingConsole implements ConsoleSession {

@@ -29,7 +29,9 @@ final class PlatformVersions {
                 "junitJupiterVersion", value("junit.jupiter.version"),
                 "assertjVersion", value("assertj.version"),
                 "javaToolchainVersion", value("java.toolchain.version"),
-                "gradleVersion", value("gradle.version"));
+                "gradleVersion", value("gradle.version"),
+                "kotlinPluginVersion", value("kotlin.plugin.version"),
+                "platformSpiVersion", value("platform.spi.version"));
     }
 
     private static Properties load() {

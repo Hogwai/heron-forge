@@ -22,6 +22,8 @@ val junitJupiterVersion = providers.gradleProperty("junitJupiterVersion").get()
 val assertjVersion = providers.gradleProperty("assertjVersion").get()
 val javaToolchainVersion = providers.gradleProperty("javaToolchainVersion").get()
 val gradleVersion = providers.gradleProperty("gradleVersion").get()
+val kotlinPluginVersion = providers.gradleProperty("kotlinPluginVersion").get()
+val platformSpiVersion = providers.gradleProperty("platformSpiBaselineVersion").get()
 
 dependencies {
     api(project(":core:heron-platform-spi"))
@@ -50,6 +52,8 @@ tasks.processResources {
         "junitJupiterVersion" to junitJupiterVersion,
         "assertjVersion" to assertjVersion,
         "javaToolchainVersion" to javaToolchainVersion,
-        "gradleVersion" to gradleVersion
+        "gradleVersion" to gradleVersion,
+        "kotlinPluginVersion" to kotlinPluginVersion,
+        "platformSpiVersion" to platformSpiVersion
     )), ReplaceTokens::class.java)
 }
