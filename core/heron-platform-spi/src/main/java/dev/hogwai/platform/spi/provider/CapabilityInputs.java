@@ -13,7 +13,7 @@ import java.util.Set;
  * Immutable collection of {@link CapabilityInput}s keyed by {@link PortId}.
  *
  * <p>Null keys or values, duplicate ports and incoherent bindings are rejected.
- * All views are immutable; no mutable collection leaks. Framework-independent.
+ * All views are immutable.
  */
 public final class CapabilityInputs {
 

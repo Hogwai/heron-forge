@@ -18,8 +18,7 @@ import java.util.Optional;
  * <p>All collections are defensively copied and exposed immutably; no mutable
  * collection is ever exposed. The instance keys must cover exactly the graph
  * node ids: a missing or extra instance is rejected at construction with an
- * {@link IllegalArgumentException}. The class is immutable and
- * framework-independent.
+ * {@link IllegalArgumentException}.
  */
 public record RuntimeSnapshot(String generationId, CapabilityGraph graph,
                               Map<String, CapabilityInstance> instances) {

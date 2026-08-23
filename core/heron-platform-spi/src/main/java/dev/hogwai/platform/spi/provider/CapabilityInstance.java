@@ -9,17 +9,16 @@ import dev.hogwai.platform.spi.execution.ExecutionContext;
 /**
  * A single instance of a provider capability, ready to execute.
  *
- * <p>Execution is synchronous and returns a {@link DataSet}: implementations
- * choose their result shape through the covariant return —
- * {@link MaterializedDataSet} for in-memory
- * results, {@link StreamingDataSet} for lazy
- * bounded batches. The instance is {@link AutoCloseable}; {@link #close()} is a
- * no-op by default and may be overridden to release resources. When a
- * capability observes that its deadline has been exceeded or that cancellation
+ * <p>Execution is synchronous and returns a {@link DataSet}:
+ * implementations choose their result shape through the covariant return:
+ * {@link MaterializedDataSet} for in-memory results,
+ * {@link StreamingDataSet} for lazy bounded batches.
+ * The instance is {@link AutoCloseable}; {@link #close()} is a
+ * no-op by default and may be overridden to release resources.
+ * When a capability observes that its deadline has been exceeded or that cancellation
  * has been requested, it must fail with
  * {@link PlatformErrorCode#DEADLINE_EXCEEDED} or
- * {@link PlatformErrorCode#CANCELLATION_REQUESTED} respectively; no retry
- * semantics are implied. Framework-independent.
+ * {@link PlatformErrorCode#CANCELLATION_REQUESTED} respectively.
  */
 public interface CapabilityInstance extends AutoCloseable {
 

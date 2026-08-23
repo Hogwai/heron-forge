@@ -12,8 +12,7 @@ import java.util.List;
  * <p>The row count is derived from the record list and the byte estimate is
  * non-negative. Construction fails with
  * {@link PlatformErrorCode#DATASET_LIMIT_EXCEEDED} when either the maximum row
- * count or the maximum byte estimate is exceeded. Framework-independent and
- * immutable.
+ * count or the maximum byte estimate is exceeded.
  */
 @SuppressWarnings("java:S6206")
 public final class MaterializedDataSet implements DataSet {

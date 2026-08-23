@@ -8,7 +8,7 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 
-/** Result-set-backed implementation of the framework-independent row contract. */
+/** Result-set-backed implementation of the row contract. */
 @SuppressWarnings("PMD.CyclomaticComplexity")
 final class JdbiDataRow implements DataRow {
 

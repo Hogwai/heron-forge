@@ -34,7 +34,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * Jdbi implementation of the framework-independent data access contract.
+ * Jdbi implementation of the data access contract.
  */
 @SuppressWarnings("PMD.CyclomaticComplexity")
 final class JdbiDataAccess implements DataAccess {
@@ -217,9 +217,9 @@ final class JdbiDataAccess implements DataAccess {
     }
 
     /**
-     * Builds the lazy cursor. The {@link Query} is closed together with the
-     * returned iterator (Jdbi closes the statement when its result iterator
-     * closes), which the streaming dataset owns — hence S2095 suppression.
+     * Builds the lazy cursor.
+     * The {@link Query} is closed together with the returned iterator (Jdbi closes the statement when its result iterator
+     * closes), which the streaming dataset owns.
      */
     @SuppressWarnings("java:S2095")
     private static ResultIterator<SchemaRecord> getRecordResultIterator(String sql,

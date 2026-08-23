@@ -13,7 +13,7 @@ import java.util.Optional;
  * and its immutable {@link ProviderDescriptor} observed together from a single
  * discovery pass) for each registered provider, keyed by {@link ProviderId}.
  * Implementations must be immutable after construction and must expose only
- * immutable views of their collections. Framework-independent.
+ * immutable views of their collections.
  */
 public interface ProviderRegistry {
 

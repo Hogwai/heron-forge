@@ -22,7 +22,8 @@ flowchart LR
 
     subgraph Bricks [Pluggable bricks]
         host["host-helidon<br/>HTTP adapter"]
-        data["data-postgresql<br/>DataAccessFactory"]
+        data["data-postgresql<br/>PostgreSQL dialect"]
+        jdbi["data-jdbi<br/>Generic Jdbi engine"]
     end
 
     subgraph ProviderCode [External provider]
@@ -38,6 +39,8 @@ flowchart LR
     provider -->|"implements"| spi
     host -->|"implements"| spi
     data -->|"implements"| spi
+    data -->|"dialect over"| jdbi
+    jdbi -->|"implements"| spi
     runtime -.->|"discovers"| data
 ```
 
@@ -71,6 +74,8 @@ Use the Gradle wrapper (Gradle 9.7.0):
 ```
 
 `check` runs the unit tests, static analysis (Checkstyle, PMD, Error Prone), coverage reporting and coverage gates.
+
+A `Makefile` wraps the daily workflow (`make help`): `make check`, `make publish`, `make cli`, `make db-up` / `db-down`, `make integration` (opt-in PostgreSQL suites with the required environment), `make demo-run` and `make e2e` (scaffolds an application, wires a database-backed provider, boots the shell and probes the HTTP endpoints).
 
 ## Scaffolding (`heron create`)
 
@@ -129,6 +134,7 @@ The runtime discovery mechanism (`ServiceLoader`) is unchanged.
 The factory demo has one supported consumer path: 
 the standard Heron shell and the PostgreSQL fixture supplied by Compose. 
 Credentials are never stored in configuration files: the runtime resolves `${HERON_DB_URL}`, `${HERON_DB_USER}` and `${HERON_DB_PASSWORD}` placeholders in `supply-chain.yaml` from the environment.
+Placeholder resolution is strict: a placeholder must span the entire value (`password: ${HERON_DB_PASSWORD}`, never `prefix-${VAR}`), and a missing or blank variable fails the load with `CONFIG_PARSE_ERROR`.
 Start the database, export the connection settings matching the Compose fixture, run the acceptance checks, build the shell distribution, and start the application:
 
 ```bash
@@ -142,7 +148,7 @@ RUN_POSTGRES_TESTS=true ./gradlew :examples:factory-demo:test
   --config examples/factory-demo/src/main/resources/supply-chain.yaml
 ```
 
-The shell serves `GET /health/ready` and `GET /exceptions` on `http://127.0.0.1:8080`. 
+The shell serves `GET /health/ready`, `GET /exceptions` and `GET /kotlin-order-summary` on `http://127.0.0.1:8080`. 
 To try a different policy, stop the shell, change `minimumDeliveryRatio` in `supply-chain.yaml` (for example from `0.8` to`0.4`) and start it again. 
 Stop the shell with `Ctrl-C`.
 Stop PostgreSQL with `docker compose -f examples/factory-demo/docker-compose.yml down`.
@@ -197,6 +203,8 @@ Large results do not have to be materialized. `DataAccess.streamQuery(...)` retu
 - Jackson Databind 2.21.1; Jackson YAML is test-only
 - SnakeYAML Engine 3.1.1
 - Jdbi 3.54.0
+- HikariCP 7.1.0 (PostgreSQL brick, connection pooling)
+- ArchUnit 1.4.2 (architecture rules in spi, runtime and data bricks)
 - Helidon SE 4.5.3
 - picocli 4.7.7
 - Kotlin/JVM 2.4.10 (generated providers only)

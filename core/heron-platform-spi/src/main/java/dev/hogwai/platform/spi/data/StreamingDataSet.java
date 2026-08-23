@@ -21,7 +21,7 @@ import dev.hogwai.platform.spi.error.Severity;
  * consumers pull bounded batches through {@link #nextBatch()} until it returns
  * empty. Every pull re-checks the cancellation signal and the execution
  * deadline, and the cumulative row count and byte estimate are enforced against
- * {@link DataSetLimits} exactly like a materialized data set — exceeding either
+ * {@link DataSetLimits} exactly like a materialized data set, exceeding either
  * fails fast with {@link PlatformErrorCode#DATASET_LIMIT_EXCEEDED}.
  *
  * <p>The dataset owns its underlying cursor: {@link #close()} releases it and is

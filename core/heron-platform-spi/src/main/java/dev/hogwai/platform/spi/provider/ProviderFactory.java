@@ -10,7 +10,7 @@ import java.util.Map;
  * <p>The {@code rawConfig} passed to {@link #validate} and {@link #create} is
  * the raw configuration after generic validation; the provider decodes it
  * itself. The collections exposed or returned by this contract must not be
- * mutated by callers. Framework-independent.
+ * mutated by callers.
  */
 public interface ProviderFactory {
 

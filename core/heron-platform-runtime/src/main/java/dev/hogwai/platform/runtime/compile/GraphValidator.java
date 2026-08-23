@@ -20,7 +20,7 @@ import dev.hogwai.platform.spi.provider.PortDescriptor;
  * port bindings, required input connectivity and output-to-input
  * {@link SchemaCompatibility}. All failures are reported as diagnostics with
  * stable error codes and deterministic messages that never leak configuration
- * values or secrets. Framework-independent.
+ * values or secrets.
  */
 final class GraphValidator {
 

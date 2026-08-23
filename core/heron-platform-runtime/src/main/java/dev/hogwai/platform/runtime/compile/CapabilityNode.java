@@ -17,7 +17,7 @@ import java.util.Objects;
  * <p>A node carries the capability identity, kind, the resolved provider
  * identity, version, factory and descriptor, the raw configuration and the
  * ordered list of input {@link PortBinding}s. The input and output port maps
- * are exposed through the provider descriptor. Framework-independent.
+ * are exposed through the provider descriptor.
  *
  * <p>Nodes are produced by the {@link GraphCompiler}; the constructor is
  * private. During compilation a node is created empty and its input bindings

@@ -4,11 +4,7 @@ import dev.hogwai.platform.spi.data.StreamingDataSet;
 import dev.hogwai.platform.spi.execution.ExecutionContext;
 
 /**
- * Instance of a capability that streams its result instead of materializing
- * it. Created only by {@link StreamingProviderFactory} implementations; the
- * two worlds are intentionally separate — a provider is either materialized
- * ({@link CapabilityInstance}) or streaming ({@code StreamingInstance}), never
- * both.
+ * Instance of a capability that streams its result instead of materializing it.
  *
  * <p>When a streaming capability is consumed as an upstream input, the runtime
  * collects its batches into a materialized dataset before handing it to the

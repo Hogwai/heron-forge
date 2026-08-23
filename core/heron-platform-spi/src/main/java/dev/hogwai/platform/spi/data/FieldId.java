@@ -6,7 +6,6 @@ import java.util.Objects;
  * Immutable identifier of a {@link Field}.
  *
  * <p>The identifier must be non-null, non-blank and free of whitespace.
- * Framework-independent and immutable.
  *
  * @param value the field identifier
  */

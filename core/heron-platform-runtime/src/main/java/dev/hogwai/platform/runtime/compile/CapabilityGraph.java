@@ -25,7 +25,6 @@ import dev.hogwai.platform.spi.error.Severity;
  * contains a cycle, construction fails with a
  * {@link PlatformException} carrying {@link PlatformErrorCode#GRAPH_CYCLE_ERROR}
  * and the involved capability ids. All exposed collections are immutable.
- * Framework-independent.
  */
 public final class CapabilityGraph {
 

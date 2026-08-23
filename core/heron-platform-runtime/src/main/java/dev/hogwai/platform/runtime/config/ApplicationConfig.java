@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Immutable, framework-independent model of an application configuration.
+ * Immutable model of an application configuration.
  *
  * <p>Holds the root {@code apiVersion}, normalized application name, and the
  * lists of {@link CapabilityConfig}s and {@link EntrypointConfig}s. All collections are

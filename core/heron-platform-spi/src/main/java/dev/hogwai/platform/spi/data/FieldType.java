@@ -8,7 +8,7 @@ import java.util.Objects;
  * Immutable description of the type of a {@link Field}.
  *
  * <p>The set of supported types is intentionally closed (v1) and does not
- * perform any implicit numeric widening. Framework-independent and immutable.
+ * perform any implicit numeric widening.
  */
 public sealed interface FieldType
         permits FieldType.StringType, FieldType.BooleanType, FieldType.Int64Type,

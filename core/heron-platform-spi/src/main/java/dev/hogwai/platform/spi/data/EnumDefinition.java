@@ -11,8 +11,7 @@ import java.util.Set;
  *
  * <p>The symbols are stored as an ordered list (not a {@code Set}) so that the
  * observable order is preserved in iteration and equality; duplicates are
- * rejected at construction. Blank symbols are rejected. Framework-independent
- * and immutable.
+ * rejected at construction. Blank symbols are rejected.
  *
  * @param identifier the non-blank enum identifier
  * @param symbols    the ordered, unique immutable list representing the set of

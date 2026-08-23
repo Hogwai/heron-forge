@@ -3,7 +3,7 @@ package dev.hogwai.platform.spi.data;
 /**
  * Immutable limits applied to a {@link MaterializedDataSet}.
  *
- * <p>Both limits are strictly positive. Framework-independent and immutable.
+ * <p>Both limits are strictly positive.
  *
  * @param maxRows  the maximum number of rows
  * @param maxBytes the maximum estimated size in bytes

@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Framework-independent runtime exception carrying a stable
+ * Runtime exception carrying a stable
  * {@link PlatformErrorCode} and an immutable list of {@link Diagnostic}s.
  *
  * <p>The message is stable and derived only from the error code and the number

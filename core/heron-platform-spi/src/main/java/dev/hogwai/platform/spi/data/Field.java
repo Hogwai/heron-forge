@@ -9,7 +9,6 @@ import java.util.Optional;
  * <p>A field carries a {@link FieldId}, a non-blank display name, a
  * {@link FieldType}, a nullability flag and an optional default value. The
  * default value, when present, must be assignable to the field type.
- * Framework-independent and immutable.
  *
  * @param id           the field identifier
  * @param displayName  the non-blank display name

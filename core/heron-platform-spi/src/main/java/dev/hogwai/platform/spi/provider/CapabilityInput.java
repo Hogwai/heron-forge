@@ -7,7 +7,6 @@ import java.util.Objects;
 /**
  * Immutable binding of a single named port to a {@link MaterializedDataSet}.
  *
- * <p>Framework-independent and immutable.
  */
 public record CapabilityInput(PortId portId, MaterializedDataSet dataSet) {
 

@@ -3,11 +3,11 @@ package dev.hogwai.platform.spi.error;
 import dev.hogwai.platform.spi.Diagnostic;
 
 /**
- * Stable, framework-independent error codes carried by {@link PlatformException}
+ * Stable error codes carried by {@link PlatformException}
  * and {@link Diagnostic}.
  *
  * <p>The set of codes is intentionally fixed and stable so that consumers can
- * rely on them across versions. Framework-independent and immutable.
+ * rely on them across versions.
  */
 public enum PlatformErrorCode {
 

@@ -4,7 +4,7 @@ import dev.hogwai.platform.spi.Diagnostic;
 import java.util.List;
 
 /**
- * Immutable, framework-independent model of a parsed application configuration.
+ * Immutable, model of a parsed application configuration.
  *
  * <p>Carries the mapped {@link ApplicationConfig} (when the document is valid)
  * together with any {@link Diagnostic}s produced during parsing or schema

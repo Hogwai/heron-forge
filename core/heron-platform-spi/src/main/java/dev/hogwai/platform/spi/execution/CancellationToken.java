@@ -5,7 +5,7 @@ import dev.hogwai.platform.spi.error.PlatformException;
 import java.util.List;
 
 /**
- * Framework-independent cancellation token.
+ * Cancellation token.
  *
  * <p>Implementations report whether cancellation has been requested.
  * {@link #throwIfCancellationRequested()} throws a {@link PlatformException}

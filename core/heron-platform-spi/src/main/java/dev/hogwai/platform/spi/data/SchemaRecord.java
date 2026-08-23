@@ -10,7 +10,6 @@ import java.util.Objects;
  * distinguishes an absent key from a key present with a {@code null} value.
  * Unknown fields are rejected when the schema is closed ({@code openFields}
  * is {@code false}), and missing required fields are rejected.
- * Framework-independent and immutable.
  */
 public final class SchemaRecord {
 

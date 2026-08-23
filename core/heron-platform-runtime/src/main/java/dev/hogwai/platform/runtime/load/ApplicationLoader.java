@@ -30,7 +30,7 @@ import dev.hogwai.platform.spi.error.Severity;
 import dev.hogwai.platform.spi.host.EntrypointDescriptor;
 import dev.hogwai.platform.spi.host.HostApplication;
 
-/** Public Core boundary for loading a framework-independent application. */
+/** Public Core boundary for loading an application. */
 @SuppressWarnings("PMD.CyclomaticComplexity")
 public final class ApplicationLoader {
 

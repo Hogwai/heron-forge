@@ -11,7 +11,7 @@ import java.util.Optional;
  *
  * <p>Hosts pull bounded batches until {@link #nextBatch()} returns empty; the
  * cumulative delivered count grows accordingly. Closing the payload releases
- * the underlying resources and is idempotent. Framework-independent.
+ * the underlying resources and is idempotent.
  */
 public interface StreamingPayload extends AutoCloseable {
 

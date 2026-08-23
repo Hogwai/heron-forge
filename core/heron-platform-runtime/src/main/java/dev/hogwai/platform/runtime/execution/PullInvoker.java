@@ -25,9 +25,9 @@ import java.util.Objects;
  * Package-private synchronous evaluator for one entrypoint dependency closure.
  *
  * <p>Upstream nodes are always collected into {@link MaterializedDataSet}s so
- * transforms can compose them; only the entrypoint target's own result keeps
- * its declared shape — a target returning a {@link StreamingDataSet} flows to
- * the caller lazily.
+ * transforms can compose them.
+ * Only the entrypoint target's own result keeps
+ * its declared shape
  */
 public final class PullInvoker {
 

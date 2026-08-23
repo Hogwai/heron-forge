@@ -11,7 +11,6 @@ import java.util.Objects;
  * <p>A binding retains the source and target {@link CapabilityNode}s together
  * with the named output port on the source and the named input port on the
  * target, so the full edge is preserved without relying on ids alone.
- * Framework-independent.
  */
 public final class PortBinding {
 

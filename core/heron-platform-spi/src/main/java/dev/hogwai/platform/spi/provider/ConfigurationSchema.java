@@ -11,7 +11,7 @@ import java.util.Set;
  * names, the scalar kind of each field, the set of required field names and
  * optional deprecation messages. It never deserializes provider classes and
  * carries no values. All collections are defensively copied and exposed
- * immutably. Framework-independent.
+ * immutably.
  *
  * @param allowedFields  the set of allowed field names
  * @param requiredFields the set of required field names; must be a subset of

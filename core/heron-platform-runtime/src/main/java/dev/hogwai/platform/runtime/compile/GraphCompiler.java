@@ -34,7 +34,7 @@ import dev.hogwai.platform.spi.error.Severity;
  * by the graph, including forward references. The resulting graph is validated
  * for unique ids, source/transform semantics, duplicate input port bindings,
  * required input connectivity and schema compatibility before the immutable
- * graph is built. Framework-independent.
+ * graph is built.
  */
 public final class GraphCompiler {
 

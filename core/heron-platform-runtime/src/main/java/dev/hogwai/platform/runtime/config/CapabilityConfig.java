@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Immutable, framework-independent model of a single capability declaration.
+ * Immutable model of a single capability declaration.
  *
  * <p>Carries the capability {@code id}, the provider {@code id} and
  * {@code version}, an immutable map of safe configuration values and the list of

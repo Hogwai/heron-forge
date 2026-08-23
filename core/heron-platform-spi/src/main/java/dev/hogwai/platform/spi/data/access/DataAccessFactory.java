@@ -1,7 +1,7 @@
 package dev.hogwai.platform.spi.data.access;
 
 /**
- * Factory for opening framework-independent data access instances.
+ * Factory for opening data access instances.
  *
  * <p>A provider that opens a {@link DataAccess} owns that client. It must
  * register the client immediately with {@code BuildContext.resourceTracker()};

@@ -10,7 +10,6 @@ import java.util.Optional;
  * <p>A schema carries a non-blank identifier, a strictly positive version, an
  * ordered immutable list of {@link Field}s and an {@code openFields} flag.
  * Duplicate field identifiers or display names are rejected.
- * Framework-independent and immutable.
  */
 @SuppressWarnings("java:S6206")
 public record Schema(String identifier,

@@ -8,7 +8,7 @@ import java.util.Objects;
  *
  * <p>It carries only the request identifier, the snapshot identifier, the
  * deadline, a {@link CancellationToken} and the correlation identifier. All
- * values are immutable and validated at construction. Framework-independent.
+ * values are immutable and validated at construction.
  */
 public record ExecutionContext(String requestId, String snapshotId, Instant deadline,
                                CancellationToken cancellationToken, String correlationId) {

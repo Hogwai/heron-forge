@@ -4,7 +4,7 @@ package dev.hogwai.platform.spi;
  * Major version of the SPI contract.
  *
  * <p>Exposes the SPI major version as an integer constant, accessible directly
- * as {@code SpiMajor.V1}. Framework-independent and immutable.
+ * as {@code SpiMajor.V1}.
  */
 public final class SpiMajor {
 

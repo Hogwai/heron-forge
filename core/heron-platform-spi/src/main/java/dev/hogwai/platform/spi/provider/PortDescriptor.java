@@ -9,7 +9,7 @@ import java.util.Objects;
  *
  * <p>A port carries a {@link PortId}, the {@link Schema} of the data flowing
  * through it and a {@code required} flag. All components are non-null and the
- * descriptor is immutable. Framework-independent.
+ * descriptor is immutable.
  */
 public record PortDescriptor(PortId portId, Schema schema, boolean required) {
 

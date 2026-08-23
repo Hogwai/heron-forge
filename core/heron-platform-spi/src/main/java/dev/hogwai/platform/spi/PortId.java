@@ -6,7 +6,6 @@ import java.util.Objects;
  * Immutable identifier of a data port.
  *
  * <p>The identifier must be non-null, non-blank and free of whitespace. It is
- * framework-independent and immutable.
  *
  * @param value the port identifier
  */

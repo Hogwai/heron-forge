@@ -7,9 +7,7 @@ import dev.hogwai.platform.spi.Diagnostic;
 
 /**
  * Provider factory for capabilities whose results stream instead of
- * materializing. Implementing this interface — rather than
- * {@link ProviderFactory} — is the declaration that makes a capability
- * streaming: the two worlds are separate by construction.
+ * materializing.
  *
  * <p>Registered and discovered exactly like any provider factory through
  * {@code ServiceLoader}, under its own service contract.

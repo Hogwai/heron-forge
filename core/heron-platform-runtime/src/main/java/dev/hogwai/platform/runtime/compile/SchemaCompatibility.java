@@ -19,7 +19,7 @@ import java.util.Optional;
  * the output, types must be compatible without implicit numeric widening,
  * nullability must be respected, extra output fields are only allowed when the
  * input is open, an open output cannot feed a closed input, and closed enums
- * must not add symbols on the output side. Framework-independent and immutable.
+ * must not add symbols on the output side.
  */
 public final class SchemaCompatibility {
 

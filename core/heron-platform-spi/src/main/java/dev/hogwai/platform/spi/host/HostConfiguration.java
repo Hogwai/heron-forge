@@ -3,7 +3,7 @@ package dev.hogwai.platform.spi.host;
 import java.time.Duration;
 import java.util.Objects;
 
-/** Framework-independent host bind and request-timeout configuration.
+/** Host bind and request-timeout configuration.
  *
  * @param bindAddress    address on which the adapter binds
  * @param port           bind port, or zero for an automatically selected port

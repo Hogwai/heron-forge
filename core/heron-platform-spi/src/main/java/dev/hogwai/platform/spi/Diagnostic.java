@@ -11,7 +11,7 @@ import java.util.Objects;
  * <p>A diagnostic carries a stable {@link PlatformErrorCode}, a
  * {@link Severity}, an optional JSON Pointer-like YAML path (for example
  * {@code /spec/capabilities/1/inputs/orders}), a non-empty message and an
- * optional remediation hint. It is framework-independent and immutable.
+ * optional remediation hint.
  *
  * @param code        the stable error code
  * @param severity    the severity

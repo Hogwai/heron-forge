@@ -3,7 +3,7 @@ package dev.hogwai.platform.runtime.config;
 import java.util.Objects;
 
 /**
- * Immutable, framework-independent model of an application HTTP entrypoint.
+ * Immutable model of an application HTTP entrypoint.
  *
  * <p>The runtime configuration mapper currently accepts only {@code GET}
  * methods. The method remains a string so this model does not depend on an

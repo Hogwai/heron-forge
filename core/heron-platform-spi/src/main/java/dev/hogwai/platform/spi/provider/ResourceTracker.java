@@ -5,7 +5,7 @@ package dev.hogwai.platform.spi.provider;
  * capability instance.
  *
  * <p>Implementations are responsible for the lifecycle and thread-safety of the
- * registered resources. Framework-independent.
+ * registered resources.
  */
 public interface ResourceTracker {
 

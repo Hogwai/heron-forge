@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Framework-independent contract for executing data queries.
+ * Contract for executing data queries.
  *
  * <p>The low-level {@link #query} primitive maps rows through a caller-supplied
  * {@link RowMapper}. The higher-level {@link #queryToDataSet} methods execute a

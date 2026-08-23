@@ -8,7 +8,6 @@ import java.util.Objects;
 /**
  * Immutable result of a {@link SchemaCompatibility} check.
  *
- * <p>Framework-independent and immutable.
  */
 public final class SchemaCompatibilityResult {
 
