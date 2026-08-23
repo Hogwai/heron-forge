@@ -127,7 +127,7 @@ dependencies {
 }
 ```
 
-The annotation lives in `core:heron-platform-spi`; the processor is build-time only and never appears in runtime artifacts. 
+The annotation lives in `core:heron-platform-spi`. The processor is build-time only and never appears in runtime artifacts. 
 The runtime discovery mechanism (`ServiceLoader`) is unchanged.
 
 ## Generation registry
@@ -147,17 +147,17 @@ $HERON rollback --store /var/lib/heron/reg --app my-app         # prints the sta
 ```
 
 Generations follow a monotone lifecycle: `EXPERIMENTAL → STABLE → DEPRECATED → RETIRED`. 
-`start` picks the latest STABLE generation by default; RETIRED is always refused and DEPRECATED requires an explicit `--generation` (with a warning).
+`start` picks the latest STABLE generation by default. RETIRED is always refused and DEPRECATED requires an explicit `--generation` (with a warning).
 
-The store keeps the sealed *definition*, never live state: each generation is a directory holding the raw validated YAML (`${ENV}` placeholders stay unresolved on disk — no secrets are persisted) plus a `record.json` metadata file:
+The store keeps the sealed *definition*, never live state: each generation is a directory holding the raw validated YAML (`${ENV}` placeholders stay unresolved on disk, so no secrets are persisted) plus a `record.json` metadata file:
 
 ```text
 <store-root>/<applicationId>/<generationId>/{config.yaml,record.json}
 ```
 
 The store root comes from `--store`, else the `HERON_REGISTRY_DIR` environment variable, else `./registry`. 
-At activation the stored YAML is re-parsed and recompiled through the same pipeline as a direct boot; the integrity check `sha256(rawYaml) == generationId` runs before any compilation, so a stored generation always rebuilds to exactly what was sealed. 
-The default store is the file-backed brick (`bricks:heron-platform-registry`, service id `registry.file`); another backend means writing another brick implementing `spi.registry.GenerationStore`.
+At activation the stored YAML is reparsed and recompiled through the same pipeline as a direct boot. The integrity check `sha256(rawYaml) == generationId` runs before any compilation, so a stored generation always rebuilds to exactly what was sealed. 
+The default store is the file-backed brick (`bricks:heron-platform-registry`, service id `registry.file`). Another backend means writing another brick implementing `spi.registry.GenerationStore`.
 
 ## Factory demo consumer path
 
@@ -209,30 +209,30 @@ The platform is split into core modules (agnostic, framework-independent) and br
 
 - The core (`spi`, `runtime`) is framework-independent: it knows neither Helidon, nor picocli, nor PostgreSQL.
 - The bricks (`data-jdbi`, `data-postgresql`, `host-helidon`, `cli`, `registry`) are pluggable: one can pick its database brick, its HTTP brick, its launcher and its generation store.
-- The data contract lives in the framework-independent `core:heron-platform-spi`. `bricks:heron-platform-data-jdbi` is the generic SQL engine over Jdbi; `bricks:heron-platform-data-postgresql` is a thin dialect on top of it (PostgresPlugin, JDBC driver) and is discovered by the runtime through `ServiceLoader`. Supporting another database means writing another thin dialect brick.
+- The data contract lives in the framework-independent `core:heron-platform-spi`. `bricks:heron-platform-data-jdbi` is the generic SQL engine over Jdbi. `bricks:heron-platform-data-postgresql` is a thin dialect on top of it (PostgresPlugin, JDBC driver) and is discovered by the runtime through `ServiceLoader`. Supporting another database means writing another thin dialect brick.
 - The launcher (`bricks:heron-platform-cli`) is host-agnostic: it discovers the `HostAdapter` implementation through `ServiceLoader`. `bricks:heron-platform-host-helidon` is the HTTP brick that one can wire in. Another host brick can be plugged in without touching the launcher.
-- The registry keeps cold/hot separation: the store persists sealed definitions (`GenerationRecord`), while `RuntimeSnapshot` holds live capability instances and stays RAM-only. Swapping the file store for another backend (e.g. PostgreSQL) means writing another `GenerationStore` brick — core and CLI stay unchanged.
+- The registry keeps cold/hot separation: the store persists sealed definitions (`GenerationRecord`), while `RuntimeSnapshot` holds live capability instances and stays RAM-only. Swapping the file store for another backend (e.g. PostgreSQL) means writing another `GenerationStore` brick. Core and CLI stay unchanged.
 
 The runtime discovers the `DataAccessFactory` implementation on the classpath via `ServiceLoader` and supplies it to providers through `BuildContext`. 
-A configuration that never touches data access loads even without a data brick; a provider that opens a data client fails with `DATA_ACCESS_UNAVAILABLE` when no brick is present. 
+A configuration that never touches data access loads even without a data brick. A provider that opens a data client fails with `DATA_ACCESS_UNAVAILABLE` when no brick is present. 
 The launcher fails with a clear `HostException` when no host brick is on the classpath. 
 A provider opens a data client during creation, registers it in the resource tracker, and receives a fresh database handle for each query. 
 The generic Jdbi factory installs no plugins unless they are supplied explicitly, the PostgreSQL factory installs `PostgresPlugin`. 
 Both factories run a `SELECT 1` startup probe and sanitize startup and query failures. 
 The PostgreSQL factory backs every client with a small HikariCP connection pool (`JdbiPoolOptions.defaults()`, closed together with the client when the snapshot releases it).
-Jdbi applies a per-query timeout from the execution deadline; a cancellation signal cannot actively interrupt a server call that is already blocked without a separate statement-cancellation mechanism. 
+Jdbi applies a per-query timeout from the execution deadline. A cancellation signal cannot actively interrupt a server call that is already blocked without a separate statement-cancellation mechanism. 
 PostgreSQL integration tests are opt-in with `RUN_POSTGRES_TESTS=true`.
 
 ### Streaming datasets
 
-Large results do not have to be materialized. `DataAccess.streamQuery(...)` returns a `StreamingDataSet` — an `AutoCloseable` view delivering bounded batches while re-checking the deadline and cancellation signal on every pull and enforcing the same `DataSetLimits` as materialized datasets. A capability declares its result shape through the covariant return of `execute`: return a `StreamingDataSet` to stream (entrypoint targets flow lazily to the host), or keep returning a `MaterializedDataSet` as before. When a streaming capability is consumed as an upstream input, the runtime collects it into a materialized dataset for composition. The demo orders capability (`demo.orders`) streams by default over the Jdbi cursor.
+Large results do not have to be materialized. `DataAccess.streamQuery(...)` returns a `StreamingDataSet`, an `AutoCloseable` view delivering bounded batches while re-checking the deadline and cancellation signal on every pull and enforcing the same `DataSetLimits` as materialized datasets. A capability declares its result shape through the covariant return of `execute`: return a `StreamingDataSet` to stream (entrypoint targets flow lazily to the host), or keep returning a `MaterializedDataSet` as before. When a streaming capability is consumed as an upstream input, the runtime collects it into a materialized dataset for composition. The demo orders capability (`demo.orders`) streams by default over the Jdbi cursor.
 
 ## Versions & tools
 
 - Gradle 9.7.0 (wrapper)
 - Java toolchain 25
 - JUnit Jupiter 5.11.4, AssertJ 3.27.7
-- Jackson Databind 2.21.1; Jackson YAML is test-only
+- Jackson Databind 2.21.1. Jackson YAML is test-only
 - SnakeYAML Engine 3.1.1
 - Jdbi 3.54.0
 - HikariCP 7.1.0 (PostgreSQL brick, connection pooling)
@@ -241,7 +241,7 @@ Large results do not have to be materialized. `DataAccess.streamQuery(...)` retu
 - picocli 4.7.7
 - Kotlin/JVM 2.4.10 (generated providers only)
 - SLF4J 2.0.16
-- Revapi 0.19.1 (SPI module only; compatible with gradle-revapi 1.8.0)
+- Revapi 0.19.1 (SPI module only, compatible with gradle-revapi 1.8.0)
 - JMH 1.37 (runtime module only)
 - Error Prone 2.50.0
 - PMD 7.25.0, Checkstyle 13.6.0, JaCoCo 0.8.15
