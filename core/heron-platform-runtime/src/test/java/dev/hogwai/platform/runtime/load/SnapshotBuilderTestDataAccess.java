@@ -6,6 +6,7 @@ import java.util.Map;
 import dev.hogwai.platform.spi.data.DataSetLimits;
 import dev.hogwai.platform.spi.data.MaterializedDataSet;
 import dev.hogwai.platform.spi.data.Schema;
+import dev.hogwai.platform.spi.data.StreamingDataSet;
 import dev.hogwai.platform.spi.data.access.DataAccess;
 import dev.hogwai.platform.spi.data.access.DataAccessConfiguration;
 import dev.hogwai.platform.spi.data.access.DataAccessFactory;
@@ -38,31 +39,60 @@ final class SnapshotBuilderTestDataAccess implements DataAccess {
     }
 
     @Override
-    public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
+    public MaterializedDataSet queryToDataSet(QueryContext context,
+                                              String operation,
+                                              String sql,
             Schema schema, Map<String, String> columnByField) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
-            Map<String, ?> parameters, Schema schema, Map<String, String> columnByField) {
+    public MaterializedDataSet queryToDataSet(QueryContext context,
+                                              String operation,
+                                              String sql,
+                                              Map<String, ?> parameters,
+                                              Schema schema,
+                                              Map<String, String> columnByField) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
-            Schema schema, Map<String, String> columnByField, DataSetLimits limits) {
+    public MaterializedDataSet queryToDataSet(QueryContext context,
+                                              String operation,
+                                              String sql,
+                                              Schema schema,
+                                              Map<String, String> columnByField,
+                                              DataSetLimits limits) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
-            Map<String, ?> parameters, Schema schema, Map<String, String> columnByField, DataSetLimits limits) {
+    public MaterializedDataSet queryToDataSet(QueryContext context,
+                                              String operation,
+                                              String sql,
+                                              Map<String, ?> parameters,
+                                              Schema schema,
+                                              Map<String, String> columnByField,
+                                              DataSetLimits limits) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public int execute(QueryContext context, String operation, String sql, Map<String, ?> parameters) {
+    public StreamingDataSet streamQuery(QueryContext context,
+                                        String operation,
+                                        String sql,
+                                        Schema schema,
+                                        Map<String, String> columnByField,
+                                        DataSetLimits limits,
+                                        int batchSize) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int execute(QueryContext context,
+                       String operation,
+                       String sql,
+                       Map<String, ?> parameters) {
         throw new UnsupportedOperationException();
     }
 

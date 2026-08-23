@@ -3,6 +3,7 @@ package dev.hogwai.platform.spi.data.access;
 import dev.hogwai.platform.spi.data.DataSetLimits;
 import dev.hogwai.platform.spi.data.MaterializedDataSet;
 import dev.hogwai.platform.spi.data.Schema;
+import dev.hogwai.platform.spi.data.StreamingDataSet;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Modifier;
@@ -152,6 +153,17 @@ class DataApiContractTest {
             public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
                     Map<String, ?> parameters, Schema schema, Map<String, String> columnByField,
                     DataSetLimits limits) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public StreamingDataSet streamQuery(QueryContext context,
+                                                String operation,
+                                                String sql,
+                                                Schema schema,
+                                                Map<String, String> columnByField,
+                                                DataSetLimits limits,
+                                                int batchSize) {
                 throw new UnsupportedOperationException();
             }
 

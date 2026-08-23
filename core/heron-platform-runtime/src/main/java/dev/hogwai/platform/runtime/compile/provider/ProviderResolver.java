@@ -19,6 +19,8 @@ import dev.hogwai.platform.spi.provider.ConfigurationSchema;
 import dev.hogwai.platform.spi.provider.ProviderDescriptor;
 import dev.hogwai.platform.spi.provider.ProviderFactory;
 
+import static dev.hogwai.platform.spi.error.PlatformErrorCode.PROVIDER_CONFIG_ERROR;
+
 /**
  * Resolves a {@link CapabilityConfig} to the exact provider factory and
  * descriptor.
@@ -41,7 +43,13 @@ import dev.hogwai.platform.spi.provider.ProviderFactory;
  */
 public final class ProviderResolver {
 
+    // Diagnostic pointer paths, not network URIs: Sonar S1075 is intentionally
+    // suppressed because these values must stay stable API-facing strings.
+    @SuppressWarnings("java:S1075")
     private static final String CONFIG_PATH_PREFIX = "/config/";
+    @SuppressWarnings("java:S1075")
+    private static final String PROVIDER_ID_PATH = "/provider/id";
+    @SuppressWarnings("java:S1075")
     private static final String PROVIDER_VERSION_PATH = "/provider/version";
 
     private final ProviderRegistry registry;
@@ -74,11 +82,31 @@ public final class ProviderResolver {
         Optional<ProviderRegistry.Registration> registrationOpt = registry.registration(providerId);
         if (registrationOpt.isEmpty()) {
             throw new PlatformException(PlatformErrorCode.PROVIDER_NOT_FOUND, List.of(
-                    new Diagnostic(PlatformErrorCode.PROVIDER_NOT_FOUND, Severity.ERROR, "/provider/id",
+                    new Diagnostic(PlatformErrorCode.PROVIDER_NOT_FOUND, Severity.ERROR, PROVIDER_ID_PATH,
                             "provider not found", "register the provider on the classpath")));
         }
         ProviderRegistry.Registration registration = registrationOpt.get();
         ProviderFactory factory = registration.factory();
+        ProviderDescriptor descriptor = getProviderDescriptor(registration, version);
+        List<Diagnostic> genericDiagnostics = GenericConfigChecks.validate(descriptor.configurationSchema(), config.config());
+        if (genericDiagnostics.stream().anyMatch(d -> d.severity() == Severity.ERROR)) {
+            throw new PlatformException(PROVIDER_CONFIG_ERROR, genericDiagnostics);
+        }
+
+        List<Diagnostic> providerDiagnostics = ProviderValidator.validate(factory, config.config());
+
+        List<Diagnostic> diagnostics = new ArrayList<>(genericDiagnostics.size() + providerDiagnostics.size());
+        diagnostics.addAll(genericDiagnostics);
+        diagnostics.addAll(providerDiagnostics);
+
+        if (diagnostics.stream().anyMatch(d -> d.severity() == Severity.ERROR)) {
+            throw new PlatformException(PROVIDER_CONFIG_ERROR, diagnostics);
+        }
+        return new ResolvedProvider(factory, descriptor, diagnostics);
+    }
+
+    private static ProviderDescriptor getProviderDescriptor(ProviderRegistry.Registration registration,
+                                                            ProviderVersion version) {
         ProviderDescriptor descriptor = registration.descriptor();
 
         if (!descriptor.version().equals(version)) {
@@ -91,21 +119,7 @@ public final class ProviderResolver {
                     new Diagnostic(PlatformErrorCode.PROVIDER_VERSION_MISMATCH, Severity.ERROR, PROVIDER_VERSION_PATH,
                             "provider SPI major version is not supported", "use a provider with SPI major " + SpiMajor.V1)));
         }
-        List<Diagnostic> genericDiagnostics = GenericConfigChecks.validate(descriptor.configurationSchema(), config.config());
-        if (genericDiagnostics.stream().anyMatch(d -> d.severity() == Severity.ERROR)) {
-            throw new PlatformException(PlatformErrorCode.PROVIDER_CONFIG_ERROR, genericDiagnostics);
-        }
-
-        List<Diagnostic> providerDiagnostics = ProviderValidator.validate(factory, config.config());
-
-        List<Diagnostic> diagnostics = new ArrayList<>(genericDiagnostics.size() + providerDiagnostics.size());
-        diagnostics.addAll(genericDiagnostics);
-        diagnostics.addAll(providerDiagnostics);
-
-        if (diagnostics.stream().anyMatch(d -> d.severity() == Severity.ERROR)) {
-            throw new PlatformException(PlatformErrorCode.PROVIDER_CONFIG_ERROR, diagnostics);
-        }
-        return new ResolvedProvider(factory, descriptor, diagnostics);
+        return descriptor;
     }
 
     /**
@@ -150,8 +164,8 @@ public final class ProviderResolver {
             try {
                 return new ProviderId(value);
             } catch (RuntimeException _) {
-                throw new PlatformException(PlatformErrorCode.PROVIDER_CONFIG_ERROR, List.of(
-                        new Diagnostic(PlatformErrorCode.PROVIDER_CONFIG_ERROR, Severity.ERROR, "/provider/id",
+                throw new PlatformException(PROVIDER_CONFIG_ERROR, List.of(
+                        new Diagnostic(PROVIDER_CONFIG_ERROR, Severity.ERROR, PROVIDER_ID_PATH,
                                 "provider id is invalid", "provide a valid provider id")));
             }
         }
@@ -160,8 +174,8 @@ public final class ProviderResolver {
             try {
                 return ProviderVersion.parse(value);
             } catch (RuntimeException _) {
-                throw new PlatformException(PlatformErrorCode.PROVIDER_CONFIG_ERROR, List.of(
-                        new Diagnostic(PlatformErrorCode.PROVIDER_CONFIG_ERROR, Severity.ERROR, PROVIDER_VERSION_PATH,
+                throw new PlatformException(PROVIDER_CONFIG_ERROR, List.of(
+                        new Diagnostic(PROVIDER_CONFIG_ERROR, Severity.ERROR, PROVIDER_VERSION_PATH,
                                 "provider version is invalid", "provide a canonical major.minor.patch version")));
             }
         }
@@ -206,21 +220,23 @@ public final class ProviderResolver {
             validateRequiredFields(schema, rawConfig, diagnostics);
         }
 
-        private static void validateUnknownFields(ConfigurationSchema schema, Map<String, Object> rawConfig,
+        private static void validateUnknownFields(ConfigurationSchema schema,
+                                                  Map<String, Object> rawConfig,
                                                   List<Diagnostic> diagnostics) {
             for (String key : rawConfig.keySet()) {
                 if (!schema.allowedFields().contains(key)) {
-                    diagnostics.add(new Diagnostic(PlatformErrorCode.PROVIDER_CONFIG_ERROR, Severity.ERROR, CONFIG_PATH_PREFIX + "<key>",
+                    diagnostics.add(new Diagnostic(PROVIDER_CONFIG_ERROR, Severity.ERROR, "%s%s".formatted(CONFIG_PATH_PREFIX, "<key>"),
                             "unknown configuration field", "remove the field or check the provider documentation"));
                 }
             }
         }
 
-        private static void validateRequiredFields(ConfigurationSchema schema, Map<String, Object> rawConfig,
+        private static void validateRequiredFields(ConfigurationSchema schema,
+                                                   Map<String, Object> rawConfig,
                                                    List<Diagnostic> diagnostics) {
             for (String required : schema.requiredFields()) {
                 if (!rawConfig.containsKey(required)) {
-                    diagnostics.add(new Diagnostic(PlatformErrorCode.PROVIDER_CONFIG_ERROR, Severity.ERROR, CONFIG_PATH_PREFIX + required,
+                    diagnostics.add(new Diagnostic(PROVIDER_CONFIG_ERROR, Severity.ERROR, CONFIG_PATH_PREFIX + required,
                             "missing required configuration field", "provide the required field"));
                 }
             }
@@ -250,7 +266,7 @@ public final class ProviderResolver {
             for (Map.Entry<String, ConfigurationSchema.ScalarKind> entry : schema.fieldKinds().entrySet()) {
                 Object value = rawConfig.get(entry.getKey());
                 if (value != null && !matches(entry.getValue(), value)) {
-                    diagnostics.add(new Diagnostic(PlatformErrorCode.PROVIDER_CONFIG_ERROR, Severity.ERROR,
+                    diagnostics.add(new Diagnostic(PROVIDER_CONFIG_ERROR, Severity.ERROR,
                             CONFIG_PATH_PREFIX + entry.getKey(), "configuration field has the wrong type",
                             "provide a value of the declared type"));
                 }
@@ -261,7 +277,7 @@ public final class ProviderResolver {
                                                  List<Diagnostic> diagnostics) {
             for (Map.Entry<String, String> entry : schema.deprecations().entrySet()) {
                 if (rawConfig.containsKey(entry.getKey())) {
-                    diagnostics.add(new Diagnostic(PlatformErrorCode.PROVIDER_CONFIG_ERROR, Severity.WARNING,
+                    diagnostics.add(new Diagnostic(PROVIDER_CONFIG_ERROR, Severity.WARNING,
                             CONFIG_PATH_PREFIX + entry.getKey(), "configuration field is deprecated", entry.getValue()));
                 }
             }
@@ -299,11 +315,11 @@ public final class ProviderResolver {
             try {
                 result = factory.validate(rawConfig);
             } catch (RuntimeException _) {
-                return List.of(new Diagnostic(PlatformErrorCode.PROVIDER_CONFIG_ERROR, Severity.ERROR, null,
+                return List.of(new Diagnostic(PROVIDER_CONFIG_ERROR, Severity.ERROR, null,
                         "provider validation failed", CHECK_PROVIDER_IMPLEMENTATION));
             }
             if (result == null) {
-                return List.of(new Diagnostic(PlatformErrorCode.PROVIDER_CONFIG_ERROR, Severity.ERROR, null,
+                return List.of(new Diagnostic(PROVIDER_CONFIG_ERROR, Severity.ERROR, null,
                         "provider validation returned no diagnostics", CHECK_PROVIDER_IMPLEMENTATION));
             }
             return createDiagnostics(result);
@@ -313,7 +329,7 @@ public final class ProviderResolver {
             List<Diagnostic> converted = new ArrayList<>(result.size());
             for (Diagnostic diagnostic : result) {
                 converted.add(Objects.requireNonNullElseGet(
-                        diagnostic, () -> new Diagnostic(PlatformErrorCode.PROVIDER_CONFIG_ERROR,
+                        diagnostic, () -> new Diagnostic(PROVIDER_CONFIG_ERROR,
                                 Severity.ERROR,
                                 null,
                                 "provider validation returned a null diagnostic",

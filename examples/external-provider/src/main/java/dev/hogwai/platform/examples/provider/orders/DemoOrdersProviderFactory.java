@@ -76,7 +76,9 @@ public final class DemoOrdersProviderFactory implements ProviderFactory {
             Objects.requireNonNull(inputs, "inputs must not be null");
             QueryContext queryContext = new QueryContext(executionContext.deadline(),
                     executionContext.cancellationToken()::isCancellationRequested);
-            return OrdersQuery.read(dataAccess, queryContext, SupplyChainDatabaseConfig.limits(rawConfig));
+            // Covariant return: streaming straight from the Jdbi cursor.
+            return OrdersQuery.stream(dataAccess, queryContext,
+                    SupplyChainDatabaseConfig.limits(rawConfig));
         };
     }
 }

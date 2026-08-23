@@ -56,6 +56,12 @@ class ProviderFactoryTest {
         }
 
         @Override
+            public dev.hogwai.platform.spi.data.StreamingDataSet streamQuery(QueryContext context, String operation, String sql,
+                    Schema schema, Map<String, String> columnByField, DataSetLimits limits, int batchSize) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
         public int execute(QueryContext context, String operation, String sql, Map<String, ?> parameters) {
             throw new UnsupportedOperationException();
         }

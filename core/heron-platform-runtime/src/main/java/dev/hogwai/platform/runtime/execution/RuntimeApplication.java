@@ -2,11 +2,14 @@ package dev.hogwai.platform.runtime.execution;
 
 import java.time.Clock;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import dev.hogwai.platform.runtime.snapshot.SnapshotCandidate;
-import dev.hogwai.platform.spi.data.MaterializedDataSet;
+import dev.hogwai.platform.spi.data.DataSet;
+import dev.hogwai.platform.spi.data.StreamingDataSet;
 import dev.hogwai.platform.spi.error.PlatformErrorCode;
 import dev.hogwai.platform.spi.error.PlatformException;
 import dev.hogwai.platform.spi.execution.CancellationToken;
@@ -18,8 +21,12 @@ import dev.hogwai.platform.spi.host.InvocationFailure;
 import dev.hogwai.platform.spi.host.InvocationRequest;
 import dev.hogwai.platform.spi.host.InvocationResult;
 import dev.hogwai.platform.spi.host.InvocationSuccess;
+import dev.hogwai.platform.spi.host.StreamingPayload;
 
-/** Owner of one loaded candidate and its provider resources. */
+/**
+ * Owner of one loaded candidate and its provider resources.
+ */
+@SuppressWarnings("PMD.CyclomaticComplexity")
 public final class RuntimeApplication implements HostApplication {
 
     private final SnapshotCandidate candidate;
@@ -50,10 +57,7 @@ public final class RuntimeApplication implements HostApplication {
         if (request == null) {
             return new InvocationFailure(FailureCode.INVALID_REQUEST, "invalid request");
         }
-        RuntimeEntrypoint entrypoint = runtimeEntrypoints.stream()
-                .filter(snapshot -> snapshot.descriptor().id().equals(request.entrypointId()))
-                .findFirst()
-                .orElse(null);
+        RuntimeEntrypoint entrypoint = find(request);
         if (entrypoint == null) {
             return new InvocationFailure(FailureCode.ENTRYPOINT_NOT_FOUND, "entrypoint not found");
         }
@@ -61,13 +65,82 @@ public final class RuntimeApplication implements HostApplication {
         try {
             ExecutionContext context = new ExecutionContext(request.requestId(), candidate.snapshot().generationId(),
                     request.deadline(), cancellationToken(request), request.correlationId());
-            MaterializedDataSet result = invoker.invokeTarget(candidate.snapshot(), entrypoint.target(), context);
+            DataSet result = invoker.invokeTarget(candidate.snapshot(), entrypoint.target(), context);
             return new InvocationSuccess(StructuredPayloadProjector.project(result));
         } catch (PlatformException failure) {
             return failure(failure.code());
         } catch (RuntimeException _) {
             return new InvocationFailure(FailureCode.INTERNAL, "internal invocation failure");
         }
+    }
+
+    @Override
+    public Optional<dev.hogwai.platform.spi.host.StreamingPayload> invokeStreaming(InvocationRequest request) {
+        if (closed.get() || request == null) {
+            return Optional.empty();
+        }
+        RuntimeEntrypoint entrypoint = find(request);
+        if (entrypoint == null) {
+            return Optional.empty();
+        }
+        try {
+            ExecutionContext context = new ExecutionContext(request.requestId(), candidate.snapshot().generationId(),
+                    request.deadline(), cancellationToken(request), request.correlationId());
+            DataSet result = invoker.invokeTarget(candidate.snapshot(), entrypoint.target(), context);
+            // Only targets that declared a streaming result flow lazily to the
+            // host; anything else falls back to the materialized invocation.
+            if (result instanceof StreamingDataSet streamed) {
+                return Optional.of(new StreamedPayload(streamed));
+            }
+            return Optional.empty();
+        } catch (RuntimeException _) {
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Adapts an SPI streaming dataset to the host-generic payload contract.
+     */
+    private record StreamedPayload(StreamingDataSet dataset) implements StreamingPayload {
+
+        private StreamedPayload(StreamingDataSet dataset) {
+            this.dataset = Objects.requireNonNull(dataset, "dataset must not be null");
+        }
+
+        @Override
+        public Optional<List<Map<String, Object>>> nextBatch() {
+            return dataset.nextBatch().map(batch -> batch.stream()
+                    .map(StructuredPayloadProjector::toGenericRow)
+                    .toList());
+        }
+
+
+        @Override
+        public String schemaId() {
+            return dataset.schema().identifier();
+        }
+
+        @Override
+        public int schemaVersion() {
+            return dataset.schema().version();
+        }
+
+        @Override
+        public long deliveredRowCount() {
+            return dataset.deliveredRowCount();
+        }
+
+        @Override
+        public void close() {
+            dataset.close();
+        }
+    }
+
+    private RuntimeEntrypoint find(InvocationRequest request) {
+        return runtimeEntrypoints.stream()
+                .filter(snapshot -> snapshot.descriptor().id().equals(request.entrypointId()))
+                .findFirst()
+                .orElse(null);
     }
 
     @Override
@@ -99,8 +172,8 @@ public final class RuntimeApplication implements HostApplication {
                 case CAPABILITY_EXECUTION_ERROR -> new InvocationFailure(FailureCode.PROVIDER,
                         "provider execution failed");
                 case CONFIG_PARSE_ERROR, CONFIG_SCHEMA_ERROR, PROVIDER_NOT_FOUND, PROVIDER_VERSION_MISMATCH,
-                        PROVIDER_CONFIG_ERROR, GRAPH_REFERENCE_ERROR, GRAPH_CYCLE_ERROR, SCHEMA_INCOMPATIBLE,
-                        DATASET_LIMIT_EXCEEDED, DATA_ACCESS_UNAVAILABLE -> new InvocationFailure(FailureCode.CONFIGURATION,
+                     PROVIDER_CONFIG_ERROR, GRAPH_REFERENCE_ERROR, GRAPH_CYCLE_ERROR, SCHEMA_INCOMPATIBLE,
+                     DATASET_LIMIT_EXCEEDED, DATA_ACCESS_UNAVAILABLE -> new InvocationFailure(FailureCode.CONFIGURATION,
                         "application configuration failed");
             };
         }

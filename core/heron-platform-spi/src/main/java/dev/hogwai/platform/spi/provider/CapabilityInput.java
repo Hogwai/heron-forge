@@ -9,11 +9,7 @@ import java.util.Objects;
  *
  * <p>Framework-independent and immutable.
  */
-@SuppressWarnings("java:S6206")
-public final class CapabilityInput {
-
-    private final PortId portId;
-    private final MaterializedDataSet dataSet;
+public record CapabilityInput(PortId portId, MaterializedDataSet dataSet) {
 
     /**
      * Creates a capability input.
@@ -32,6 +28,7 @@ public final class CapabilityInput {
      *
      * @return the port identifier
      */
+    @Override
     public PortId portId() {
         return portId;
     }
@@ -41,6 +38,7 @@ public final class CapabilityInput {
      *
      * @return the data set bound to the port
      */
+    @Override
     public MaterializedDataSet dataSet() {
         return dataSet;
     }

@@ -16,6 +16,7 @@ import dev.hogwai.platform.spi.data.FieldId;
 import dev.hogwai.platform.spi.data.MaterializedDataSet;
 import dev.hogwai.platform.spi.data.Schema;
 import dev.hogwai.platform.spi.data.SchemaRecord;
+import dev.hogwai.platform.spi.data.StreamingDataSet;
 import dev.hogwai.platform.spi.data.access.DataAccess;
 import dev.hogwai.platform.spi.data.access.DataAccessFactory;
 import dev.hogwai.platform.spi.data.access.DataRow;
@@ -92,9 +93,12 @@ class DemoOrdersProviderFactoryTest {
         RuntimeException registrationFailure = new IllegalStateException("registration failed");
         DataAccessFactory factory = configuration -> access;
         BuildContext context = new BuildContext(java.time.Clock.systemUTC(),
-                resource -> { throw registrationFailure; }, factory);
+                resource -> {
+                    throw registrationFailure;
+                }, factory);
 
-        assertThatThrownBy(() -> new DemoOrdersProviderFactory().create(
+        var failingFactory = new DemoOrdersProviderFactory();
+        assertThatThrownBy(() -> failingFactory.create(
                 Map.of("url", "jdbc:postgresql://localhost:5432/heron_demo",
                         "user", "test-user", "password", "test-password"), context))
                 .isSameAs(registrationFailure);
@@ -125,31 +129,39 @@ class DemoOrdersProviderFactoryTest {
 
         @Override
         public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
-                Schema schema, Map<String, String> columnByField) {
+                                                  Schema schema, Map<String, String> columnByField) {
             return queryToDataSet(context, operation, sql, Map.of(), schema, columnByField,
                     FakeDataAccessSupport.DEFAULT_LIMITS);
         }
 
         @Override
         public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
-                Schema schema, Map<String, String> columnByField, DataSetLimits limits) {
+                                                  Schema schema, Map<String, String> columnByField, DataSetLimits limits) {
             return queryToDataSet(context, operation, sql, Map.of(), schema, columnByField, limits);
         }
 
         @Override
         public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
-                Map<String, ?> parameters, Schema schema, Map<String, String> columnByField) {
+                                                  Map<String, ?> parameters, Schema schema, Map<String, String> columnByField) {
             return queryToDataSet(context, operation, sql, parameters, schema, columnByField,
                     FakeDataAccessSupport.DEFAULT_LIMITS);
         }
 
         @Override
         public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
-                Map<String, ?> parameters, Schema schema, Map<String, String> columnByField, DataSetLimits limits) {
+                                                  Map<String, ?> parameters, Schema schema,
+                                                  Map<String, String> columnByField, DataSetLimits limits) {
             QueryRequest<SchemaRecord> request = new QueryRequest<>(operation, sql, parameters,
                     row -> FakeDataAccessSupport.toRecord(row, schema, columnByField));
             List<SchemaRecord> records = query(request, context);
             return FakeDataAccessSupport.dataSet(schema, operation, records, limits);
+        }
+
+        @Override
+        public StreamingDataSet streamQuery(QueryContext context, String operation, String sql,
+                                            Schema schema, Map<String, String> columnByField,
+                                            DataSetLimits limits, int batchSize) {
+            throw new UnsupportedOperationException();
         }
 
         @Override
@@ -175,12 +187,7 @@ class DemoOrdersProviderFactoryTest {
         }
     }
 
-    private static final class MapDataRow implements DataRow {
-        private final Map<String, Object> values;
-
-        private MapDataRow(Map<String, Object> values) {
-            this.values = values;
-        }
+    private record MapDataRow(Map<String, Object> values) implements DataRow {
 
         @Override
         public String string(String column) {

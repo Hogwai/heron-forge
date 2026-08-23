@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import dev.hogwai.platform.runtime.compile.provider.ProviderRegistry;
 import dev.hogwai.platform.runtime.snapshot.SnapshotCandidate;
 import dev.hogwai.platform.spi.Diagnostic;
+import dev.hogwai.platform.spi.data.DataSet;
 import dev.hogwai.platform.spi.data.MaterializedDataSet;
 import dev.hogwai.platform.spi.data.access.DataAccessFactory;
 import dev.hogwai.platform.spi.error.PlatformErrorCode;
@@ -91,10 +92,8 @@ class ApplicationLoaderTest {
     void invalidYamlAndProviderConfigurationFailBeforeReturningAnApplication() {
         TestFixture fixture = sourceFixture("source");
         var invalidYaml = stream("not: [valid");
-        assertThatThrownBy(() -> ApplicationLoader.load(invalidYaml, fixture.registry,
-                fixture.dataAccessFactory))
+        assertThatThrownBy(() -> load(fixture, invalidYaml))
                 .isInstanceOf(PlatformException.class);
-
         TestFixture invalid = sourceFixture("source", List.of(new Diagnostic(
                 PlatformErrorCode.PROVIDER_CONFIG_ERROR, Severity.ERROR,
                 null, "invalid", null)));
@@ -108,8 +107,8 @@ class ApplicationLoaderTest {
     @Test
     void missingEntrypointTargetClosesAlreadyCreatedInstances() {
         TestFixture fixture = sourceFixture("source");
-        assertThatThrownBy(() -> ApplicationLoader.load(stream(yaml("missing", "source")), fixture.registry,
-                fixture.dataAccessFactory))
+        var stream = stream(yaml("missing", "source"));
+        assertThatThrownBy(() -> ApplicationLoader.load(stream, fixture.registry, fixture.dataAccessFactory))
                 .isInstanceOf(PlatformException.class)
                 .satisfies(error -> assertThat(((PlatformException) error).code())
                         .isEqualTo(PlatformErrorCode.GRAPH_REFERENCE_ERROR));
@@ -164,6 +163,10 @@ class ApplicationLoaderTest {
         assertThat(fixture.closedCount.get()).isEqualTo(1);
     }
 
+    private static HostApplication load(TestFixture fixture, ByteArrayInputStream yaml) {
+        return ApplicationLoader.load(yaml, fixture.registry, fixture.dataAccessFactory);
+    }
+
     private static HostApplication load(TestFixture fixture, String yaml) {
         return ApplicationLoader.load(stream(yaml), fixture.registry, fixture.dataAccessFactory);
     }
@@ -214,7 +217,7 @@ class ApplicationLoaderTest {
     }
 
     private static TestFixture sourceFixture(String id, List<Diagnostic> diagnostics) {
-        dev.hogwai.platform.spi.data.MaterializedDataSet dataset = MaterializedDataSetFactory.dataset();
+        MaterializedDataSet dataset = MaterializedDataSetFactory.dataset();
         return sourceFixture(id, diagnostics, _ -> new RecordingInstance(
                 dataset, new AtomicInteger(), null));
     }
@@ -263,7 +266,7 @@ class ApplicationLoaderTest {
                                          AtomicReference<ExecutionContext> lastContext) implements CapabilityInstance {
 
         @Override
-            public MaterializedDataSet execute(
+            public DataSet execute(
                     CapabilityInputs inputs,
                     ExecutionContext context) {
                 lastContext.set(context);

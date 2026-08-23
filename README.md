@@ -156,17 +156,17 @@ Helidon and picocli are supplied by the standard shell.
 
 The platform is split into core modules (agnostic, framework-independent) and bricks (pluggable components that a solution squad wires in).
 
-| Module                                  | Kind    | Description                                                         | Depends on                                                                                                                                                    |
-|-----------------------------------------|---------|---------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `core:heron-platform-spi`               | core    | Service provider interfaces, host contract and data access contract | N/A                                                                                                                                                           |
-| `core:heron-platform-runtime`           | core    | Runtime implementation                                              | `core:heron-platform-spi`                                                                                                                                     |
-| `bricks:heron-platform-data-jdbi`       | brick   | Generic Jdbi data access engine (connection pooling included)        | `core:heron-platform-spi`                                                                                                                                     |
-| `bricks:heron-platform-data-postgresql` | brick   | PostgreSQL dialect over the Jdbi brick (plugin, driver, registration) | `core:heron-platform-spi`, `bricks:heron-platform-data-jdbi`                                                                                                 |
-| `bricks:heron-platform-host-helidon`    | brick   | Helidon SE 4.5.3 HTTP shell                                         | `core:heron-platform-spi`                                                                                                                                     |
-| `bricks:heron-platform-cli`             | brick   | picocli standard command-line bootstrap                             | `core:heron-platform-spi`, `core:heron-platform-runtime`                                                                                                      |
-| `examples:external-provider`            | example | Example external provider                                           | `core:heron-platform-spi`                                                                                                                                     |
-| `examples:kotlin-provider`              | example | Kotlin/JVM PostgreSQL-backed provider                               | `core:heron-platform-spi`                                                                                                                                     |
-| `examples:factory-demo`                 | example | Example factory demo                                                | `core:heron-platform-runtime`, `bricks:heron-platform-cli`, `bricks:heron-platform-data-postgresql`, `examples:external-provider`, `examples:kotlin-provider` |
+| Module                                  | Kind    | Description                                                           | Depends on                                                                                                                                                    |
+|-----------------------------------------|---------|-----------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `core:heron-platform-spi`               | core    | Service provider interfaces, host contract and data access contract   | N/A                                                                                                                                                           |
+| `core:heron-platform-runtime`           | core    | Runtime implementation                                                | `core:heron-platform-spi`                                                                                                                                     |
+| `bricks:heron-platform-data-jdbi`       | brick   | Generic Jdbi data access engine (connection pooling included)         | `core:heron-platform-spi`                                                                                                                                     |
+| `bricks:heron-platform-data-postgresql` | brick   | PostgreSQL dialect over the Jdbi brick (plugin, driver, registration) | `core:heron-platform-spi`, `bricks:heron-platform-data-jdbi`                                                                                                  |
+| `bricks:heron-platform-host-helidon`    | brick   | Helidon SE 4.5.3 HTTP shell                                           | `core:heron-platform-spi`                                                                                                                                     |
+| `bricks:heron-platform-cli`             | brick   | picocli standard command-line bootstrap                               | `core:heron-platform-spi`, `core:heron-platform-runtime`                                                                                                      |
+| `examples:external-provider`            | example | Example external provider                                             | `core:heron-platform-spi`                                                                                                                                     |
+| `examples:kotlin-provider`              | example | Kotlin/JVM PostgreSQL-backed provider                                 | `core:heron-platform-spi`                                                                                                                                     |
+| `examples:factory-demo`                 | example | Example factory demo                                                  | `core:heron-platform-runtime`, `bricks:heron-platform-cli`, `bricks:heron-platform-data-postgresql`, `examples:external-provider`, `examples:kotlin-provider` |
 
 ## Boundaries
 
@@ -184,6 +184,10 @@ Both factories run a `SELECT 1` startup probe and sanitize startup and query fai
 The PostgreSQL factory backs every client with a small HikariCP connection pool (`JdbiPoolOptions.defaults()`, closed together with the client when the snapshot releases it).
 Jdbi applies a per-query timeout from the execution deadline; a cancellation signal cannot actively interrupt a server call that is already blocked without a separate statement-cancellation mechanism. 
 PostgreSQL integration tests are opt-in with `RUN_POSTGRES_TESTS=true`.
+
+### Streaming datasets
+
+Large results do not have to be materialized. `DataAccess.streamQuery(...)` returns a `StreamingDataSet` — an `AutoCloseable` view delivering bounded batches while re-checking the deadline and cancellation signal on every pull and enforcing the same `DataSetLimits` as materialized datasets. A capability declares its result shape through the covariant return of `execute`: return a `StreamingDataSet` to stream (entrypoint targets flow lazily to the host), or keep returning a `MaterializedDataSet` as before. When a streaming capability is consumed as an upstream input, the runtime collects it into a materialized dataset for composition. The demo orders capability (`demo.orders`) streams by default over the Jdbi cursor.
 
 ## Versions & tools
 

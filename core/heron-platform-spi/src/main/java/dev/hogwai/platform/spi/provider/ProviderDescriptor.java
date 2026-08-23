@@ -14,31 +14,28 @@ import java.util.Objects;
  * major version, immutable input and output port maps, and configuration
  * schema. Shape constraints are enforced at construction.
  */
-@SuppressWarnings("java:S6206")
-public final class ProviderDescriptor {
-
-    private final ProviderId providerId;
-    private final ProviderVersion version;
-    private final CapabilityKind capabilityKind;
-    private final int spiMajor;
-    private final Map<PortId, PortDescriptor> inputPorts;
-    private final Map<PortId, PortDescriptor> outputPorts;
-    private final ConfigurationSchema configurationSchema;
+public record ProviderDescriptor(ProviderId providerId,
+                                 ProviderVersion version,
+                                 CapabilityKind capabilityKind,
+                                 int spiMajor,
+                                 Map<PortId, PortDescriptor> inputPorts,
+                                 Map<PortId, PortDescriptor> outputPorts,
+                                 ConfigurationSchema configurationSchema) {
 
     /**
      * Creates a provider descriptor.
      *
-     * @param providerId provider identifier
-     * @param version provider version
-     * @param capabilityKind capability kind
-     * @param spiMajor SPI major version
-     * @param inputPorts input ports keyed by {@link PortId}
-     * @param outputPorts output ports keyed by {@link PortId}
+     * @param providerId          provider identifier
+     * @param version             provider version
+     * @param capabilityKind      capability kind
+     * @param spiMajor            SPI major version
+     * @param inputPorts          input ports keyed by {@link PortId}
+     * @param outputPorts         output ports keyed by {@link PortId}
      * @param configurationSchema configuration schema
-     * @throws NullPointerException if any argument is null
+     * @throws NullPointerException     if any argument is null
      * @throws IllegalArgumentException if the SPI major is not positive, output
-     *         ports are empty, a source declares inputs, or a port key does not
-     *         match its descriptor's port id
+     *                                  ports are empty, a source declares inputs, or a port key does not
+     *                                  match its descriptor's port id
      */
     @SuppressWarnings("java:S107")
     public ProviderDescriptor(ProviderId providerId, ProviderVersion version, CapabilityKind capabilityKind,
@@ -54,34 +51,6 @@ public final class ProviderDescriptor {
         this.inputPorts = Map.copyOf(inputPorts);
         this.outputPorts = Map.copyOf(outputPorts);
         this.configurationSchema = Objects.requireNonNull(configurationSchema, "configurationSchema must not be null");
-    }
-
-    public ProviderId providerId() {
-        return providerId;
-    }
-
-    public ProviderVersion version() {
-        return version;
-    }
-
-    public CapabilityKind capabilityKind() {
-        return capabilityKind;
-    }
-
-    public int spiMajor() {
-        return spiMajor;
-    }
-
-    public Map<PortId, PortDescriptor> inputPorts() {
-        return inputPorts;
-    }
-
-    public Map<PortId, PortDescriptor> outputPorts() {
-        return outputPorts;
-    }
-
-    public ConfigurationSchema configurationSchema() {
-        return configurationSchema;
     }
 
     private static final class Validator {

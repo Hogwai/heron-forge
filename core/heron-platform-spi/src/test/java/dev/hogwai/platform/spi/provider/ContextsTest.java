@@ -3,6 +3,7 @@ package dev.hogwai.platform.spi.provider;
 import dev.hogwai.platform.spi.data.DataSetLimits;
 import dev.hogwai.platform.spi.data.MaterializedDataSet;
 import dev.hogwai.platform.spi.data.Schema;
+import dev.hogwai.platform.spi.data.StreamingDataSet;
 import dev.hogwai.platform.spi.data.access.DataAccess;
 import dev.hogwai.platform.spi.data.access.DataAccessFactory;
 import dev.hogwai.platform.spi.data.access.QueryContext;
@@ -48,6 +49,17 @@ class ContextsTest {
         }
 
         @Override
+            public StreamingDataSet streamQuery(QueryContext context,
+                                                String operation,
+                                                String sql,
+                                                Schema schema,
+                                                Map<String, String> columnByField,
+                                                DataSetLimits limits,
+                                                int batchSize) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
         public int execute(QueryContext context, String operation, String sql, Map<String, ?> parameters) {
             throw new UnsupportedOperationException();
         }

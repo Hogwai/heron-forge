@@ -11,19 +11,17 @@ import java.util.Objects;
  * lists of {@link CapabilityConfig}s and {@link EntrypointConfig}s. All collections are
  * defensively copied.
  */
-public final class ApplicationConfig {
-
-    private final String apiVersion;
-    private final String name;
-    private final List<CapabilityConfig> capabilities;
-    private final List<EntrypointConfig> entrypoints;
+public record ApplicationConfig(String apiVersion,
+                                String name,
+                                List<CapabilityConfig> capabilities,
+                                List<EntrypointConfig> entrypoints) {
 
     /**
      * Creates an application configuration.
      *
-     * @param apiVersion    the API version
-     * @param name          the application name
-     * @param capabilities  the capabilities
+     * @param apiVersion   the API version
+     * @param name         the application name
+     * @param capabilities the capabilities
      * @throws NullPointerException if any argument is {@code null}
      */
     public ApplicationConfig(String apiVersion, String name, List<CapabilityConfig> capabilities) {
@@ -33,10 +31,10 @@ public final class ApplicationConfig {
     /**
      * Creates an application configuration with its entrypoints.
      *
-     * @param apiVersion    the API version
-     * @param name          the application name
-     * @param capabilities  the capabilities
-     * @param entrypoints   the entrypoints
+     * @param apiVersion   the API version
+     * @param name         the application name
+     * @param capabilities the capabilities
+     * @param entrypoints  the entrypoints
      * @throws NullPointerException if any argument is {@code null}
      */
     public ApplicationConfig(String apiVersion, String name,
@@ -50,6 +48,7 @@ public final class ApplicationConfig {
     /**
      * @return the API version
      */
+    @Override
     public String apiVersion() {
         return apiVersion;
     }
@@ -57,6 +56,7 @@ public final class ApplicationConfig {
     /**
      * @return the application name
      */
+    @Override
     public String name() {
         return name;
     }
@@ -64,6 +64,7 @@ public final class ApplicationConfig {
     /**
      * @return an immutable view of the capabilities
      */
+    @Override
     public List<CapabilityConfig> capabilities() {
         return capabilities;
     }
@@ -71,6 +72,7 @@ public final class ApplicationConfig {
     /**
      * @return an immutable view of the entrypoints
      */
+    @Override
     public List<EntrypointConfig> entrypoints() {
         return entrypoints;
     }

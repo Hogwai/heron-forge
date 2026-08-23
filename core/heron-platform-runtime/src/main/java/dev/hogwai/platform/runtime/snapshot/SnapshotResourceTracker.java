@@ -51,7 +51,7 @@ public final class SnapshotResourceTracker implements dev.hogwai.platform.spi.pr
      * Closes all registered resources in reverse order of registration.
      *
      * <p>Idempotent: subsequent calls are no-ops. All resources are closed even
-     * if some fail; failures are aggregated as described in the class javadoc.
+     * if some fail; failures are aggregated as described in the Javadoc.
      *
      * @throws PlatformException if one or more resources failed to close
      */

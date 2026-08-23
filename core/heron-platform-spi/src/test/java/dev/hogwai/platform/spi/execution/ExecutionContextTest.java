@@ -62,6 +62,11 @@ class ExecutionContextTest {
                         ApiAssert.MethodSpec.of("snapshotId", String.class),
                         ApiAssert.MethodSpec.of("deadline", Instant.class),
                         ApiAssert.MethodSpec.of("cancellationToken", CancellationToken.class),
-                        ApiAssert.MethodSpec.of("correlationId", String.class)));
+                        ApiAssert.MethodSpec.of("correlationId", String.class),
+                        // Record API: value equality and rendering are part of
+                        // the declared surface since the record conversion.
+                        ApiAssert.MethodSpec.of("equals", boolean.class, Object.class),
+                        ApiAssert.MethodSpec.of("hashCode", int.class),
+                        ApiAssert.MethodSpec.of("toString", String.class)));
     }
 }

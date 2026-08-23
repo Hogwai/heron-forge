@@ -35,7 +35,7 @@ import org.snakeyaml.engine.v2.schema.JsonSchema;
 final class YamlEventValidator {
 
     private static final Pattern ENV_INTERPOLATION = Pattern.compile("\\$\\{[^}]*}");
-    private static final Pattern CANONICAL_PLACEHOLDER = Pattern.compile("\\$\\{([A-Za-z_][A-Za-z0-9_]*)}");
+    private static final Pattern CANONICAL_PLACEHOLDER = Pattern.compile("\\$\\{([A-Za-z_]\\w*)}");
     private static final JsonSchema JSON_SCHEMA = new JsonSchema();
 
     private final YamlLimits limits;
@@ -125,7 +125,7 @@ final class YamlEventValidator {
                     "use a scalar mapping key");
         }
         String path = nodePath();
-        if (!checkControls(event, path, diagnostics, false)) {
+        if (areControlsInvalid(event, path, diagnostics, false)) {
             return false;
         }
         if (!isRootAllowed(mapping, diagnostics)) {
@@ -159,7 +159,7 @@ final class YamlEventValidator {
     private boolean scalar(ScalarEvent scalar, List<Diagnostic> diagnostics) {
         boolean key = isMappingKey();
         String path = nodePath();
-        if (!checkControls(scalar, path, diagnostics, key)) {
+        if (areControlsInvalid(scalar, path, diagnostics, key)) {
             return false;
         }
         if (state.frames.isEmpty()) {
@@ -264,16 +264,16 @@ final class YamlEventValidator {
         return INVALID;
     }
 
-    private boolean checkControls(NodeEvent event, String path, List<Diagnostic> diagnostics, boolean key) {
+    private boolean areControlsInvalid(NodeEvent event, String path, List<Diagnostic> diagnostics, boolean key) {
         if (event.getAnchor().isPresent()) {
-            return fail(diagnostics, path, key ? "YAML anchor on key is not allowed" : "YAML anchors are not allowed",
+            return !fail(diagnostics, path, key ? "YAML anchor on key is not allowed" : "YAML anchors are not allowed",
                     "remove the anchor");
         }
         if (hasExplicitTag(event)) {
-            return fail(diagnostics, path, key ? "explicit YAML tag on key is not allowed"
+            return !fail(diagnostics, path, key ? "explicit YAML tag on key is not allowed"
                     : "explicit YAML tag is not allowed", "remove the explicit YAML tag");
         }
-        return true;
+        return false;
     }
 
     private static boolean hasExplicitTag(NodeEvent event) {
@@ -346,10 +346,11 @@ final class YamlEventValidator {
         return false;
     }
 
-    private static final Object INVALID = new InvalidNumber();
+    private static final InvalidNumber INVALID = InvalidNumber.INSTANCE;
 
-    private static final class InvalidNumber {
-        // Sentinel type used to keep conversion failure separate from null.
+    /** Sentinel type used to keep conversion failure separate from null. */
+    private enum InvalidNumber {
+        INSTANCE
     }
 
     private static final class EventState {

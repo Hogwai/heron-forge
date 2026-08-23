@@ -12,18 +12,13 @@ import java.util.Objects;
  * immediately with {@link #resourceTracker()}, and rely on the runtime to
  * close it with the snapshot.
  */
-@SuppressWarnings("java:S6206")
-public final class BuildContext {
-
-    private final Clock clock;
-    private final ResourceTracker resourceTracker;
-    private final DataAccessFactory dataAccessFactory;
+public record BuildContext(Clock clock, ResourceTracker resourceTracker, DataAccessFactory dataAccessFactory) {
 
     /**
      * Creates a build context.
      *
-     * @param clock clock
-     * @param resourceTracker resource tracker
+     * @param clock             clock
+     * @param resourceTracker   resource tracker
      * @param dataAccessFactory data access factory
      * @throws NullPointerException if any argument is null
      */
@@ -31,17 +26,5 @@ public final class BuildContext {
         this.clock = Objects.requireNonNull(clock, "clock must not be null");
         this.resourceTracker = Objects.requireNonNull(resourceTracker, "resourceTracker must not be null");
         this.dataAccessFactory = Objects.requireNonNull(dataAccessFactory, "dataAccessFactory must not be null");
-    }
-
-    public Clock clock() {
-        return clock;
-    }
-
-    public ResourceTracker resourceTracker() {
-        return resourceTracker;
-    }
-
-    public DataAccessFactory dataAccessFactory() {
-        return dataAccessFactory;
     }
 }

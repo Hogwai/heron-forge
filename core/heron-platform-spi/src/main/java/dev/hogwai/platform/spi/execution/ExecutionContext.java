@@ -10,14 +10,8 @@ import java.util.Objects;
  * deadline, a {@link CancellationToken} and the correlation identifier. All
  * values are immutable and validated at construction. Framework-independent.
  */
-@SuppressWarnings("java:S6206")
-public final class ExecutionContext {
-
-    private final String requestId;
-    private final String snapshotId;
-    private final Instant deadline;
-    private final CancellationToken cancellationToken;
-    private final String correlationId;
+public record ExecutionContext(String requestId, String snapshotId, Instant deadline,
+                               CancellationToken cancellationToken, String correlationId) {
 
     /**
      * Creates an execution context.
@@ -56,6 +50,7 @@ public final class ExecutionContext {
      *
      * @return the request identifier
      */
+    @Override
     public String requestId() {
         return requestId;
     }
@@ -65,6 +60,7 @@ public final class ExecutionContext {
      *
      * @return the snapshot identifier
      */
+    @Override
     public String snapshotId() {
         return snapshotId;
     }
@@ -74,6 +70,7 @@ public final class ExecutionContext {
      *
      * @return the deadline
      */
+    @Override
     public Instant deadline() {
         return deadline;
     }
@@ -83,6 +80,7 @@ public final class ExecutionContext {
      *
      * @return the cancellation token
      */
+    @Override
     public CancellationToken cancellationToken() {
         return cancellationToken;
     }
@@ -92,6 +90,7 @@ public final class ExecutionContext {
      *
      * @return the correlation identifier
      */
+    @Override
     public String correlationId() {
         return correlationId;
     }

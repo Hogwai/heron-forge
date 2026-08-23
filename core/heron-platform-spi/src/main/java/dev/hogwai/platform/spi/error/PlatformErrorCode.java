@@ -33,7 +33,7 @@ public enum PlatformErrorCode {
     CAPABILITY_EXECUTION_ERROR,
     /** A deadline was exceeded. */
     DEADLINE_EXCEEDED,
-    /** The operation was cancelled. */
+    /** The operation was canceled. */
     CANCELLATION_REQUESTED,
     /** No data access implementation was found on the classpath. */
     DATA_ACCESS_UNAVAILABLE

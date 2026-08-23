@@ -1,5 +1,6 @@
 package dev.hogwai.platform.spi.provider;
 
+import dev.hogwai.platform.spi.data.DataSet;
 import dev.hogwai.platform.spi.data.DataSetLimits;
 import dev.hogwai.platform.spi.data.DataSetMetadata;
 import dev.hogwai.platform.spi.data.MaterializedDataSet;
@@ -26,7 +27,7 @@ class CapabilityInstanceTest {
 
     @Test
     void executeReturnsDataSet() {
-        MaterializedDataSet result = INSTANCE.execute(CapabilityInputs.of(List.of()),
+        DataSet result = INSTANCE.execute(CapabilityInputs.of(List.of()),
                 new ExecutionContext("req", "snap", java.time.Instant.now(),
                         () -> false, "corr"));
         assertThat(result.schema().identifier()).isEqualTo("s");

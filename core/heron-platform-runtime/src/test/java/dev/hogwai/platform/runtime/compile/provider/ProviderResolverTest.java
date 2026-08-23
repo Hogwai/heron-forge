@@ -5,6 +5,7 @@ import dev.hogwai.platform.runtime.compile.provider.ResolverTestSupport.FakeRegi
 import dev.hogwai.platform.spi.CapabilityKind;
 import dev.hogwai.platform.spi.Diagnostic;
 import dev.hogwai.platform.spi.ProviderId;
+import dev.hogwai.platform.spi.data.FieldType;
 import dev.hogwai.platform.spi.error.PlatformErrorCode;
 import dev.hogwai.platform.spi.error.PlatformException;
 import dev.hogwai.platform.spi.error.Severity;
@@ -50,8 +51,8 @@ class ProviderResolverTest {
 
     @Test
     void rejectsMissingProvider() {
-        assertThatThrownBy(() -> resolver.resolve(
-                config("orders", "missing", "1.0.0", Map.of())))
+        var failingConfig = config("orders", "missing", "1.0.0", Map.of());
+        assertThatThrownBy(() -> resolver.resolve(failingConfig))
                 .isInstanceOf(PlatformException.class)
                 .satisfies(e -> {
                     PlatformException pe = (PlatformException) e;
@@ -65,8 +66,8 @@ class ProviderResolverTest {
     void rejectsVersionMismatch() {
         registry.add(new FakeFactory(sourceDescriptor("orders", "1.0.0", TestProviders.hostConfigSchema())));
 
-        assertThatThrownBy(() -> resolver.resolve(
-                config("orders", "orders", "9.9.9", Map.of("host", "localhost"))))
+        var failingConfig = config("orders", "orders", "9.9.9", Map.of("host", "localhost"));
+        assertThatThrownBy(() -> resolver.resolve(failingConfig))
                 .isInstanceOf(PlatformException.class)
                 .satisfies(e -> {
                     PlatformException pe = (PlatformException) e;
@@ -80,8 +81,8 @@ class ProviderResolverTest {
     void rejectsSpiMajorMismatch() {
         registry.add(new FakeFactory(sourceDescriptor("orders", "1.0.0", 2, TestProviders.hostConfigSchema())));
 
-        assertThatThrownBy(() -> resolver.resolve(
-                config("orders", "orders", "1.0.0", Map.of("host", "localhost"))))
+        var failingConfig = config("orders", "orders", "1.0.0", Map.of("host", "localhost"));
+        assertThatThrownBy(() -> resolver.resolve(failingConfig))
                 .isInstanceOf(PlatformException.class)
                 .satisfies(e -> {
                     PlatformException pe = (PlatformException) e;
@@ -94,8 +95,8 @@ class ProviderResolverTest {
     @Test
     void resolvesDescriptorKindWithoutConfigurationKind() {
         ProviderDescriptor transformDescriptor = TestProviders.transform("orders", "1.0.0", 1, "in",
-                TestProviders.schema("orders-in", "id", new dev.hogwai.platform.spi.data.FieldType.StringType()),
-                "out", TestProviders.schema("orders-out", "id", new dev.hogwai.platform.spi.data.FieldType.StringType()),
+                TestProviders.schema("orders-in", "id", new FieldType.StringType()),
+                "out", TestProviders.schema("orders-out", "id", new FieldType.StringType()),
                 TestProviders.hostConfigSchema());
         registry.add(new FakeFactory(transformDescriptor));
 

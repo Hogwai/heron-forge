@@ -1,6 +1,8 @@
 package dev.hogwai.platform.spi.provider;
 
 import dev.hogwai.platform.spi.PortId;
+import dev.hogwai.platform.spi.data.DataSetLimits;
+import dev.hogwai.platform.spi.data.DataSetMetadata;
 import dev.hogwai.platform.spi.data.MaterializedDataSet;
 import org.junit.jupiter.api.Test;
 
@@ -20,8 +22,7 @@ class CapabilityInputsTest {
 
     private static MaterializedDataSet dataSet(String id) {
         return new MaterializedDataSet(ProviderTestSupport.schema(id), List.of(),
-                new dev.hogwai.platform.spi.data.DataSetMetadata("ds",
-                        new dev.hogwai.platform.spi.data.DataSetLimits(10, 1000)), 0);
+                new DataSetMetadata("ds", new DataSetLimits(10, 1000)), 0);
     }
 
     @Test

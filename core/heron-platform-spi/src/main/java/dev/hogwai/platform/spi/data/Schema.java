@@ -13,12 +13,10 @@ import java.util.Optional;
  * Framework-independent and immutable.
  */
 @SuppressWarnings("java:S6206")
-public final class Schema {
-
-    private final String identifier;
-    private final int version;
-    private final List<Field> fields;
-    private final boolean openFields;
+public record Schema(String identifier,
+                     int version,
+                     List<Field> fields,
+                     boolean openFields) {
 
     /**
      * Creates a schema.
@@ -55,6 +53,7 @@ public final class Schema {
      *
      * @return the non-blank schema identifier
      */
+    @Override
     public String identifier() {
         return identifier;
     }
@@ -64,6 +63,7 @@ public final class Schema {
      *
      * @return the strictly positive schema version
      */
+    @Override
     public int version() {
         return version;
     }
@@ -73,6 +73,7 @@ public final class Schema {
      *
      * @return an immutable view of the ordered fields
      */
+    @Override
     public List<Field> fields() {
         return fields;
     }
@@ -82,6 +83,7 @@ public final class Schema {
      *
      * @return whether unknown fields are permitted in records
      */
+    @Override
     public boolean openFields() {
         return openFields;
     }

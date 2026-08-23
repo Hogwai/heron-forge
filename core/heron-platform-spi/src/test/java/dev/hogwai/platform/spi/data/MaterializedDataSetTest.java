@@ -80,7 +80,10 @@ class MaterializedDataSetTest {
     @Test
     void materializedDataSetRejectsRecordWithDistinctSchema() {
         Schema datasetSchema = schema();
-        Schema otherSchema = schema();
+        // Records compare by value: a genuinely different schema needs
+        // different content, not just a different instance.
+        Schema otherSchema = new Schema(datasetSchema.identifier() + "-other",
+                datasetSchema.version(), datasetSchema.fields(), datasetSchema.openFields());
         SchemaRecord schemaRecord = schemaRecord(otherSchema, "a");
         List<SchemaRecord> schemaRecords = List.of(schemaRecord);
         DataSetMetadata meta = metadata(10, 1000);

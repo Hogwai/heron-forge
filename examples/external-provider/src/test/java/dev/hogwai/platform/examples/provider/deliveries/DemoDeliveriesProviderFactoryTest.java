@@ -1,11 +1,5 @@
 package dev.hogwai.platform.examples.provider.deliveries;
 
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import dev.hogwai.platform.examples.provider.model.SupplyChainSchemas;
 import dev.hogwai.platform.examples.provider.support.FakeDataAccessSupport;
 import dev.hogwai.platform.spi.CapabilityKind;
@@ -17,11 +11,18 @@ import dev.hogwai.platform.spi.data.FieldId;
 import dev.hogwai.platform.spi.data.MaterializedDataSet;
 import dev.hogwai.platform.spi.data.Schema;
 import dev.hogwai.platform.spi.data.SchemaRecord;
+import dev.hogwai.platform.spi.data.StreamingDataSet;
 import dev.hogwai.platform.spi.data.access.DataAccess;
 import dev.hogwai.platform.spi.data.access.DataRow;
 import dev.hogwai.platform.spi.data.access.QueryContext;
 import dev.hogwai.platform.spi.data.access.QueryRequest;
 import org.junit.jupiter.api.Test;
+
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -95,33 +96,46 @@ class DemoDeliveriesProviderFactoryTest {
             contexts.add(context);
             return values.stream().map(value -> request.mapper().map(new MapDataRow(value))).toList();
         }
+
         @Override
         public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
-                Schema schema, Map<String, String> columnByField) {
+                                                  Schema schema, Map<String, String> columnByField) {
             return queryToDataSet(context, operation, sql, Map.of(), schema, columnByField,
                     FakeDataAccessSupport.DEFAULT_LIMITS);
         }
 
         @Override
         public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
-                Schema schema, Map<String, String> columnByField, DataSetLimits limits) {
+                                                  Schema schema, Map<String, String> columnByField, DataSetLimits limits) {
             return queryToDataSet(context, operation, sql, Map.of(), schema, columnByField, limits);
         }
 
         @Override
         public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
-                Map<String, ?> parameters, Schema schema, Map<String, String> columnByField) {
+                                                  Map<String, ?> parameters, Schema schema, Map<String, String> columnByField) {
             return queryToDataSet(context, operation, sql, parameters, schema, columnByField,
                     FakeDataAccessSupport.DEFAULT_LIMITS);
         }
 
         @Override
         public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
-                Map<String, ?> parameters, Schema schema, Map<String, String> columnByField, DataSetLimits limits) {
+                                                  Map<String, ?> parameters, Schema schema,
+                                                  Map<String, String> columnByField, DataSetLimits limits) {
             QueryRequest<SchemaRecord> request = new QueryRequest<>(operation, sql, parameters,
                     row -> FakeDataAccessSupport.toRecord(row, schema, columnByField));
             List<SchemaRecord> records = query(request, context);
             return FakeDataAccessSupport.dataSet(schema, operation, records, limits);
+        }
+
+        @Override
+        public StreamingDataSet streamQuery(QueryContext context,
+                                            String operation,
+                                            String sql,
+                                            Schema schema,
+                                            Map<String, String> columnByField,
+                                            DataSetLimits limits,
+                                            int batchSize) {
+            throw new UnsupportedOperationException();
         }
 
         @Override
@@ -143,12 +157,7 @@ class DemoDeliveriesProviderFactoryTest {
         }
     }
 
-    private static final class MapDataRow implements DataRow {
-        private final Map<String, Object> values;
-
-        private MapDataRow(Map<String, Object> values) {
-            this.values = values;
-        }
+    private record MapDataRow(Map<String, Object> values) implements DataRow {
 
         @Override
         public String string(String column) {

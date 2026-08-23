@@ -14,11 +14,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import dev.hogwai.platform.data.jdbi.JdbiDataAccessFactory;
 import dev.hogwai.platform.data.jdbi.JdbiPoolOptions;
 import dev.hogwai.platform.spi.Diagnostic;
+import dev.hogwai.platform.spi.data.DataSetLimits;
 import dev.hogwai.platform.spi.data.Field;
 import dev.hogwai.platform.spi.data.FieldId;
 import dev.hogwai.platform.spi.data.FieldType;
 import dev.hogwai.platform.spi.data.MaterializedDataSet;
 import dev.hogwai.platform.spi.data.Schema;
+import dev.hogwai.platform.spi.data.SchemaRecord;
+import dev.hogwai.platform.spi.data.StreamingDataSet;
 import dev.hogwai.platform.spi.data.access.DataAccess;
 import dev.hogwai.platform.spi.data.access.DataAccessConfiguration;
 import dev.hogwai.platform.spi.data.access.QueryContext;
@@ -95,14 +98,15 @@ class PostgresJdbiDataAccessIntegrationTest {
     @Test
     void checksCancellationAndDeadlineBeforeOpeningAHandle() {
         try (DataAccess access = new PostgresJdbiDataAccessFactory().open(CONFIG)) {
-            QueryRequest<Integer> request = new QueryRequest<>("guarded-query", "SELECT 1", Map.of(),
-                    row -> 1);
-            assertThatThrownBy(() -> access.query(request, new QueryContext(ACTIVE.deadline(), () -> true)))
+            QueryRequest<Integer> request =
+                    new QueryRequest<>("guarded-query", "SELECT 1", Map.of(), _ -> 1);
+            var queryContext = new QueryContext(ACTIVE.deadline(), () -> true);
+            assertThatThrownBy(() -> access.query(request, queryContext))
                     .isInstanceOf(PlatformException.class)
                     .extracting(exception -> ((PlatformException) exception).code())
                     .isEqualTo(PlatformErrorCode.CANCELLATION_REQUESTED);
-            assertThatThrownBy(() -> access.query(request,
-                    new QueryContext(Instant.parse("2000-01-01T00:00:00Z"), () -> false)))
+            var queryCtxDeadline = new QueryContext(Instant.parse("2000-01-01T00:00:00Z"), () -> false);
+            assertThatThrownBy(() -> access.query(request, queryCtxDeadline))
                     .isInstanceOf(PlatformException.class)
                     .extracting(exception -> ((PlatformException) exception).code())
                     .isEqualTo(PlatformErrorCode.DEADLINE_EXCEEDED);
@@ -119,8 +123,8 @@ class PostgresJdbiDataAccessIntegrationTest {
                         cancelled.set(true);
                         return value;
                     });
-
-            assertThatThrownBy(() -> access.query(request, new QueryContext(ACTIVE.deadline(), cancelled::get)))
+            var queryContext = new QueryContext(ACTIVE.deadline(), cancelled::get);
+            assertThatThrownBy(() -> access.query(request, queryContext))
                     .isInstanceOf(PlatformException.class)
                     .extracting(exception -> ((PlatformException) exception).code())
                     .isEqualTo(PlatformErrorCode.CANCELLATION_REQUESTED);
@@ -132,7 +136,8 @@ class PostgresJdbiDataAccessIntegrationTest {
         DataAccessConfiguration unavailable = new DataAccessConfiguration(
                 "jdbc:postgresql://127.0.0.1:1/unavailable", "probe-user", "probe-secret");
 
-        assertThatThrownBy(() -> new PostgresJdbiDataAccessFactory().open(unavailable))
+        PostgresJdbiDataAccessFactory factory = new PostgresJdbiDataAccessFactory();
+        assertThatThrownBy(() -> factory.open(unavailable))
                 .isInstanceOf(PlatformException.class)
                 .hasMessageNotContaining("127.0.0.1")
                 .hasMessageNotContaining("probe-user")
@@ -184,13 +189,10 @@ class PostgresJdbiDataAccessIntegrationTest {
 
     @Test
     void closesAfterAQueryFailure() {
-        DataAccess access = new PostgresJdbiDataAccessFactory().open(CONFIG);
-        try {
-            QueryRequest<Integer> request = new QueryRequest<>("close-after-error", "SELECT invalid SQL",
-                    Map.of(), row -> 1);
+        try (DataAccess access = new PostgresJdbiDataAccessFactory().open(CONFIG)) {
+            QueryRequest<Integer> request =
+                    new QueryRequest<>("close-after-error", "SELECT invalid SQL", Map.of(), _ -> 1);
             assertThatThrownBy(() -> access.query(request, ACTIVE)).isInstanceOf(PlatformException.class);
-        } finally {
-            access.close();
         }
     }
 
@@ -258,7 +260,8 @@ class PostgresJdbiDataAccessIntegrationTest {
         assertThat(rows).containsExactly(new Row("Ada", 7L));
 
         access.close();
-        assertThatThrownBy(() -> access.query(simpleRequest("post-close"), ACTIVE))
+        var req = simpleRequest("post-close");
+        assertThatThrownBy(() -> access.query(req, ACTIVE))
                 .isInstanceOf(PlatformException.class)
                 .hasMessageNotContaining("jdbc:postgresql");
     }
@@ -308,6 +311,56 @@ class PostgresJdbiDataAccessIntegrationTest {
 
     private static QueryRequest<Long> simpleRequest(String operation) {
         return new QueryRequest<>(operation, "SELECT 42 AS value", Map.of(), row -> row.longValue(VALUE));
+    }
+
+    @Test
+    void streamQueryDeliversBatchesAndCountsRows() {
+        try (DataAccess access = new PostgresJdbiDataAccessFactory().open(CONFIG)) {
+            StreamingDataSet stream = access.streamQuery(ACTIVE, "streamed-orders",
+                    "SELECT 'Ada' AS name, gs AS amount FROM generate_series(1, 5) gs",
+                    namedSchema(), Map.of("name", "name", AMOUNT, AMOUNT),
+                    new DataSetLimits(100, 100_000), 2);
+
+            List<Integer> batchSizes = new ArrayList<>();
+            long delivered = 0;
+            Optional<List<SchemaRecord>> batch = stream.nextBatch();
+            while (batch.isPresent()) {
+                batchSizes.add(batch.get().size());
+                delivered = stream.deliveredRowCount();
+                batch = stream.nextBatch();
+            }
+
+            assertThat(batchSizes).containsExactly(2, 2, 1);
+            assertThat(delivered).isEqualTo(5);
+        }
+    }
+
+    @Test
+    void streamQuerySanitizesFailuresWithOperationNameOnly() {
+        String secret = "mid-stream-secret";
+        try (DataAccess access = new PostgresJdbiDataAccessFactory().open(CONFIG)) {
+            // Whether the server rejects this at cursor creation or between
+            // batch pulls, the caller sees only the sanitized diagnostic.
+            assertThatThrownBy(() -> pullFirstBatch(access)).isInstanceOfSatisfying(PlatformException.class,
+                    exception -> {
+                        assertThat(exception.code()).isEqualTo(PlatformErrorCode.CAPABILITY_EXECUTION_ERROR);
+                        assertThat(exception.diagnostics()).singleElement()
+                                .extracting(Diagnostic::message)
+                                .asString()
+                                .contains("broken-stream")
+                                .doesNotContain(secret);
+                    });
+        }
+    }
+
+    private static void pullFirstBatch(DataAccess access) {
+        try (StreamingDataSet stream = access.streamQuery(ACTIVE, "broken-stream",
+                "SELECT 'Ada' AS name, CASE WHEN gs = 4 THEN 1 / 0 ELSE gs END AS amount "
+                        + "FROM generate_series(1, 5) gs",
+                namedSchema(), Map.of("name", "name", AMOUNT, AMOUNT),
+                new DataSetLimits(100, 100_000), 2)) {
+            stream.nextBatch();
+        }
     }
 
     private static String environmentOrDefault(String name, String fallback) {

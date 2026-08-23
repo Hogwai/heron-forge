@@ -12,9 +12,10 @@ public record QueryRequest<T>(String operation, String sql, Map<String, ?> param
      * Validates and defensively copies the query request values.
      *
      * <p>The operation identifies the logical query, while parameters are the
-     * named values supplied to the SQL. The returned map structure and its key-
-     * value associations are immutable, but parameter values are retained as
-     * supplied rather than copied. A {@code null} value represents SQL NULL.
+     * named values supplied to the SQL.
+     * The returned map structure and its key-value associations are immutable,
+     * but parameter values are retained as supplied rather than copied.
+     * A {@code null} value represents SQL NULL.
      */
     public QueryRequest {
         Objects.requireNonNull(operation, "operation must not be null");

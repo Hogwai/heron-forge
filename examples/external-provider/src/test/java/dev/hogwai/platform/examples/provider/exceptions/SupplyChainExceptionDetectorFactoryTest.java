@@ -18,6 +18,7 @@ import dev.hogwai.platform.spi.data.FieldId;
 import dev.hogwai.platform.spi.data.MaterializedDataSet;
 import dev.hogwai.platform.spi.data.Schema;
 import dev.hogwai.platform.spi.data.SchemaRecord;
+import dev.hogwai.platform.spi.data.StreamingDataSet;
 import dev.hogwai.platform.spi.data.access.DataAccess;
 import dev.hogwai.platform.spi.data.access.DataAccessFactory;
 import dev.hogwai.platform.spi.data.access.QueryContext;
@@ -68,6 +69,16 @@ class SupplyChainExceptionDetectorFactoryTest {
         }
 
         @Override
+        public StreamingDataSet streamQuery(QueryContext context,
+                                            String operation,
+                                            String sql,
+                                            Schema schema,
+                                            Map<String, String> columnByField,
+                                            DataSetLimits limits,
+                                            int batchSize) {
+            throw new UnsupportedOperationException();
+        }
+        @Override
         public int execute(QueryContext context, String operation, String sql, Map<String, ?> parameters) {
             throw new UnsupportedOperationException();
         }
@@ -105,7 +116,7 @@ class SupplyChainExceptionDetectorFactoryTest {
                 "minimumDeliveryRatio", new BigDecimal("0.80"),
                 "priorityRiskDays", 3L));
 
-        MaterializedDataSet result = detector.execute(CapabilityInputs.of(Map.of(
+        var result = (MaterializedDataSet) detector.execute(CapabilityInputs.of(Map.of(
                 new PortId("orders"), orders,
                 new PortId("deliveries"), deliveries)), context());
 
@@ -149,15 +160,25 @@ class SupplyChainExceptionDetectorFactoryTest {
                 "minimumDeliveryRatio", new BigDecimal("0.8"),
                 "priorityRiskDays", 3L));
 
-        assertThat(detector.execute(CapabilityInputs.of(inputs), context()).records()).extracting(SchemaRecord::values)
-                .isEqualTo(detector.execute(CapabilityInputs.of(inputs), context()).records().stream()
+        MaterializedDataSet first = (MaterializedDataSet) detector.execute(
+                CapabilityInputs.of(inputs), context());
+        assertThat(first.records()).extracting(SchemaRecord::values)
+                .isEqualTo(((MaterializedDataSet) detector.execute(
+                        CapabilityInputs.of(inputs), context())).records().stream()
                         .map(SchemaRecord::values).toList());
-        assertThatThrownBy(() -> detector.execute(CapabilityInputs.of(inputs), context(
-                () -> true, Instant.parse("2099-01-01T00:00:00Z"))))
+        var capInputs = CapabilityInputs.of(inputs);
+        var cancelledContext = cancelledContext();
+        assertThatThrownBy(() -> detector.execute(capInputs, cancelledContext))
                 .isInstanceOf(PlatformException.class)
                 .extracting("code").isEqualTo(PlatformErrorCode.CANCELLATION_REQUESTED);
-        assertThatThrownBy(() -> detector.execute(CapabilityInputs.of(Map.of()), context()))
+        var emptyInputs = CapabilityInputs.of(Map.of());
+        var context = context();
+        assertThatThrownBy(() -> detector.execute(emptyInputs, context))
                 .isInstanceOf(PlatformException.class);
+    }
+
+    private static ExecutionContext cancelledContext() {
+        return context(() -> true, Instant.parse("2099-01-01T00:00:00Z"));
     }
 
     private static CapabilityInstance detector(Map<String, Object> config) {

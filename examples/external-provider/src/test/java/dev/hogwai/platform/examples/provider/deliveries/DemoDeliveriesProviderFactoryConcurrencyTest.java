@@ -16,11 +16,13 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import dev.hogwai.platform.examples.provider.support.FakeDataAccessSupport;
+import dev.hogwai.platform.spi.data.DataSet;
 import dev.hogwai.platform.spi.data.DataSetLimits;
 import dev.hogwai.platform.spi.data.FieldId;
 import dev.hogwai.platform.spi.data.MaterializedDataSet;
 import dev.hogwai.platform.spi.data.Schema;
 import dev.hogwai.platform.spi.data.SchemaRecord;
+import dev.hogwai.platform.spi.data.StreamingDataSet;
 import dev.hogwai.platform.spi.data.access.DataAccess;
 import dev.hogwai.platform.spi.data.access.DataRow;
 import dev.hogwai.platform.spi.data.access.QueryContext;
@@ -51,8 +53,9 @@ class DemoDeliveriesProviderFactoryConcurrencyTest {
                         "delivered_at", Instant.parse("2025-01-02T00:00:00Z")),
                 Map.of("order_id", "ORDER-002", "delivered_quantity", 3L,
                         "delivered_at", Instant.parse("2025-01-03T00:00:00Z"))));
-        BuildContext buildContext = new BuildContext(Clock.systemUTC(), resource -> { },
-                configuration -> access);
+        BuildContext buildContext = new BuildContext(Clock.systemUTC(), resource -> {
+        },
+                _ -> access);
         CapabilityInstance instance = new DemoDeliveriesProviderFactory().create(
                 Map.of("url", "jdbc:postgresql://localhost:5432/heron_demo",
                         "user", "test-user", "password", "test-password"), buildContext);
@@ -62,7 +65,7 @@ class DemoDeliveriesProviderFactoryConcurrencyTest {
         CountDownLatch start = new CountDownLatch(THREADS);
         ExecutorService executor = Executors.newFixedThreadPool(THREADS);
         try {
-            List<Future<MaterializedDataSet>> futures = new ArrayList<>();
+            List<Future<DataSet>> futures = new ArrayList<>();
             for (int i = 0; i < THREADS; i++) {
                 futures.add(executor.submit(() -> {
                     start.countDown();
@@ -70,19 +73,20 @@ class DemoDeliveriesProviderFactoryConcurrencyTest {
                     return instance.execute(CapabilityInputs.of(Map.of()), executionContext);
                 }));
             }
-            List<MaterializedDataSet> results = new ArrayList<>();
-            for (Future<MaterializedDataSet> future : futures) {
+            List<DataSet> results = new ArrayList<>();
+            for (Future<DataSet> future : futures) {
                 results.add(future.get(5, TimeUnit.SECONDS));
             }
 
             assertThat(results).hasSize(THREADS);
             assertThat(results).allSatisfy(result -> {
-                assertThat(result.schema().fields())
+                var materialized = (dev.hogwai.platform.spi.data.MaterializedDataSet) result;
+                assertThat(materialized.schema().fields())
                         .extracting(field -> field.id().value())
                         .containsExactly("orderId", "deliveredQuantity", "deliveredAt");
-                assertThat(result.records()).extracting(schemaRecord -> schemaRecord.value(new FieldId("orderId")))
+                assertThat(materialized.records()).extracting(schemaRecord -> schemaRecord.value(new FieldId("orderId")))
                         .containsExactly("ORDER-001", "ORDER-001", "ORDER-002");
-                assertThat(result.records()).extracting(schemaRecord -> schemaRecord.value(new FieldId("deliveredQuantity")))
+                assertThat(materialized.records()).extracting(schemaRecord -> schemaRecord.value(new FieldId("deliveredQuantity")))
                         .containsExactly(5L, 7L, 3L);
             });
             // The overlap barrier only releases when both queries are active at the
@@ -94,7 +98,9 @@ class DemoDeliveriesProviderFactoryConcurrencyTest {
         }
     }
 
-    /** Fake data access that counts concurrent queries and forces real overlap. */
+    /**
+     * Fake data access that counts concurrent queries and forces real overlap.
+     */
     private static final class ConcurrentDataAccess implements DataAccess {
         private final List<Map<String, Object>> values;
         private final CyclicBarrier overlapBarrier = new CyclicBarrier(THREADS);
@@ -123,33 +129,46 @@ class DemoDeliveriesProviderFactoryConcurrencyTest {
             }
             return values.stream().map(value -> request.mapper().map(new MapDataRow(value))).toList();
         }
+
         @Override
         public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
-                Schema schema, Map<String, String> columnByField) {
+                                                  Schema schema, Map<String, String> columnByField) {
             return queryToDataSet(context, operation, sql, Map.of(), schema, columnByField,
                     FakeDataAccessSupport.DEFAULT_LIMITS);
         }
 
         @Override
         public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
-                Schema schema, Map<String, String> columnByField, DataSetLimits limits) {
+                                                  Schema schema, Map<String, String> columnByField, DataSetLimits limits) {
             return queryToDataSet(context, operation, sql, Map.of(), schema, columnByField, limits);
         }
 
         @Override
         public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
-                Map<String, ?> parameters, Schema schema, Map<String, String> columnByField) {
+                                                  Map<String, ?> parameters, Schema schema, Map<String, String> columnByField) {
             return queryToDataSet(context, operation, sql, parameters, schema, columnByField,
                     FakeDataAccessSupport.DEFAULT_LIMITS);
         }
 
         @Override
         public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
-                Map<String, ?> parameters, Schema schema, Map<String, String> columnByField, DataSetLimits limits) {
+                Map<String, ?> parameters, Schema schema, Map<String, String> columnByField,
+                DataSetLimits limits) {
             QueryRequest<SchemaRecord> request = new QueryRequest<>(operation, sql, parameters,
                     row -> FakeDataAccessSupport.toRecord(row, schema, columnByField));
             List<SchemaRecord> records = query(request, context);
             return FakeDataAccessSupport.dataSet(schema, operation, records, limits);
+        }
+
+        @Override
+        public StreamingDataSet streamQuery(QueryContext context,
+                                            String operation,
+                                            String sql,
+                                            Schema schema,
+                                            Map<String, String> columnByField,
+                                            DataSetLimits limits,
+                                            int batchSize) {
+            throw new UnsupportedOperationException();
         }
 
         @Override
@@ -171,13 +190,10 @@ class DemoDeliveriesProviderFactoryConcurrencyTest {
         }
     }
 
-    /** Fake row backed by a plain map, used by the fake data access in this file. */
-    private static final class MapDataRow implements DataRow {
-        private final Map<String, Object> values;
-
-        private MapDataRow(Map<String, Object> values) {
-            this.values = values;
-        }
+    /**
+     * Fake row backed by a plain map, used by the fake data access in this file.
+     */
+    private record MapDataRow(Map<String, Object> values) implements DataRow {
 
         @Override
         public String string(String column) {

@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +29,7 @@ import dev.hogwai.platform.spi.PortId;
 import dev.hogwai.platform.spi.ProviderId;
 import dev.hogwai.platform.spi.ProviderVersion;
 import dev.hogwai.platform.spi.SpiMajor;
+import dev.hogwai.platform.spi.data.DataSet;
 import dev.hogwai.platform.spi.data.DataSetLimits;
 import dev.hogwai.platform.spi.data.DataSetMetadata;
 import dev.hogwai.platform.spi.data.Field;
@@ -35,6 +37,9 @@ import dev.hogwai.platform.spi.data.FieldId;
 import dev.hogwai.platform.spi.data.FieldType;
 import dev.hogwai.platform.spi.data.MaterializedDataSet;
 import dev.hogwai.platform.spi.data.Schema;
+import dev.hogwai.platform.spi.data.SchemaRecord;
+import dev.hogwai.platform.spi.data.StreamingDataSet;
+import dev.hogwai.platform.spi.data.access.DataAccessFactory;
 import dev.hogwai.platform.spi.execution.ExecutionContext;
 import dev.hogwai.platform.spi.host.HostApplication;
 import dev.hogwai.platform.spi.host.InvocationRequest;
@@ -51,6 +56,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SuppressWarnings("PMD.CyclomaticComplexity")
 class PullInvokerTest {
+
+    private static final Schema SCHEMA = new Schema("pull", 1,
+            List.of(new Field(new FieldId("id"), "id", new FieldType.StringType(), false, Optional.empty())), false);
+    private static final Instant FAR_FUTURE = Instant.parse("2099-01-01T00:00:00Z");
 
     @Test
     void pullsOnlyTheTransitiveClosureInDependencyOrderAndMemoizesSharedSources() {
@@ -92,7 +101,7 @@ class PullInvokerTest {
         try (HostApplication application = load(stream(yaml()), registry,
                 SnapshotBuilderTestSupport.dataAccessFactory())) {
             assertThat(application.invoke(new InvocationRequest("read", "r1", "c1",
-                    Instant.parse("2099-01-01T00:00:00Z"), () -> false)))
+                    FAR_FUTURE, () -> false)))
                     .isEqualTo(new InvocationSuccess(StructuredPayloadProjector.project(targetData)));
         }
 
@@ -122,13 +131,13 @@ class PullInvokerTest {
             RuntimeSnapshot snapshot = candidate.snapshot();
             PullInvoker invoker = new PullInvoker();
             ExecutionContext context = new ExecutionContext("r1", snapshot.generationId(),
-                    Instant.parse("2099-01-01T00:00:00Z"), () -> false, "c1");
+                    FAR_FUTURE, () -> false, "c1");
 
             int threads = 2;
             CountDownLatch start = new CountDownLatch(threads);
             ExecutorService executor = Executors.newFixedThreadPool(threads);
             try {
-                List<Future<MaterializedDataSet>> futures = new ArrayList<>();
+                List<Future<DataSet>> futures = new ArrayList<>();
                 for (int i = 0; i < threads; i++) {
                     futures.add(executor.submit(() -> {
                         start.countDown();
@@ -136,7 +145,7 @@ class PullInvokerTest {
                         return invoker.invokeTarget(snapshot, "source", context);
                     }));
                 }
-                for (Future<MaterializedDataSet> future : futures) {
+                for (Future<DataSet> future : futures) {
                     assertThat(future.get(5, TimeUnit.SECONDS)).isSameAs(sourceData);
                 }
             } finally {
@@ -149,11 +158,164 @@ class PullInvokerTest {
         }
     }
 
-    private static HostApplication load(ByteArrayInputStream yaml, ProviderRegistry registry,
-                                        dev.hogwai.platform.spi.data.access.DataAccessFactory dataAccessFactory) {
+    @Test
+    void streamedTargetKeepsItsLazyShapeThroughTheInvoker() {
+        List<String> order = new ArrayList<>();
+        MaterializedDataSet sourceData = dataset("source");
+        ProviderFactory source = factory("source", descriptor("source", CapabilityKind.SOURCE,
+                Map.of(), Map.of(new PortId("out"), port("out"))),
+                (_, _) -> {
+                    order.add("source");
+                    return sourceData;
+                });
+        ProviderFactory target = factory("target", descriptor("target", CapabilityKind.TRANSFORM,
+                Map.of(new PortId("left"), port("left")), Map.of(new PortId("out"), port("out"))),
+                (inputs, _) -> {
+                    order.add("target");
+                    assertThat(inputs.get(new PortId("left"))).isSameAs(sourceData);
+                    return StreamingDataSet.over(
+                            schema(),
+                            records(7).iterator(),
+                            new DataSetLimits(1000, 1_000_000),
+                            3, FAR_FUTURE,
+                            () -> false
+                    );
+                });
+        ProviderRegistry registry = new Registry(source, target);
+
+        SnapshotBuilder builder = SnapshotBuilderTestSupport.builder(registry, "gen-stream",
+                java.time.Clock.systemUTC(), SnapshotBuilderTestSupport.dataAccessFactory());
+        try (SnapshotCandidate candidate = builder.build(SnapshotBuilderTestSupport.application(
+                "pull-stream",
+                new SnapshotBuilderTestYaml.TestCap("source", "source", "1.0.0"),
+                new SnapshotBuilderTestYaml.TestCap("target", "target", "1.0.0",
+                        List.of(new SnapshotBuilderTestYaml.TestInput("left", "source", "out")))))) {
+            RuntimeSnapshot snapshot = candidate.snapshot();
+            PullInvoker invoker = new PullInvoker();
+            ExecutionContext context = new ExecutionContext("r1", snapshot.generationId(),
+                    FAR_FUTURE, () -> false, "c1");
+            DataSet result = invoker.invokeTarget(snapshot, "target", context);
+            assertThat(result).isInstanceOf(StreamingDataSet.class);
+            try (StreamingDataSet stream = (StreamingDataSet) result) {
+                List<Integer> batchSizes = new ArrayList<>();
+                Optional<List<SchemaRecord>> batch = stream.nextBatch();
+                while (batch.isPresent()) {
+                    batchSizes.add(batch.get().size());
+                    batch = stream.nextBatch();
+                }
+                assertThat(batchSizes).containsExactly(3, 3, 1);
+                assertThat(stream.deliveredRowCount()).isEqualTo(7);
+            }
+            assertThat(order).containsExactly("source", "target");
+        }
+    }
+
+    @Test
+    void streamingUpstreamIsCollectedWhenConsumedAsInput() {
+        List<String> order = new ArrayList<>();
+        ProviderFactory source = factory("source", descriptor("source", CapabilityKind.SOURCE,
+                Map.of(), Map.of(new PortId("out"), port("out"))),
+                (_, _) -> {
+                    order.add("source");
+                    return StreamingDataSet.over(schema(), records(2).iterator(),
+                            new DataSetLimits(100, 100_000), 5, FAR_FUTURE, () -> false);
+                });
+        ProviderFactory target = factory("target", descriptor("target", CapabilityKind.TRANSFORM,
+                Map.of(new PortId("left"), port("left")), Map.of(new PortId("out"), port("out"))),
+                (inputs, _) -> {
+                    order.add("target");
+                    MaterializedDataSet left = inputs.get(new PortId("left"));
+                    assertThat(left.records()).hasSize(2);
+                    return left;
+                });
+        ProviderRegistry registry = new Registry(source, target);
+
+        SnapshotBuilder builder = SnapshotBuilderTestSupport.builder(registry, "gen-collect",
+                java.time.Clock.systemUTC(), SnapshotBuilderTestSupport.dataAccessFactory());
+        try (SnapshotCandidate candidate = builder.build(SnapshotBuilderTestSupport.application(
+                "pull-collect",
+                new SnapshotBuilderTestYaml.TestCap("source", "source", "1.0.0"),
+                new SnapshotBuilderTestYaml.TestCap("target", "target", "1.0.0",
+                        List.of(new SnapshotBuilderTestYaml.TestInput("left", "source", "out")))))) {
+            RuntimeSnapshot snapshot = candidate.snapshot();
+            PullInvoker invoker = new PullInvoker();
+            ExecutionContext context = new ExecutionContext("r1", snapshot.generationId(),
+                    FAR_FUTURE, () -> false, "c1");
+            DataSet result = invoker.invokeTarget(snapshot, "target", context);
+            assertThat(((MaterializedDataSet) result).records()).hasSize(2);
+            assertThat(order).containsExactly("source", "target");
+        }
+    }
+
+    @Test
+    void materializedTargetKeepsItsShapeThroughTheInvoker() {
+        MaterializedDataSet targetData = new MaterializedDataSet(schema(), records(4),
+                new DataSetMetadata("target", new DataSetLimits(100, 100_000)),
+                4L * StreamingDataSet.ROW_ESTIMATE_BYTES);
+        ProviderFactory target = factory("target", descriptor("target", CapabilityKind.SOURCE,
+                Map.of(), Map.of(new PortId("out"), port("out"))),
+                (_, _) -> targetData);
+        ProviderRegistry registry = new Registry(target);
+
+        SnapshotBuilder builder = SnapshotBuilderTestSupport.builder(registry, "gen-fallback",
+                Clock.systemUTC(), SnapshotBuilderTestSupport.dataAccessFactory());
+        try (SnapshotCandidate candidate = builder.build(SnapshotBuilderTestSupport.application(
+                "pull-fallback", new SnapshotBuilderTestYaml.TestCap("target", "target", "1.0.0")))) {
+            RuntimeSnapshot snapshot = candidate.snapshot();
+            PullInvoker invoker = new PullInvoker();
+            ExecutionContext context = new ExecutionContext("r1", snapshot.generationId(),
+                    FAR_FUTURE, () -> false, "c1");
+            assertThat(invoker.invokeTarget(snapshot, "target", context))
+                    .isInstanceOf(MaterializedDataSet.class)
+                    .isSameAs(targetData);
+            assertThat(invoker.invokeTargetAsMaterialized(snapshot, "target", context)).isSameAs(targetData);
+        }
+    }
+
+    @Test
+    void streamsThroughTheHostContractOnlyForStreamingTargets() {
+        MaterializedDataSet sourceData = dataset("source");
+        ProviderFactory source = factory("source", descriptor("source", CapabilityKind.SOURCE,
+                Map.of(), Map.of(new PortId("out"), port("out"))),
+                (_, _) -> sourceData);
+        ProviderFactory target = factory("target", descriptor("target", CapabilityKind.TRANSFORM,
+                Map.of(new PortId("left"), port("left"), new PortId("right"), port("right")),
+                Map.of(new PortId("out"), port("out"))),
+                (_, _) -> StreamingDataSet.over(schema(), records(2).iterator(),
+                        new DataSetLimits(100, 100_000), 5, FAR_FUTURE, () -> false));
+        ProviderFactory unrelated = factory("unrelated", descriptor("unrelated", CapabilityKind.SOURCE,
+                Map.of(), Map.of(new PortId("out"), port("out"))),
+                (_, _) -> dataset("unrelated"));
+        ProviderRegistry registry = new Registry(source, target, unrelated);
+
+        try (HostApplication application = load(stream(yaml()), registry,
+                SnapshotBuilderTestSupport.dataAccessFactory())) {
+            Optional<dev.hogwai.platform.spi.host.StreamingPayload> streamed = application.invokeStreaming(
+                    new InvocationRequest("read", "r1", "c1", FAR_FUTURE, () -> false));
+
+            assertThat(streamed).isPresent();
+            try (var payload = streamed.get()) {
+                assertThat(payload.nextBatch()).hasValueSatisfying(
+                        batch -> assertThat(batch).containsExactly(
+                                Map.of("id", "row-0"), Map.of("id", "row-1")));
+                assertThat(payload.nextBatch()).isEmpty();
+                assertThat(payload.deliveredRowCount()).isEqualTo(2);
+                assertThat(payload.schemaId()).isEqualTo("pull");
+                assertThat(payload.schemaVersion()).isEqualTo(1);
+            }
+
+            // Unknown entrypoint falls back to materialized invocation.
+            assertThat(application.invokeStreaming(new InvocationRequest("nope", "r2", "c2",
+                    FAR_FUTURE, () -> false))).isEmpty();
+        }
+    }
+
+    private static HostApplication load(ByteArrayInputStream yaml,
+                                        ProviderRegistry registry,
+                                        DataAccessFactory dataAccessFactory) {
         try {
             Method method = ApplicationLoader.class.getDeclaredMethod("load", java.io.InputStream.class,
-                    ProviderRegistry.class, dev.hogwai.platform.spi.data.access.DataAccessFactory.class);
+                    ProviderRegistry.class, DataAccessFactory.class);
             method.setAccessible(true);
             return (HostApplication) method.invoke(null, yaml, registry, dataAccessFactory);
         } catch (InvocationTargetException failure) {
@@ -202,8 +364,15 @@ class PullInvokerTest {
     }
 
     private static Schema schema() {
-        return new Schema("pull", 1,
-                List.of(new Field(new FieldId("id"), "id", new FieldType.StringType(), false, Optional.empty())), false);
+        return SCHEMA;
+    }
+
+    private static List<SchemaRecord> records(int count) {
+        List<SchemaRecord> records = new ArrayList<>();
+        for (int index = 0; index < count; index++) {
+            records.add(SchemaRecord.of(SCHEMA, Map.of(new FieldId("id"), "row-" + index)));
+        }
+        return records;
     }
 
     private static MaterializedDataSet dataset(String name) {
@@ -254,7 +423,7 @@ class PullInvokerTest {
 
     @FunctionalInterface
     private interface CapabilityExecution {
-        MaterializedDataSet execute(CapabilityInputs inputs, ExecutionContext context);
+        DataSet execute(CapabilityInputs inputs, ExecutionContext context);
     }
 
     private static final class Registry implements ProviderRegistry {
@@ -271,6 +440,5 @@ class PullInvokerTest {
         public Optional<Registration> registration(ProviderId providerId) {
             return Optional.ofNullable(registrations.get(providerId));
         }
-
     }
 }

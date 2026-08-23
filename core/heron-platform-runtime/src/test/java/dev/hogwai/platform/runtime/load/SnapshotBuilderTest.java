@@ -26,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  *
  * <p>Uses in-memory trusted provider factories that create real
  * {@link dev.hogwai.platform.spi.provider.CapabilityInstance}s with observable
- * close behaviour, so teardown order and cleanup are asserted against real
+ * close behavior, so teardown order and cleanup are asserted against real
  * instances rather than mocks.
  */
 class SnapshotBuilderTest {
@@ -107,8 +107,9 @@ class SnapshotBuilderTest {
                 new ProviderRegistry.Registration(orders, orders.descriptor()));
         SnapshotBuilder builder = SnapshotBuilderTestSupport.builder(registry, "gen-1", CLOCK);
 
-        assertThatThrownBy(() -> builder.build(SnapshotBuilderTestSupport.application("test",
-                new SnapshotBuilderTestYaml.TestCap("orders", "missing", "1.0.0"))))
+        var failingApplication = SnapshotBuilderTestSupport.application("test",
+                new SnapshotBuilderTestYaml.TestCap("orders", "missing", "1.0.0"));
+        assertThatThrownBy(() -> builder.build(failingApplication))
                 .isInstanceOf(PlatformException.class)
                 .satisfies(e -> assertThat(((PlatformException) e).code())
                         .isEqualTo(PlatformErrorCode.PROVIDER_NOT_FOUND));
@@ -128,8 +129,9 @@ class SnapshotBuilderTest {
                 new ProviderRegistry.Registration(orders, orders.descriptor()));
         SnapshotBuilder builder = SnapshotBuilderTestSupport.builder(registry, "gen-1", CLOCK);
 
-        assertThatThrownBy(() -> builder.build(SnapshotBuilderTestSupport.application("test",
-                new SnapshotBuilderTestYaml.TestCap("orders", "orders", "1.0.0"))))
+        var failingApplication = SnapshotBuilderTestSupport.application("test",
+                new SnapshotBuilderTestYaml.TestCap("orders", "orders", "1.0.0"));
+        assertThatThrownBy(() -> builder.build(failingApplication))
                 .isInstanceOf(PlatformException.class)
                 .satisfies(e -> assertThat(((PlatformException) e).code())
                         .isEqualTo(PlatformErrorCode.PROVIDER_CONFIG_ERROR));
@@ -147,9 +149,10 @@ class SnapshotBuilderTest {
                 new ProviderRegistry.Registration(t, t.descriptor()));
         SnapshotBuilder builder = SnapshotBuilderTestSupport.builder(registry, "gen-1", CLOCK);
 
-        assertThatThrownBy(() -> builder.build(SnapshotBuilderTestSupport.application("test",
+        var failingApplication = SnapshotBuilderTestSupport.application("test",
                 new SnapshotBuilderTestYaml.TestCap("t", "t", "1.0.0",
-                        List.of(new SnapshotBuilderTestYaml.TestInput("in", "missing", "out"))))))
+                        List.of(new SnapshotBuilderTestYaml.TestInput("in", "missing", "out"))));
+        assertThatThrownBy(() -> builder.build(failingApplication))
                 .isInstanceOf(PlatformException.class)
                 .satisfies(e -> assertThat(((PlatformException) e).code())
                         .isEqualTo(PlatformErrorCode.GRAPH_REFERENCE_ERROR));
@@ -180,10 +183,11 @@ class SnapshotBuilderTest {
                 new ProviderRegistry.Registration(c, c.descriptor()));
         SnapshotBuilder builder = SnapshotBuilderTestSupport.builder(registry, "gen-1", CLOCK);
 
-        assertThatThrownBy(() -> builder.build(SnapshotBuilderTestSupport.application("test",
+        var failingApplication = SnapshotBuilderTestSupport.application("test",
                 new SnapshotBuilderTestYaml.TestCap("a", "a", "1.0.0"),
                 new SnapshotBuilderTestYaml.TestCap("b", "b", "1.0.0"),
-                new SnapshotBuilderTestYaml.TestCap("c", "c", "1.0.0"))))
+                new SnapshotBuilderTestYaml.TestCap("c", "c", "1.0.0"));
+        assertThatThrownBy(() -> builder.build(failingApplication))
                 .isInstanceOf(PlatformException.class)
                 .satisfies(e -> {
                     PlatformException pe = (PlatformException) e;
@@ -206,8 +210,9 @@ class SnapshotBuilderTest {
                 new ProviderRegistry.Registration(secretProvider, secretProvider.descriptor()));
         SnapshotBuilder builder = SnapshotBuilderTestSupport.builder(registry, "gen-1", CLOCK);
 
-        assertThatThrownBy(() -> builder.build(SnapshotBuilderTestSupport.application("test",
-                new SnapshotBuilderTestYaml.TestCap("secret", "secret", "1.0.0"))))
+        var failingApplication = SnapshotBuilderTestSupport.application("test",
+                new SnapshotBuilderTestYaml.TestCap("secret", "secret", "1.0.0"));
+        assertThatThrownBy(() -> builder.build(failingApplication))
                 .isInstanceOf(PlatformException.class)
                 .satisfies(e -> {
                     PlatformException pe = (PlatformException) e;
@@ -235,9 +240,10 @@ class SnapshotBuilderTest {
                 new ProviderRegistry.Registration(b, b.descriptor()));
         SnapshotBuilder builder = SnapshotBuilderTestSupport.builder(registry, "gen-1", CLOCK);
 
-        assertThatThrownBy(() -> builder.build(SnapshotBuilderTestSupport.application("test",
+        var failingApplication = SnapshotBuilderTestSupport.application("test",
                 new SnapshotBuilderTestYaml.TestCap("a", "a", "1.0.0"),
-                new SnapshotBuilderTestYaml.TestCap("b", "b", "1.0.0"))))
+                new SnapshotBuilderTestYaml.TestCap("b", "b", "1.0.0"));
+        assertThatThrownBy(() -> builder.build(failingApplication))
                 .isInstanceOf(PlatformException.class)
                 .satisfies(e -> assertThat(((PlatformException) e).code())
                         .isEqualTo(PlatformErrorCode.PROVIDER_CONFIG_ERROR));
@@ -268,10 +274,11 @@ class SnapshotBuilderTest {
                 new ProviderRegistry.Registration(c, c.descriptor()));
         SnapshotBuilder builder = SnapshotBuilderTestSupport.builder(registry, "gen-1", CLOCK);
 
-        assertThatThrownBy(() -> builder.build(SnapshotBuilderTestSupport.application("test",
+        var failingApplication = SnapshotBuilderTestSupport.application("test",
                 new SnapshotBuilderTestYaml.TestCap("a", "a", "1.0.0"),
                 new SnapshotBuilderTestYaml.TestCap("b", "b", "1.0.0"),
-                new SnapshotBuilderTestYaml.TestCap("c", "c", "1.0.0"))))
+                new SnapshotBuilderTestYaml.TestCap("c", "c", "1.0.0"));
+        assertThatThrownBy(() -> builder.build(failingApplication))
                 .isInstanceOf(PlatformException.class)
                 .satisfies(e -> {
                     PlatformException pe = (PlatformException) e;
@@ -311,10 +318,11 @@ class SnapshotBuilderTest {
                 new ProviderRegistry.Registration(c, c.descriptor()));
         SnapshotBuilder builder = SnapshotBuilderTestSupport.builder(registry, "gen-1", CLOCK);
 
-        assertThatThrownBy(() -> builder.build(SnapshotBuilderTestSupport.application("test",
+        var failingApplication = SnapshotBuilderTestSupport.application("test",
                 new SnapshotBuilderTestYaml.TestCap("a", "a", "1.0.0"),
                 new SnapshotBuilderTestYaml.TestCap("b", "b", "1.0.0"),
-                new SnapshotBuilderTestYaml.TestCap("c", "c", "1.0.0"))))
+                new SnapshotBuilderTestYaml.TestCap("c", "c", "1.0.0"));
+        assertThatThrownBy(() -> builder.build(failingApplication))
                 .isInstanceOf(PlatformException.class)
                 .satisfies(e -> {
                     PlatformException pe = (PlatformException) e;

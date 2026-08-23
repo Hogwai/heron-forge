@@ -16,7 +16,7 @@ import java.util.List;
  * immutable.
  */
 @SuppressWarnings("java:S6206")
-public final class MaterializedDataSet {
+public final class MaterializedDataSet implements DataSet {
 
     private final Schema schema;
     private final List<SchemaRecord> schemaRecords;
@@ -53,6 +53,7 @@ public final class MaterializedDataSet {
      *
      * @return the schema of the records
      */
+    @Override
     public Schema schema() {
         return schema;
     }

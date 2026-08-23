@@ -64,7 +64,7 @@ final class ExceptionDetector implements CapabilityInstance {
     }
 
     private static List<SchemaRecord> requireRecords(MaterializedDataSet dataSet, Schema schema) {
-        if (dataSet == null || dataSet.schema() != schema) {
+        if (dataSet == null || !dataSet.schema().equals(schema)) {
             throw new PlatformException(PlatformErrorCode.CAPABILITY_EXECUTION_ERROR, List.of());
         }
         return new ArrayList<>(dataSet.records());

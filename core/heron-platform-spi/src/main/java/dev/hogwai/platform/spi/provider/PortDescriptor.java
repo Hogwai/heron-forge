@@ -11,12 +11,7 @@ import java.util.Objects;
  * through it and a {@code required} flag. All components are non-null and the
  * descriptor is immutable. Framework-independent.
  */
-@SuppressWarnings("java:S6206")
-public final class PortDescriptor {
-
-    private final PortId portId;
-    private final Schema schema;
-    private final boolean required;
+public record PortDescriptor(PortId portId, Schema schema, boolean required) {
 
     /**
      * Creates a port descriptor.
@@ -37,6 +32,7 @@ public final class PortDescriptor {
      *
      * @return the port identifier
      */
+    @Override
     public PortId portId() {
         return portId;
     }
@@ -46,6 +42,7 @@ public final class PortDescriptor {
      *
      * @return the schema of the data flowing through the port
      */
+    @Override
     public Schema schema() {
         return schema;
     }
@@ -55,6 +52,7 @@ public final class PortDescriptor {
      *
      * @return whether the port is required
      */
+    @Override
     public boolean required() {
         return required;
     }

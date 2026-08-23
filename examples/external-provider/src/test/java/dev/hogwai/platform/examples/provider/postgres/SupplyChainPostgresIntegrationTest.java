@@ -14,11 +14,13 @@ import dev.hogwai.platform.examples.provider.orders.DemoOrdersProviderFactory;
 import dev.hogwai.platform.examples.provider.support.FakeDataAccessSupport;
 import dev.hogwai.platform.spi.Diagnostic;
 import dev.hogwai.platform.spi.PortId;
+import dev.hogwai.platform.spi.data.DataSet;
 import dev.hogwai.platform.spi.data.DataSetLimits;
 import dev.hogwai.platform.spi.data.FieldId;
 import dev.hogwai.platform.spi.data.MaterializedDataSet;
 import dev.hogwai.platform.spi.data.Schema;
 import dev.hogwai.platform.spi.data.SchemaRecord;
+import dev.hogwai.platform.spi.data.StreamingDataSet;
 import dev.hogwai.platform.spi.data.access.DataAccess;
 import dev.hogwai.platform.spi.data.access.DataAccessConfiguration;
 import dev.hogwai.platform.spi.data.access.DataAccessFactory;
@@ -48,10 +50,14 @@ class SupplyChainPostgresIntegrationTest {
         List<AutoCloseable> resources = new ArrayList<>();
         BuildContext buildContext = new BuildContext(Clock.systemUTC(), resources::add, DATA_ACCESS_FACTORY);
         try {
-            CapabilityInstance ordersProvider = new DemoOrdersProviderFactory().create(Map.of(), buildContext);
-            CapabilityInstance deliveriesProvider = new DemoDeliveriesProviderFactory().create(Map.of(), buildContext);
-            MaterializedDataSet orders = ordersProvider.execute(CapabilityInputs.of(Map.of()), context());
-            MaterializedDataSet deliveries = deliveriesProvider.execute(CapabilityInputs.of(Map.of()), context());
+            Map<String, Object> databaseConfig = databaseConfig();
+            CapabilityInstance ordersProvider = new DemoOrdersProviderFactory().create(databaseConfig, buildContext);
+            CapabilityInstance deliveriesProvider = new DemoDeliveriesProviderFactory().create(databaseConfig(), buildContext);
+            DataSet ordersDataSet = ordersProvider.execute(CapabilityInputs.of(Map.of()), context());
+            MaterializedDataSet orders = ordersDataSet instanceof dev.hogwai.platform.spi.data.StreamingDataSet streamed
+                    ? streamed.toMaterialized() : (MaterializedDataSet) ordersDataSet;
+            MaterializedDataSet deliveries = (MaterializedDataSet) deliveriesProvider.execute(
+                    CapabilityInputs.of(Map.of()), context());
 
             assertThat(orders.rowCount()).isEqualTo(3);
             assertThat(deliveries.rowCount()).isEqualTo(5);
@@ -64,7 +70,7 @@ class SupplyChainPostgresIntegrationTest {
                     "lateToleranceDays", 1L,
                     "minimumDeliveryRatio", new BigDecimal("0.80"),
                     "priorityRiskDays", 3L), buildContext);
-            MaterializedDataSet exceptions = detector.execute(CapabilityInputs.of(Map.of(
+            MaterializedDataSet exceptions = (MaterializedDataSet) detector.execute(CapabilityInputs.of(Map.of(
                     new PortId("orders"), orders,
                     new PortId("deliveries"), deliveries)), context());
 
@@ -82,8 +88,10 @@ class SupplyChainPostgresIntegrationTest {
         List<AutoCloseable> resources = new ArrayList<>();
         BuildContext buildContext = new BuildContext(Clock.systemUTC(), resources::add, DATA_ACCESS_FACTORY);
         try {
-            new DemoOrdersProviderFactory().create(Map.of(), buildContext);
-            assertThatThrownBy(() -> new SupplyChainExceptionDetectorFactory().create(Map.of(), buildContext))
+            var databaseConfig = databaseConfig();
+            new DemoOrdersProviderFactory().create(databaseConfig, buildContext);
+            var failingDetector = new SupplyChainExceptionDetectorFactory();
+            assertThatThrownBy(() -> failingDetector.create(databaseConfig, buildContext))
                     .isInstanceOf(PlatformException.class);
         } finally {
             closeInReverseOrder(resources);
@@ -95,8 +103,9 @@ class SupplyChainPostgresIntegrationTest {
 
     @Test
     void sanitizesStartupProbeFailures() {
-        assertThatThrownBy(() -> DATA_ACCESS_FACTORY.open(new DataAccessConfiguration(
-                "jdbc:postgresql://127.0.0.1:1/unavailable", "probe-user", "probe-password")))
+        var dbConfig = new DataAccessConfiguration(
+                "jdbc:postgresql://127.0.0.1:1/unavailable", "probe-user", "probe-password");
+        assertThatThrownBy(() -> DATA_ACCESS_FACTORY.open(dbConfig))
                 .isInstanceOf(PlatformException.class)
                 .satisfies(failure -> {
                     PlatformException exception = (PlatformException) failure;
@@ -104,6 +113,18 @@ class SupplyChainPostgresIntegrationTest {
                     assertThat(exception.diagnostics()).extracting(Diagnostic::message)
                             .allSatisfy(message -> assertThat(message).doesNotContain("probe-password", "127.0.0.1"));
                 });
+    }
+
+    private static Map<String, Object> databaseConfig() {
+        return Map.of(
+                "url", environmentOrDefault("HERON_DB_URL", "jdbc:postgresql://localhost:5432/heron_demo"),
+                "user", environmentOrDefault("HERON_DB_USER", "heron"),
+                "password", environmentOrDefault("HERON_DB_PASSWORD", "heron"));
+    }
+
+    private static String environmentOrDefault(String name, String fallback) {
+        String value = System.getenv(name);
+        return value == null || value.isBlank() ? fallback : value;
     }
 
     private static ExecutionContext context() {
@@ -152,6 +173,12 @@ class SupplyChainPostgresIntegrationTest {
             return FakeDataAccessSupport.dataSet(schema, operation, records, limits);
         }
 
+        @Override
+        public StreamingDataSet streamQuery(QueryContext context, String operation, String sql,
+                                            Schema schema, Map<String, String> columnByField,
+                                            DataSetLimits limits, int batchSize) {
+            return delegate.streamQuery(context, operation, sql, schema, columnByField, limits, batchSize);
+        }
         @Override
         public int execute(QueryContext context, String operation, String sql, Map<String, ?> parameters) {
             throw new UnsupportedOperationException();

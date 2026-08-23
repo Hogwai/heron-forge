@@ -8,6 +8,7 @@ import dev.hogwai.platform.spi.data.FieldId;
 import dev.hogwai.platform.spi.data.FieldType;
 import dev.hogwai.platform.spi.data.MaterializedDataSet;
 import dev.hogwai.platform.spi.data.Schema;
+import dev.hogwai.platform.spi.data.StreamingDataSet;
 import dev.hogwai.platform.spi.data.SchemaRecord;
 import dev.hogwai.platform.spi.data.access.DataAccess;
 import dev.hogwai.platform.spi.data.access.DataRow;
@@ -16,7 +17,9 @@ import dev.hogwai.platform.spi.data.access.QueryRequest;
 import dev.hogwai.platform.spi.error.PlatformErrorCode;
 import dev.hogwai.platform.spi.error.PlatformException;
 import dev.hogwai.platform.spi.error.Severity;
+import org.jdbi.v3.core.Handle;
 import org.jdbi.v3.core.Jdbi;
+import org.jdbi.v3.core.result.ResultIterator;
 import org.jdbi.v3.core.statement.Query;
 
 import com.zaxxer.hikari.HikariDataSource;
@@ -24,11 +27,15 @@ import com.zaxxer.hikari.HikariDataSource;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
-/** Jdbi implementation of the framework-independent data access contract. */
+/**
+ * Jdbi implementation of the framework-independent data access contract.
+ */
 @SuppressWarnings("PMD.CyclomaticComplexity")
 final class JdbiDataAccess implements DataAccess {
 
@@ -70,7 +77,7 @@ final class JdbiDataAccess implements DataAccess {
      *
      * @param request the query request
      * @param context the cancellation and deadline context
-     * @param <T> the mapped row type
+     * @param <T>     the mapped row type
      * @return all mapped rows
      * @throws PlatformException if the query fails, is canceled, or exceeds its deadline
      */
@@ -112,25 +119,26 @@ final class JdbiDataAccess implements DataAccess {
 
     @Override
     public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
-            Schema schema, Map<String, String> columnByField) {
+                                              Schema schema, Map<String, String> columnByField) {
         return queryToDataSet(context, operation, sql, Map.of(), schema, columnByField, DEFAULT_LIMITS);
     }
 
     @Override
     public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
-            Schema schema, Map<String, String> columnByField, DataSetLimits limits) {
+                                              Schema schema, Map<String, String> columnByField, DataSetLimits limits) {
         return queryToDataSet(context, operation, sql, Map.of(), schema, columnByField, limits);
     }
 
     @Override
     public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
-            Map<String, ?> parameters, Schema schema, Map<String, String> columnByField) {
+                                              Map<String, ?> parameters, Schema schema, Map<String, String> columnByField) {
         return queryToDataSet(context, operation, sql, parameters, schema, columnByField, DEFAULT_LIMITS);
     }
 
     @Override
     public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
-            Map<String, ?> parameters, Schema schema, Map<String, String> columnByField, DataSetLimits limits) {
+            Map<String, ?> parameters, Schema schema, Map<String, String> columnByField,
+            DataSetLimits limits) {
         Objects.requireNonNull(context, CONTEXT_MUST_NOT_BE_NULL);
         Objects.requireNonNull(schema, "schema must not be null");
         Objects.requireNonNull(columnByField, "columnByField must not be null");
@@ -141,6 +149,171 @@ final class JdbiDataAccess implements DataAccess {
         long estimate = Math.multiplyExact(records.size(), 256L);
         return new MaterializedDataSet(schema, records,
                 new DataSetMetadata(operation, limits), estimate);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Resource ownership is deliberately transferred to the returned
+     * dataset: the handle and the cursor are released by
+     * {@code ReleasingIterator} when the caller closes the stream (or eagerly
+     * on a creation failure below). Deferred close is the whole point of
+     * streaming, hence the S2095 suppressions.
+     */
+    @Override
+    @SuppressWarnings("java:S2095")
+    public StreamingDataSet streamQuery(QueryContext context, String operation, String sql,
+                                        Schema schema, Map<String, String> columnByField,
+                                        DataSetLimits limits,
+                                        int batchSize) {
+        Objects.requireNonNull(context, CONTEXT_MUST_NOT_BE_NULL);
+        Objects.requireNonNull(schema, "schema must not be null");
+        Objects.requireNonNull(columnByField, "columnByField must not be null");
+        Objects.requireNonNull(limits, "limits must not be null");
+        checkContext(context);
+
+        int queryTimeoutSeconds = queryTimeoutSeconds(context.deadline());
+        Handle handle = jdbi.open();
+        ResultIterator<SchemaRecord> cursor;
+        try {
+            // pgjdbc honors the fetch size only outside autocommit; cursor mode
+            // is what keeps large results off the wire buffer.
+            handle.getConnection().setAutoCommit(false);
+            cursor = getRecordResultIterator(sql, schema, columnByField, batchSize, handle,
+                    queryTimeoutSeconds);
+        } catch (Exception original) {
+            // Roll back quietly: with autocommit off Jdbi would otherwise raise
+            // its own TransactionException on close and mask the real failure.
+            releaseQuietly(handle);
+            if (original instanceof PlatformException platformFailure) {
+                throw platformFailure;
+            }
+            if (context.isCancellationRequested()) {
+                throw cancellationFailure(operation);
+            }
+            if (!Instant.now().isBefore(context.deadline())) {
+                throw deadlineFailure(operation);
+            }
+            throw queryFailure(operation);
+        }
+        return new SanitizedStream(operation,
+                StreamingDataSet.over(schema, new ReleasingIterator(cursor, handle),
+                        limits, batchSize, context.deadline(),
+                        context::isCancellationRequested));
+    }
+
+    /** Rolls back then closes quietly: release failures never mask the original. */
+    private static void releaseQuietly(Handle handle) {
+        try {
+            handle.rollback();
+        } catch (RuntimeException _) {
+            // best effort
+        }
+        try {
+            handle.close();
+        } catch (RuntimeException _) {
+            // best effort
+        }
+    }
+
+    /**
+     * Builds the lazy cursor. The {@link Query} is closed together with the
+     * returned iterator (Jdbi closes the statement when its result iterator
+     * closes), which the streaming dataset owns — hence S2095 suppression.
+     */
+    @SuppressWarnings("java:S2095")
+    private static ResultIterator<SchemaRecord> getRecordResultIterator(String sql,
+                                                                        Schema schema,
+                                                                        Map<String, String> columnByField,
+                                                                        int batchSize, Handle handle,
+                                                                        int queryTimeoutSeconds) {
+        Query query = handle.createQuery(sql);
+        query.setQueryTimeout(queryTimeoutSeconds);
+        // Enables JDBC cursor mode: without a fetch size the driver buffers the whole result on every pull.
+        query.setFetchSize(batchSize);
+        return query.map((resultSet, _) ->
+                        mapRow(new JdbiDataRow(resultSet), schema, columnByField))
+                .iterator();
+    }
+
+    /**
+     * Iterator whose close releases both the Jdbi cursor and the owning
+     * handle; the streaming data set closes it through its AutoCloseable hook.
+     */
+    private record ReleasingIterator(ResultIterator<SchemaRecord> cursor, Handle handle)
+            implements Iterator<SchemaRecord>, AutoCloseable {
+
+        @Override
+        public boolean hasNext() {
+            return cursor.hasNext();
+        }
+
+        @Override
+        public SchemaRecord next() {
+            return cursor.next();
+        }
+
+        /**
+         * Cursor mode runs inside a transaction (autocommit off).
+         * Reads are rolled back before release so Jdbi's forceEndTransaction check never fires on close.
+         */
+        @Override
+        public void close() {
+            try {
+                cursor.close();
+            } finally {
+                try {
+                    handle.rollback();
+                } catch (RuntimeException _) {
+                    // the handle close below still releases.
+                }
+                handle.close();
+            }
+        }
+    }
+
+    /**
+     * Decorator mapping mid-stream failures to sanitized diagnostics.
+     */
+    private record SanitizedStream(String operation, StreamingDataSet delegate) implements StreamingDataSet {
+
+        @Override
+        public Schema schema() {
+            return delegate.schema();
+        }
+
+        @Override
+        public Optional<List<SchemaRecord>> nextBatch() {
+            try {
+                return delegate.nextBatch();
+            } catch (IllegalStateException contractMisuse) {
+                throw contractMisuse;
+            } catch (RuntimeException failure) {
+                releaseQuietly();
+                if (failure instanceof PlatformException platformFailure) {
+                    throw platformFailure;
+                }
+                throw queryFailure(operation);
+            }
+        }
+
+        @Override
+        public long deliveredRowCount() {
+            return delegate.deliveredRowCount();
+        }
+
+        @Override
+        public void close() {
+            delegate.close();
+        }
+
+        private void releaseQuietly() {
+            try {
+                delegate.close();
+            } catch (RuntimeException _) {
+                // The original failure takes precedence over release errors.
+            }
+        }
     }
 
     @Override
