@@ -47,7 +47,7 @@ flowchart LR
 ### Runtime flow
 
 ```mermaid
-flowchart TD
+flowchart LR
     configStage["Application configuration<br/>YAML"] --> parseStage["Secure YAML parsing<br/>and validation"]
     providerInput["Provider implementations<br/>on the runtime classpath"] --> providerStage["Provider discovery<br/>and validation"]
     parseStage --> providerStage

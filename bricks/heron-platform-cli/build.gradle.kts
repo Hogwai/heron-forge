@@ -28,6 +28,7 @@ val platformSpiVersion = providers.gradleProperty("platformSpiBaselineVersion").
 dependencies {
     api(project(":core:heron-platform-spi"))
     api(project(":core:heron-platform-runtime"))
+    implementation(project(":bricks:heron-platform-registry"))
     implementation("info.picocli:picocli:$picocliVersion")
     implementation("org.slf4j:slf4j-api:$slf4jVersion")
     runtimeOnly("org.slf4j:slf4j-simple:$slf4jVersion")

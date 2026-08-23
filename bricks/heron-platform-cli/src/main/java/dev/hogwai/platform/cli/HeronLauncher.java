@@ -19,7 +19,8 @@ import java.util.concurrent.CountDownLatch;
 
 /** The sole standard process bootstrap for Heron applications. */
 @Command(name = "heron", mixinStandardHelpOptions = true,
-        subcommands = {StartCommand.class, InitCommand.class, CreateCommand.class},
+        subcommands = {StartCommand.class, InitCommand.class, CreateCommand.class,
+                RegisterCommand.class, GenerationsCommand.class, RollbackCommand.class},
         description = "Heron application launcher")
 @SuppressWarnings("PMD.CyclomaticComplexity")
 public final class HeronLauncher implements Runnable {
@@ -80,13 +81,28 @@ public final class HeronLauncher implements Runnable {
         Objects.requireNonNull(adapterFactory, "adapterFactory must not be null");
         Objects.requireNonNull(shutdownWaiter, "shutdownWaiter must not be null");
 
-        HostApplication application = null;
+        HostApplication application;
+        try {
+            application = loadApplication(command, loader);
+        } catch (Exception failure) {
+            report(safeMessage(failure));
+            Thread.currentThread().interrupt();
+            return 1;
+        }
+        return run(command.port(), application, adapterFactory, shutdownWaiter);
+    }
+
+    static int run(int port, HostApplication application,
+            HostAdapterFactory adapterFactory, ShutdownWaiter shutdownWaiter) {
+        Objects.requireNonNull(application, "application must not be null");
+        Objects.requireNonNull(adapterFactory, "adapterFactory must not be null");
+        Objects.requireNonNull(shutdownWaiter, "shutdownWaiter must not be null");
+
         HostAdapter host = null;
         Exception primaryFailure = null;
         try {
-            application = loadApplication(command, loader);
             host = Objects.requireNonNull(adapterFactory.create(), "host adapter must not be null");
-            HostConfiguration configuration = new HostConfiguration(DEFAULT_BIND_ADDRESS, command.port(),
+            HostConfiguration configuration = new HostConfiguration(DEFAULT_BIND_ADDRESS, port,
                     DEFAULT_REQUEST_TIMEOUT);
             host.start(application, configuration);
             shutdownWaiter.await();

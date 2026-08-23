@@ -2,29 +2,49 @@ package dev.hogwai.platform.cli;
 
 import dev.hogwai.platform.runtime.load.ApplicationLoader;
 import picocli.CommandLine.Command;
-import picocli.CommandLine.ITypeConverter;
+import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
-import picocli.CommandLine.TypeConversionException;
+import picocli.CommandLine.Spec;
 
-import java.nio.file.Files;
-import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.concurrent.Callable;
 
 /** Picocli subcommand that starts the standard Heron host. */
-@Command(name = "start", description = "Start the configured Heron application")
+@Command(name = "start",
+        description = "Start the Heron host from a YAML configuration or from a stored generation")
+@SuppressWarnings("PMD.CyclomaticComplexity")
 public final class StartCommand implements Callable<Integer> {
 
     /** Default HTTP port used when no explicit port is supplied. */
     public static final int DEFAULT_PORT = 8080;
 
-    @Option(names = "--config", required = true, converter = ReadablePathConverter.class,
-            description = "readable YAML application configuration")
+    /** Default generation store root used when no explicit store is supplied. */
+    public static final String DEFAULT_STORE = "registry";
+
+    @Option(names = "--config", converter = ReadablePathConverter.class,
+            description = "readable YAML application configuration (mutually exclusive with --app)")
     private Path configuration;
+
+    @Option(names = "--store", defaultValue = DEFAULT_STORE,
+            description = "generation store root directory (default: ./" + DEFAULT_STORE + ")")
+    private Path store;
+
+    @Option(names = "--app",
+            description = "application id in the generation store; starts from the store "
+                    + "instead of --config")
+    private String applicationId;
+
+    @Option(names = "--generation",
+            description = "explicit generation id (default: latest STABLE; required to start "
+                    + "a DEPRECATED generation; RETIRED generations are always refused)")
+    private String generationId;
 
     @Option(names = "--port", defaultValue = "" + DEFAULT_PORT, converter = PortConverter.class,
             description = "HTTP bind port (0..65535)")
     private int port;
+
+    @Spec
+    private CommandSpec commandSpec;
 
     /** Creates the picocli start command. */
     public StartCommand() {
@@ -69,39 +89,30 @@ public final class StartCommand implements Callable<Integer> {
 
     @Override
     public Integer call() {
+        Integer invalid = validateSourceOptions();
+        if (invalid != null) {
+            return invalid;
+        }
+        if (applicationId != null) {
+            return startFromStore();
+        }
         return HeronLauncher.run(this, ApplicationLoader::load,
                 HeronLauncher::createHostAdapter, HeronLauncher::awaitShutdown);
     }
 
-    private static final class ReadablePathConverter implements ITypeConverter<Path> {
-        @Override
-        public Path convert(String value) {
-            try {
-                Path path = Path.of(value);
-                if (!Files.isRegularFile(path) || !Files.isReadable(path)) {
-                    throw new TypeConversionException("configuration file is not readable");
-                }
-                return path;
-            } catch (InvalidPathException | SecurityException _) {
-                throw new TypeConversionException("configuration file path is invalid");
-            }
+    private Integer validateSourceOptions() {
+        if (configuration == null && applicationId == null) {
+            commandSpec.commandLine().getErr().println("heron: either --config or --app is required");
+            return 2;
         }
+        if (configuration != null && applicationId != null) {
+            commandSpec.commandLine().getErr().println("heron: --config and --app are mutually exclusive");
+            return 2;
+        }
+        return null;
     }
 
-    private static final class PortConverter implements ITypeConverter<Integer> {
-        @Override
-        public Integer convert(String value) {
-            final int parsed;
-            try {
-                parsed = Integer.parseInt(value);
-            } catch (NumberFormatException _) {
-                throw new TypeConversionException("port must be 0 through 65535");
-            }
-            if (parsed < 0 || parsed > 65535) {
-                throw new TypeConversionException("port must be 0 through 65535");
-            }
-            return parsed;
-        }
+    private Integer startFromStore() {
+        return new GenerationStarter(store, applicationId, generationId, port, commandSpec).start();
     }
-
 }

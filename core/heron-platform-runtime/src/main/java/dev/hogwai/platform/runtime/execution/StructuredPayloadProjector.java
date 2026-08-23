@@ -48,10 +48,10 @@ public final class StructuredPayloadProjector {
     }
 
     /**
-     * Converts one record to the generic row shape exposed by the Host API:
+     * Converts one generationRecord to the generic row shape exposed by the Host API:
      * a map keyed by field name with normalized scalar values.
      *
-     * @param schemaRecord the record to convert
+     * @param schemaRecord the generationRecord to convert
      * @return the generic row
      */
     public static Map<String, Object> toGenericRow(SchemaRecord schemaRecord) {

@@ -19,6 +19,7 @@ dependencies {
     implementation(project(":bricks:heron-platform-host-helidon"))
     implementation(project(":examples:external-provider"))
     implementation(project(":examples:kotlin-provider"))
+    testImplementation(project(":bricks:heron-platform-registry"))
     runtimeOnly("org.slf4j:slf4j-simple:${providers.gradleProperty("slf4jVersion").get()}")
 }
 

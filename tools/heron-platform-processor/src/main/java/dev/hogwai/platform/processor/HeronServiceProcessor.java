@@ -37,13 +37,15 @@ import dev.hogwai.platform.spi.annotation.HeronService;
 import dev.hogwai.platform.spi.data.access.DataAccessFactory;
 import dev.hogwai.platform.spi.host.HostAdapter;
 import dev.hogwai.platform.spi.provider.ProviderFactory;
+import dev.hogwai.platform.spi.registry.GenerationStore;
 
 /**
  * Annotation processor that generates {@code META-INF/services} descriptors for classes annotated with {@link HeronService}.
  *
  * <p>For every annotated class the processor verifies that it is a public,
  * non-abstract class with a public no-argument constructor implementing the service contract declared in the annotation,
- * and that one of the three supported contracts ({@link ProviderFactory}, {@link DataAccessFactory} or {@link HostAdapter}) is named.
+ * and that one of the supported contracts ({@link ProviderFactory}, {@link DataAccessFactory}, {@link HostAdapter}
+ * or {@link GenerationStore}) is named.
  * It also validates the declared metadata:
  * the identifier must be non-blank and free of whitespace, the version must be a canonical {@code major.minor.patch} string,
  * and two services of the same contract may not declare the same identifier inside a single compilation.
@@ -62,7 +64,8 @@ public final class HeronServiceProcessor extends AbstractProcessor {
     private static final List<String> SUPPORTED_CONTRACTS = List.of(
             ProviderFactory.class.getName(),
             DataAccessFactory.class.getName(),
-            HostAdapter.class.getName());
+            HostAdapter.class.getName(),
+            GenerationStore.class.getName());
 
     private final SortedMap<String, SortedSet<String>> registrations = new TreeMap<>();
     private final Map<String, String> declaredIds = new HashMap<>();
