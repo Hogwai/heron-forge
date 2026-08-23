@@ -22,8 +22,8 @@ flowchart LR
 
     subgraph Bricks [Pluggable bricks]
         host["host-helidon<br/>HTTP adapter"]
-        data["data-postgresql<br/>PostgreSQL dialect"]
-        jdbi["data-jdbi<br/>Generic Jdbi engine"]
+        data["data-postgresql<br/>DataAccessFactory"]
+        registry["registry<br/>file-backed generation store"]
     end
 
     subgraph ProviderCode [External provider]
@@ -34,6 +34,7 @@ flowchart LR
     appConfig -->|"YAML"| cli
     cli -->|"loads and starts"| runtime
     cli -.->|"discovers"| host
+    cli -.->|"stores generations"| registry
     runtime -->|"uses contracts"| spi
     runtime -.->|"discovers"| provider
     provider -->|"implements"| spi
@@ -99,7 +100,7 @@ $HERON create brick web --type=host            # host adapter brick skeleton
 
 `heron create` without arguments starts an interactive wizard in a terminal, or prints the direct usage with exit status 2 when no terminal is available.
 Project names must match `[a-z][a-z0-9-]*`.
-Generated builds resolve `dev.hogwai.platform:heron-platform-*` from `mavenLocal()`, so run `./gradlew publishToMavenLocal` first during the POC phase.
+Generated builds resolve `dev.hogwai.platform:heron-platform-*` from `mavenLocal()`, so run `./gradlew publishToMavenLocal` first.
 Provider generation defaults to Java. Use `--language=KOTLIN` to generate a Kotlin/JVM provider that implements the Java SPI and registers through `ServiceLoader`.
 
 ## Service registration (`@HeronService`)
@@ -128,6 +129,35 @@ dependencies {
 
 The annotation lives in `core:heron-platform-spi`; the processor is build-time only and never appears in runtime artifacts. 
 The runtime discovery mechanism (`ServiceLoader`) is unchanged.
+
+## Generation registry
+
+Applications do not have to be started straight from a YAML file. 
+`heron register` validates a configuration, seals it (the generation id is the full hex SHA-256 of the raw YAML bytes) and stores it with lifecycle metadata:
+
+```bash
+HERON=bricks/heron-platform-cli/build/install/heron/bin/heron
+
+$HERON register --config app.yaml --store /var/lib/heron/reg
+$HERON generations list --store /var/lib/heron/reg --app my-app
+$HERON generations mark --store /var/lib/heron/reg --app my-app --generation <id> --status stable
+$HERON generations diff --store /var/lib/heron/reg --app my-app --from <id1> --to <id2>
+$HERON start --store /var/lib/heron/reg --app my-app            # boots the latest STABLE generation
+$HERON rollback --store /var/lib/heron/reg --app my-app         # prints the start command for the previous STABLE
+```
+
+Generations follow a monotone lifecycle: `EXPERIMENTAL → STABLE → DEPRECATED → RETIRED`. 
+`start` picks the latest STABLE generation by default; RETIRED is always refused and DEPRECATED requires an explicit `--generation` (with a warning).
+
+The store keeps the sealed *definition*, never live state: each generation is a directory holding the raw validated YAML (`${ENV}` placeholders stay unresolved on disk — no secrets are persisted) plus a `record.json` metadata file:
+
+```text
+<store-root>/<applicationId>/<generationId>/{config.yaml,record.json}
+```
+
+The store root comes from `--store`, else the `HERON_REGISTRY_DIR` environment variable, else `./registry`. 
+At activation the stored YAML is re-parsed and recompiled through the same pipeline as a direct boot; the integrity check `sha256(rawYaml) == generationId` runs before any compilation, so a stored generation always rebuilds to exactly what was sealed. 
+The default store is the file-backed brick (`bricks:heron-platform-registry`, service id `registry.file`); another backend means writing another brick implementing `spi.registry.GenerationStore`.
 
 ## Factory demo consumer path
 
@@ -160,7 +190,7 @@ Helidon and picocli are supplied by the standard shell.
 
 ## Modules
 
-The platform is split into core modules (agnostic, framework-independent) and bricks (pluggable components that a solution squad wires in).
+The platform is split into core modules (agnostic, framework-independent) and bricks (pluggable components that can wired in).
 
 | Module                                  | Kind    | Description                                                           | Depends on                                                                                                                                                    |
 |-----------------------------------------|---------|-----------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -169,7 +199,8 @@ The platform is split into core modules (agnostic, framework-independent) and br
 | `bricks:heron-platform-data-jdbi`       | brick   | Generic Jdbi data access engine (connection pooling included)         | `core:heron-platform-spi`                                                                                                                                     |
 | `bricks:heron-platform-data-postgresql` | brick   | PostgreSQL dialect over the Jdbi brick (plugin, driver, registration) | `core:heron-platform-spi`, `bricks:heron-platform-data-jdbi`                                                                                                  |
 | `bricks:heron-platform-host-helidon`    | brick   | Helidon SE 4.5.3 HTTP shell                                           | `core:heron-platform-spi`                                                                                                                                     |
-| `bricks:heron-platform-cli`             | brick   | picocli standard command-line bootstrap                               | `core:heron-platform-spi`, `core:heron-platform-runtime`                                                                                                      |
+| `bricks:heron-platform-cli`             | brick   | picocli standard command-line bootstrap                               | `core:heron-platform-spi`, `core:heron-platform-runtime`, `bricks:heron-platform-registry`                                                                    |
+| `bricks:heron-platform-registry`        | brick   | File-backed generation store (sealed YAML + lifecycle metadata)       | `core:heron-platform-spi`                                                                                                                                     |
 | `examples:external-provider`            | example | Example external provider                                             | `core:heron-platform-spi`                                                                                                                                     |
 | `examples:kotlin-provider`              | example | Kotlin/JVM PostgreSQL-backed provider                                 | `core:heron-platform-spi`                                                                                                                                     |
 | `examples:factory-demo`                 | example | Example factory demo                                                  | `core:heron-platform-runtime`, `bricks:heron-platform-cli`, `bricks:heron-platform-data-postgresql`, `examples:external-provider`, `examples:kotlin-provider` |
@@ -177,9 +208,10 @@ The platform is split into core modules (agnostic, framework-independent) and br
 ## Boundaries
 
 - The core (`spi`, `runtime`) is framework-independent: it knows neither Helidon, nor picocli, nor PostgreSQL.
-- The bricks (`data-jdbi`, `data-postgresql`, `host-helidon`, `cli`) are pluggable: a solution squad picks its database brick, its HTTP brick and its launcher.
+- The bricks (`data-jdbi`, `data-postgresql`, `host-helidon`, `cli`, `registry`) are pluggable: one can pick its database brick, its HTTP brick, its launcher and its generation store.
 - The data contract lives in the framework-independent `core:heron-platform-spi`. `bricks:heron-platform-data-jdbi` is the generic SQL engine over Jdbi; `bricks:heron-platform-data-postgresql` is a thin dialect on top of it (PostgresPlugin, JDBC driver) and is discovered by the runtime through `ServiceLoader`. Supporting another database means writing another thin dialect brick.
-- The launcher (`bricks:heron-platform-cli`) is host-agnostic: it discovers the `HostAdapter` implementation through `ServiceLoader`. `bricks:heron-platform-host-helidon` is the HTTP brick that a solution squad wires in. Another host brick can be plugged in without touching the launcher.
+- The launcher (`bricks:heron-platform-cli`) is host-agnostic: it discovers the `HostAdapter` implementation through `ServiceLoader`. `bricks:heron-platform-host-helidon` is the HTTP brick that one can wire in. Another host brick can be plugged in without touching the launcher.
+- The registry keeps cold/hot separation: the store persists sealed definitions (`GenerationRecord`), while `RuntimeSnapshot` holds live capability instances and stays RAM-only. Swapping the file store for another backend (e.g. PostgreSQL) means writing another `GenerationStore` brick — core and CLI stay unchanged.
 
 The runtime discovers the `DataAccessFactory` implementation on the classpath via `ServiceLoader` and supplies it to providers through `BuildContext`. 
 A configuration that never touches data access loads even without a data brick; a provider that opens a data client fails with `DATA_ACCESS_UNAVAILABLE` when no brick is present. 
