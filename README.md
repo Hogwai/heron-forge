@@ -76,7 +76,7 @@ Use the Gradle wrapper (Gradle 9.7.0):
 
 `check` runs the unit tests, static analysis (Checkstyle, PMD, Error Prone), coverage reporting and coverage gates.
 
-A `Makefile` wraps the daily workflow (`make help`): `make check`, `make publish`, `make cli`, `make db-up` / `db-down`, `make integration` (opt-in PostgreSQL suites with the required environment), `make demo-run` and `make e2e` (scaffolds an application, wires a database-backed provider, boots the shell and probes the HTTP endpoints).
+A `Makefile` wraps the daily workflow (`make help`). It exposes `make check`, `make publish`, `make cli`, `make db-up` / `db-down` and `make integration` (opt-in PostgreSQL suites with the required environment). `make demo-run` starts the factory-demo shell in the foreground. `make e2e` scaffolds an application, wires a database-backed provider, boots the shell and probes the HTTP endpoints.
 
 ## Scaffolding (`heron create`)
 
@@ -115,7 +115,8 @@ public final class DemoOrdersProviderFactory implements ProviderFactory {
 ```
 
 At compile time the `heron-platform-processor` annotation processor generates the `META-INF/services/<interface>` descriptor. 
-It also validates the declaration: public non-abstract class with a public no-argument constructor, class implementing the declared contract, non-blank whitespace-free id, canonical `major.minor.patch` version (default `1.0.0`), and unique ids per contract inside a module.
+It also validates the declaration: public non-abstract class with a public no-argument constructor and class implementing the declared contract. 
+Metadata must be sound too: non-blank whitespace-free id, canonical `major.minor.patch` version (default `1.0.0`), unique ids per contract inside a module.
 
 Modules carrying annotated classes must declare the processor on javac's processor path:
 
@@ -149,7 +150,7 @@ $HERON rollback --store /var/lib/heron/reg --app my-app         # prints the sta
 Generations follow a monotone lifecycle: `EXPERIMENTAL → STABLE → DEPRECATED → RETIRED`. 
 `start` picks the latest STABLE generation by default. RETIRED is always refused and DEPRECATED requires an explicit `--generation` (with a warning).
 
-The store keeps the sealed *definition*, never live state: each generation is a directory holding the raw validated YAML (`${ENV}` placeholders stay unresolved on disk, so no secrets are persisted) plus a `record.json` metadata file:
+The store keeps the sealed definition, never live state. Each generation is a directory holding the raw validated YAML (`${ENV}` placeholders stay unresolved on disk, so no secrets are persisted) plus a `record.json` metadata file:
 
 ```text
 <store-root>/<applicationId>/<generationId>/{config.yaml,record.json}
@@ -225,7 +226,13 @@ PostgreSQL integration tests are opt-in with `RUN_POSTGRES_TESTS=true`.
 
 ### Streaming datasets
 
-Large results do not have to be materialized. `DataAccess.streamQuery(...)` returns a `StreamingDataSet`, an `AutoCloseable` view delivering bounded batches while re-checking the deadline and cancellation signal on every pull and enforcing the same `DataSetLimits` as materialized datasets. A capability declares its result shape through the covariant return of `execute`: return a `StreamingDataSet` to stream (entrypoint targets flow lazily to the host), or keep returning a `MaterializedDataSet` as before. When a streaming capability is consumed as an upstream input, the runtime collects it into a materialized dataset for composition. The demo orders capability (`demo.orders`) streams by default over the Jdbi cursor.
+Large results do not have to be materialized. 
+`DataAccess.streamQuery(...)` returns a `StreamingDataSet`, an `AutoCloseable` view delivering bounded batches. 
+Every pull re-checks the deadline and the cancellation signal and enforces the same `DataSetLimits` as materialized datasets. 
+A capability declares its result shape through the covariant return of `execute`. 
+Return a `StreamingDataSet` to stream (entrypoint targets flow lazily to the host) or keep returning a `MaterializedDataSet` as before. 
+When a streaming capability is consumed as an upstream input, the runtime collects it into a materialized dataset for composition. 
+The demo orders capability (`demo.orders`) streams by default over the Jdbi cursor.
 
 ## Versions & tools
 
