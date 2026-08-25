@@ -13,9 +13,8 @@ import dev.hogwai.platform.spi.data.access.DataAccessFactory;
 import dev.hogwai.platform.spi.error.PlatformErrorCode;
 import dev.hogwai.platform.spi.error.PlatformException;
 import dev.hogwai.platform.spi.host.EntrypointDescriptor;
+import dev.hogwai.platform.spi.host.ExecutionOutcome;
 import dev.hogwai.platform.spi.host.InvocationRequest;
-import dev.hogwai.platform.spi.host.InvocationResult;
-import dev.hogwai.platform.spi.host.InvocationSuccess;
 import dev.hogwai.platform.spi.registry.GenerationRecord;
 import dev.hogwai.platform.spi.registry.GenerationStatus;
 import org.junit.jupiter.api.Test;
@@ -40,9 +39,9 @@ class GenerationActivatorTest {
 
         try (RuntimeApplication application = activator.activate(generationRecord)) {
             assertThat(application.entrypoints()).containsExactly(new EntrypointDescriptor("read", "/read"));
-            InvocationResult result = application.invoke(
+            ExecutionOutcome outcome = application.execute(
                     new InvocationRequest("read", "request-1", "correlation-1", DEADLINE, () -> false));
-            assertThat(result).isInstanceOf(InvocationSuccess.class);
+            assertThat(outcome.materialized()).isPresent();
             assertThat(factory.lastContext()).isNotNull();
             assertThat(factory.lastContext().snapshotId()).isEqualTo(generationRecord.generationId());
         }
@@ -53,7 +52,8 @@ class GenerationActivatorTest {
         GenerationRecord generationRecord = service.register(yaml("localhost"), "tester").generationRecord();
         String tampered = generationRecord.rawYaml().replace("localhost", "evil-host");
         GenerationRecord falsified = new GenerationRecord(generationRecord.applicationId(), generationRecord.generationId(),
-                generationRecord.configSha256(), tampered, generationRecord.status(), generationRecord.createdAt(), generationRecord.createdBy());
+                generationRecord.configSha256(), tampered, generationRecord.status(),
+                generationRecord.createdAt(), generationRecord.createdBy());
 
         assertThatThrownBy(() -> activator.activate(falsified))
                 .isInstanceOf(PlatformException.class)

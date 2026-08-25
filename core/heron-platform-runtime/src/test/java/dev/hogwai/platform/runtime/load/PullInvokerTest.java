@@ -41,9 +41,10 @@ import dev.hogwai.platform.spi.data.SchemaRecord;
 import dev.hogwai.platform.spi.data.StreamingDataSet;
 import dev.hogwai.platform.spi.data.access.DataAccessFactory;
 import dev.hogwai.platform.spi.execution.ExecutionContext;
+import dev.hogwai.platform.spi.host.FailureCode;
 import dev.hogwai.platform.spi.host.HostApplication;
+import dev.hogwai.platform.spi.host.InvocationFailure;
 import dev.hogwai.platform.spi.host.InvocationRequest;
-import dev.hogwai.platform.spi.host.InvocationSuccess;
 import dev.hogwai.platform.spi.provider.CapabilityInputs;
 import dev.hogwai.platform.spi.provider.CapabilityInstance;
 import dev.hogwai.platform.spi.provider.ConfigurationSchema;
@@ -100,9 +101,9 @@ class PullInvokerTest {
 
         try (HostApplication application = load(stream(yaml()), registry,
                 SnapshotBuilderTestSupport.dataAccessFactory())) {
-            assertThat(application.invoke(new InvocationRequest("read", "r1", "c1",
-                    FAR_FUTURE, () -> false)))
-                    .isEqualTo(new InvocationSuccess(StructuredPayloadProjector.project(targetData)));
+            assertThat(application.execute(new InvocationRequest("read", "r1", "c1",
+                    FAR_FUTURE, () -> false)).materialized())
+                    .contains(StructuredPayloadProjector.project(targetData));
         }
 
         assertThat(order).containsExactly("source", "target");
@@ -248,6 +249,45 @@ class PullInvokerTest {
     }
 
     @Test
+    void streamingUpstreamCursorIsClosedWhenCollectedAsInput() {
+        List<String> order = new ArrayList<>();
+        CloseableRowIterator rows = new CloseableRowIterator(records(2).iterator());
+        ProviderFactory source = factory("source", descriptor("source", CapabilityKind.SOURCE,
+                Map.of(), Map.of(new PortId("out"), port("out"))),
+                (_, _) -> {
+                    order.add("source");
+                    return StreamingDataSet.over(schema(), rows,
+                            new DataSetLimits(100, 100_000), 5, FAR_FUTURE, () -> false);
+                });
+        ProviderFactory target = factory("target", descriptor("target", CapabilityKind.TRANSFORM,
+                Map.of(new PortId("left"), port("left")), Map.of(new PortId("out"), port("out"))),
+                (inputs, _) -> {
+                    order.add("target");
+                    MaterializedDataSet left = inputs.get(new PortId("left"));
+                    assertThat(left.records()).hasSize(2);
+                    return left;
+                });
+        ProviderRegistry registry = new Registry(source, target);
+
+        SnapshotBuilder builder = SnapshotBuilderTestSupport.builder(registry, "gen-collect-close",
+                java.time.Clock.systemUTC(), SnapshotBuilderTestSupport.dataAccessFactory());
+        try (SnapshotCandidate candidate = builder.build(SnapshotBuilderTestSupport.application(
+                "pull-collect-close",
+                new SnapshotBuilderTestYaml.TestCap("source", "source", "1.0.0"),
+                new SnapshotBuilderTestYaml.TestCap("target", "target", "1.0.0",
+                        List.of(new SnapshotBuilderTestYaml.TestInput("left", "source", "out")))))) {
+            RuntimeSnapshot snapshot = candidate.snapshot();
+            PullInvoker invoker = new PullInvoker();
+            ExecutionContext context = new ExecutionContext("r1", snapshot.generationId(),
+                    FAR_FUTURE, () -> false, "c1");
+            DataSet result = invoker.invokeTarget(snapshot, "target", context);
+            assertThat(((MaterializedDataSet) result).records()).hasSize(2);
+            assertThat(rows.closed).isTrue();
+            assertThat(order).containsExactly("source", "target");
+        }
+    }
+
+    @Test
     void materializedTargetKeepsItsShapeThroughTheInvoker() {
         MaterializedDataSet targetData = new MaterializedDataSet(schema(), records(4),
                 new DataSetMetadata("target", new DataSetLimits(100, 100_000)),
@@ -290,8 +330,8 @@ class PullInvokerTest {
 
         try (HostApplication application = load(stream(yaml()), registry,
                 SnapshotBuilderTestSupport.dataAccessFactory())) {
-            Optional<dev.hogwai.platform.spi.host.StreamingPayload> streamed = application.invokeStreaming(
-                    new InvocationRequest("read", "r1", "c1", FAR_FUTURE, () -> false));
+            var streamed = application.execute(
+                    new InvocationRequest("read", "r1", "c1", FAR_FUTURE, () -> false)).streaming();
 
             assertThat(streamed).isPresent();
             try (var payload = streamed.get()) {
@@ -304,9 +344,10 @@ class PullInvokerTest {
                 assertThat(payload.schemaVersion()).isEqualTo(1);
             }
 
-            // Unknown entrypoint falls back to materialized invocation.
-            assertThat(application.invokeStreaming(new InvocationRequest("nope", "r2", "c2",
-                    FAR_FUTURE, () -> false))).isEmpty();
+            // Unknown entrypoint surfaces as a failure outcome.
+            assertThat(application.execute(new InvocationRequest("nope", "r2", "c2",
+                    FAR_FUTURE, () -> false)).failure())
+                    .contains(new InvocationFailure(FailureCode.ENTRYPOINT_NOT_FOUND, "entrypoint not found"));
         }
     }
 
@@ -377,6 +418,31 @@ class PullInvokerTest {
 
     private static MaterializedDataSet dataset(String name) {
         return new MaterializedDataSet(schema(), List.of(), new DataSetMetadata(name, new DataSetLimits(100, 1000)), 0);
+    }
+
+    private static final class CloseableRowIterator implements java.util.Iterator<SchemaRecord>, AutoCloseable {
+
+        private final java.util.Iterator<SchemaRecord> delegate;
+        private boolean closed;
+
+        private CloseableRowIterator(java.util.Iterator<SchemaRecord> delegate) {
+            this.delegate = delegate;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return delegate.hasNext();
+        }
+
+        @Override
+        public SchemaRecord next() {
+            return delegate.next();
+        }
+
+        @Override
+        public void close() {
+            closed = true;
+        }
     }
 
     private static String yaml() {

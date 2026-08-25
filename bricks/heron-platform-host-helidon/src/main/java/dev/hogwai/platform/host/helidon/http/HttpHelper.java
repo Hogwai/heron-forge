@@ -5,6 +5,7 @@ import io.helidon.http.HeaderNames;
 import io.helidon.webserver.http.ServerRequest;
 import io.helidon.webserver.http.ServerResponse;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -30,9 +31,11 @@ public final class HttpHelper {
         int status = healthy ? 200 : 500;
         String readiness = healthy ? "ready" : "not-ready";
         String health = live ? "live" : readiness;
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("status", health);
         response.status(status)
                 .header("content-type", JSON_CONTENT_TYPE)
-                .send(Map.of("status", health));
+                .send(body);
     }
 
     /**

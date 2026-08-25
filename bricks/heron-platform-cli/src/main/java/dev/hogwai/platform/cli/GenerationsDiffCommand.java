@@ -18,7 +18,8 @@ import picocli.CommandLine.Spec;
  * Picocli subcommand comparing two stored generations of an application.
  *
  * <p>Both records are loaded from the store and compared structurally by {@link GenerationDiff}.
- * Finding differences is a successful outcome (exit code 0), only business errors (unknown generation, unreadable store, invalid YAML exit with 1).
+ * Finding differences is a successful outcome (exit code 0), only business errors
+ * (unknown generation, unreadable store, invalid YAML exit with 1).
  */
 @Command(name = "diff",
         description = "Compare two stored generations of an application")

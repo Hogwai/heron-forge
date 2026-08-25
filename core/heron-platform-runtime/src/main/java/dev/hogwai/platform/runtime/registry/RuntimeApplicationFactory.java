@@ -3,10 +3,14 @@ package dev.hogwai.platform.runtime.registry;
 import java.time.Clock;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import dev.hogwai.platform.runtime.compile.GraphCompiler;
+import dev.hogwai.platform.runtime.compile.WidgetValidator;
 import dev.hogwai.platform.runtime.compile.provider.ProviderRegistry;
 import dev.hogwai.platform.runtime.compile.provider.ProviderResolver;
+import dev.hogwai.platform.runtime.config.EntrypointConfig;
 import dev.hogwai.platform.runtime.config.ParsedApplication;
 import dev.hogwai.platform.runtime.execution.RuntimeApplication;
 import dev.hogwai.platform.runtime.execution.RuntimeEntrypoint;
@@ -69,6 +73,14 @@ final class RuntimeApplicationFactory {
                     candidate.snapshot().graph(), parsed.application().entrypoints());
             if (!entrypointDiagnostics.isEmpty()) {
                 throw new PlatformException(PlatformErrorCode.GRAPH_REFERENCE_ERROR, entrypointDiagnostics);
+            }
+            Set<String> entrypointIds = parsed.application().entrypoints().stream()
+                    .map(EntrypointConfig::id)
+                    .collect(Collectors.toUnmodifiableSet());
+            List<Diagnostic> widgetDiagnostics = WidgetValidator.validate(
+                    entrypointIds, parsed.application().widgets());
+            if (!widgetDiagnostics.isEmpty()) {
+                throw new PlatformException(PlatformErrorCode.GRAPH_REFERENCE_ERROR, widgetDiagnostics);
             }
             return new RuntimeApplication(candidate, runtimeEntrypoints(parsed), clock);
         } catch (RuntimeException failure) {

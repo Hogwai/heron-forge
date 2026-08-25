@@ -52,8 +52,10 @@ public final class HelidonHostAdapter implements HostAdapter {
                     .host(hostConfiguration.bindAddress())
                     .port(hostConfiguration.port())
                     .routing(routing -> {
-                        routing.get(HEALTH_LIVE_PATH, (_, resp) -> writeHealth(resp, true, ready()));
-                        routing.get(HEALTH_READY_PATH, (_, resp) -> writeHealth(resp, false, ready()));
+                        routing.get(HEALTH_LIVE_PATH, (_, resp) ->
+                                writeHealth(resp, true, ready()));
+                        routing.get(HEALTH_READY_PATH, (_, resp) ->
+                                writeHealth(resp, false, ready()));
                         for (EntrypointDescriptor descriptor : descriptors) {
                             routing.get(descriptor.path(), (request, response) ->
                                     invoker.invoke(descriptor, request, response));

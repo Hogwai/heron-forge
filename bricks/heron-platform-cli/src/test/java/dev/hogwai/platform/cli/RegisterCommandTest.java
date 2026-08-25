@@ -34,7 +34,7 @@ class RegisterCommandTest {
                 .contains("EXPERIMENTAL");
         Path generationDirectory = storeRoot.resolve("cli-demo").resolve(generationId);
         assertThat(generationDirectory.resolve("config.yaml")).exists();
-        assertThat(generationDirectory.resolve("generationRecord.json")).exists();
+        assertThat(generationDirectory.resolve("record.json")).exists();
     }
 
     @Test

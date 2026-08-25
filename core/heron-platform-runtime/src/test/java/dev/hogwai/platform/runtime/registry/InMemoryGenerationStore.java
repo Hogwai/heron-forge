@@ -46,8 +46,10 @@ final class InMemoryGenerationStore implements GenerationStore {
         if (generationRecord == null || rank(target) <= rank(generationRecord.status())) {
             return false;
         }
-        records.put(key, new GenerationRecord(generationRecord.applicationId(), generationRecord.generationId(), generationRecord.configSha256(),
-                generationRecord.rawYaml(), target, generationRecord.createdAt(), generationRecord.createdBy()));
+        records.put(key, new GenerationRecord(generationRecord.applicationId(),
+                generationRecord.generationId(), generationRecord.configSha256(),
+                generationRecord.rawYaml(), target, generationRecord.createdAt(),
+                generationRecord.createdBy()));
         return true;
     }
 

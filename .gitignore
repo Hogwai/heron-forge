@@ -19,3 +19,11 @@ bin/
 
 # Logs
 *.log
+
+# Widget shell (Vite)
+web/ui-shell/node_modules/
+web/ui-shell/dist/
+web/ui-shell/generated/
+
+# Local generation store (runtime data, never committed)
+registry/

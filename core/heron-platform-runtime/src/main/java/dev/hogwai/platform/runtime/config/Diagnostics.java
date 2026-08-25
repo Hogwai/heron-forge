@@ -23,8 +23,8 @@ public final class Diagnostics {
      * the generic {@code <key>} segment.
      */
     private static final Set<String> STRUCTURAL_SEGMENTS = Set.of(
-            "apiVersion", "application", "capabilities", "endpoints", "id", "method", "path", "target",
-            "provider", "version", "config", "inputs", "capability", "port");
+            "apiVersion", "application", "capabilities", "endpoints", "widgets", "id", "method", "path", "target",
+            "provider", "version", "config", "inputs", "capability", "port", "type", "title");
     private static final Set<String> INPUT_BINDING_FIELDS = Set.of("capability", "port");
 
     private Diagnostics() {

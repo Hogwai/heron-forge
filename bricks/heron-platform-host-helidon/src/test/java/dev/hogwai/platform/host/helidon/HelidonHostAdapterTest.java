@@ -11,16 +11,16 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import dev.hogwai.platform.spi.host.EntrypointDescriptor;
+import dev.hogwai.platform.spi.host.ExecutionOutcome;
 import dev.hogwai.platform.spi.host.FailureCode;
 import dev.hogwai.platform.spi.host.HostApplication;
 import dev.hogwai.platform.spi.host.HostConfiguration;
 import dev.hogwai.platform.spi.host.HostException;
 import dev.hogwai.platform.spi.host.InvocationFailure;
 import dev.hogwai.platform.spi.host.InvocationRequest;
-import dev.hogwai.platform.spi.host.InvocationResult;
-import dev.hogwai.platform.spi.host.InvocationSuccess;
 import dev.hogwai.platform.spi.host.StructuredPayload;
 import org.junit.jupiter.api.Test;
 
@@ -112,6 +112,24 @@ class HelidonHostAdapterTest {
     }
 
     @Test
+    void executesTheGraphExactlyOncePerRequestForMaterializedAndStreamingTargets() throws Exception {
+        CountingApplication application = new CountingApplication();
+        try (HelidonHostAdapter adapter = new HelidonHostAdapter();
+             HttpClient client = HttpClient.newHttpClient()) {
+            adapter.start(application, CONFIGURATION);
+
+            HttpResponse<String> materialized = request(client, adapter.port(), "/materialized", Map.of());
+            assertThat(materialized.statusCode()).isEqualTo(200);
+            assertThat(application.executions.get()).isEqualTo(1);
+
+            application.executions.set(0);
+            HttpResponse<String> streamed = request(client, adapter.port(), "/streamed", Map.of());
+            assertThat(streamed.statusCode()).isEqualTo(200);
+            assertThat(application.executions.get()).isEqualTo(1);
+        }
+    }
+
+    @Test
     void shutdownIsIdempotentAndAStoppedServerIsNotReused() throws Exception {
         try (HelidonHostAdapter adapter = new HelidonHostAdapter()) {
             adapter.start(new RecordingApplication(), CONFIGURATION);
@@ -139,6 +157,68 @@ class HelidonHostAdapterTest {
         return URI.create("http://127.0.0.1:" + port + path);
     }
 
+    /**
+     * Counts graph executions per request: the host must trigger exactly one
+     * execution whatever shape the target result has.
+     */
+    private static final class CountingApplication implements HostApplication {
+        private final AtomicInteger executions = new AtomicInteger();
+
+        @Override
+        public List<EntrypointDescriptor> entrypoints() {
+            return List.of(new EntrypointDescriptor("materialized", "/materialized"),
+                    new EntrypointDescriptor("streamed", "/streamed"));
+        }
+
+        @Override
+        public ExecutionOutcome execute(InvocationRequest request) {
+            executions.incrementAndGet();
+            if (request.entrypointId().equals("streamed")) {
+                return ExecutionOutcome.streaming(new SingleBatchPayload());
+            }
+            return ExecutionOutcome.materialized(new StructuredPayload(
+                    Map.of("rows", List.of(), "rowCount", 0L)));
+        }
+
+        @Override
+        public void close() {
+            // No-op
+        }
+    }
+
+    private static final class SingleBatchPayload implements dev.hogwai.platform.spi.host.StreamingPayload {
+        private boolean delivered;
+
+        @Override
+        public java.util.Optional<List<Map<String, Object>>> nextBatch() {
+            if (delivered) {
+                return java.util.Optional.empty();
+            }
+            delivered = true;
+            return java.util.Optional.of(List.of(Map.of("id", "row-0")));
+        }
+
+        @Override
+        public String schemaId() {
+            return "count";
+        }
+
+        @Override
+        public int schemaVersion() {
+            return 1;
+        }
+
+        @Override
+        public long deliveredRowCount() {
+            return delivered ? 1 : 0;
+        }
+
+        @Override
+        public void close() {
+            // No-op
+        }
+    }
+
     private static final class RecordingApplication implements HostApplication {
         private final List<EntrypointDescriptor> descriptors;
         private final AtomicReference<InvocationRequest> request = new AtomicReference<>();
@@ -157,12 +237,12 @@ class HelidonHostAdapterTest {
         }
 
         @Override
-        public InvocationResult invoke(InvocationRequest invocationRequest) {
+        public ExecutionOutcome execute(InvocationRequest invocationRequest) {
             request.set(invocationRequest);
             Map<String, Object> value = new LinkedHashMap<>();
             value.put("message", "ok");
             value.put("count", 2L);
-            return new InvocationSuccess(new StructuredPayload(value));
+            return ExecutionOutcome.materialized(new StructuredPayload(value));
         }
 
         @Override
@@ -178,11 +258,12 @@ class HelidonHostAdapterTest {
         }
 
         @Override
-        public InvocationResult invoke(InvocationRequest request) {
+        public ExecutionOutcome execute(InvocationRequest request) {
             while (!request.cancellationSignal().isCancellationRequested()) {
                 Thread.onSpinWait();
             }
-            return new InvocationFailure(FailureCode.CANCELLATION_REQUESTED, "deadline observed");
+            return ExecutionOutcome.failure(
+                    new InvocationFailure(FailureCode.CANCELLATION_REQUESTED, "deadline observed"));
         }
 
         @Override
@@ -198,13 +279,14 @@ class HelidonHostAdapterTest {
         }
 
         @Override
-        public InvocationResult invoke(InvocationRequest request) {
+        public ExecutionOutcome execute(InvocationRequest request) {
             Thread.currentThread().interrupt();
             boolean cancelled = request.cancellationSignal().isCancellationRequested();
             Thread.interrupted();
             return cancelled
-                    ? new InvocationFailure(FailureCode.CANCELLATION_REQUESTED, "interrupted")
-                    : new InvocationFailure(FailureCode.INTERNAL, "signal failed");
+                    ? ExecutionOutcome.failure(
+                            new InvocationFailure(FailureCode.CANCELLATION_REQUESTED, "interrupted"))
+                    : ExecutionOutcome.failure(new InvocationFailure(FailureCode.INTERNAL, "signal failed"));
         }
 
         @Override

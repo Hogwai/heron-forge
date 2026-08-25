@@ -55,3 +55,16 @@ endpoints:
     method: GET
     path: /kotlin-order-summary
     target: kotlin-order-summary
+widgets:
+  - id: exceptions-kpi
+    type: kpi
+    title: Open exceptions
+    target: supply-chain-exceptions
+  - id: exceptions-table
+    type: table
+    title: Supply-chain exceptions
+    target: supply-chain-exceptions
+  - id: ratio-chart
+    type: chart
+    title: Delivery ratio per order
+    target: kotlin-order-summary

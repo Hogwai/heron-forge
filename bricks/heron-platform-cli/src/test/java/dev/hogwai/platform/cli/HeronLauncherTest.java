@@ -5,14 +5,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import dev.hogwai.platform.spi.host.EntrypointDescriptor;
+import dev.hogwai.platform.spi.host.ExecutionOutcome;
 import dev.hogwai.platform.spi.host.HostAdapter;
 import dev.hogwai.platform.spi.host.HostApplication;
 import dev.hogwai.platform.spi.host.HostConfiguration;
 import dev.hogwai.platform.spi.host.HostException;
 import dev.hogwai.platform.spi.host.InvocationRequest;
-import dev.hogwai.platform.spi.host.InvocationResult;
+import dev.hogwai.platform.spi.host.StructuredPayload;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import picocli.CommandLine.ParameterException;
@@ -166,8 +168,8 @@ class HeronLauncherTest {
         }
 
         @Override
-        public InvocationResult invoke(InvocationRequest request) {
-            return null;
+        public ExecutionOutcome execute(InvocationRequest request) {
+            return ExecutionOutcome.materialized(new StructuredPayload(Map.of()));
         }
 
         @Override

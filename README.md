@@ -1,5 +1,7 @@
 # Heron Forge
 
+(I know, I know. I missed the opportunity to call it Forgheron)
+
 Heron Forge is a Java platform for building, discovering, validating, and composing provider-based capabilities.
 
 Providers expose capabilities through an SPI. 
@@ -188,6 +190,39 @@ Stop PostgreSQL with `docker compose -f examples/factory-demo/docker-compose.yml
 Helidon and picocli are supplied by the standard shell.
 
 `examples:external-provider` contains the Java supply-chain providers. `examples:kotlin-provider` is a separate Kotlin/JVM module containing `demo.kotlin.order-summary`, a PostgreSQL-backed aggregate provider that joins orders and deliveries to expose delivery status and percentage. It uses the `DataAccess` contract, resource tracking, and `ServiceLoader` registration, and is included in `factory-demo` without replacing the Java providers.
+
+### Widget surface
+
+Declare dashboard widgets in the application YAML. Register the configuration, then export the sealed generation as a JSON manifest for the React shell in `web/ui-shell`. Build the CLI distribution first (`make cli`). Export the database connection variables before registering, because the stored YAML keeps `${ENV}` placeholders unresolved:
+
+```bash
+export HERON_DB_URL=jdbc:postgresql://localhost:5432/heron_demo
+export HERON_DB_USER=heron
+export HERON_DB_PASSWORD=heron
+bricks/heron-platform-cli/build/install/heron/bin/heron register \
+  --config examples/factory-demo/src/main/resources/supply-chain.yaml
+```
+
+The pipeline has a fixed order:
+
+1. The store is the single versioned source. `heron register` seals the raw YAML into `./registry`.
+2. The export is a build step. It reads the sealed store, never a raw file.
+3. The manifest is a gitignored output at `web/ui-shell/generated/widgets.json`. It is never committed.
+
+Run the export through npm, or call the CLI directly:
+
+```bash
+cd web/ui-shell && npm run export
+bricks/heron-platform-cli/build/install/heron/bin/heron widgets export \
+  --store registry --app supply-chain-demo \
+  --output web/ui-shell/generated/widgets.json
+```
+
+`npm run build` chains the export, then `tsc`, then Vite. A fresh clone must build the CLI distribution and register once before the shell can compile, because no placeholder manifest exists in the repository.
+
+The export selects the latest STABLE generation by default. An explicit `--generation` allows DEPRECATED with a warning and refuses RETIRED. It verifies the stored YAML against its SHA-256 generation id before writing. Environment placeholders resolve at export time, exactly like activation.
+
+The manifest carries the store generation id as a JSON field. The shell shows it in its footer as an identity stamp. The affinity check lives in the CLI, not in the backend. When `heron start --store` activates a generation whose id differs from the manifest id, it prints a warning asking for a re-export. A missing manifest produces an info line. The check is advisory only and never blocks the boot. Widget types are validated at parse time (`kpi`, `table`, `chart`). Unknown types fail the export, and the shell degrades gracefully on types it does not know.
 
 ## Modules
 

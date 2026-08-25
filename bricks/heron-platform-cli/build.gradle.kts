@@ -18,6 +18,7 @@ application {
 val slf4jVersion = providers.gradleProperty("slf4jVersion").get()
 val archunitVersion = providers.gradleProperty("archunitVersion").get()
 val picocliVersion = providers.gradleProperty("picocliVersion").get()
+val jacksonVersion = providers.gradleProperty("jacksonVersion").get()
 val junitJupiterVersion = providers.gradleProperty("junitJupiterVersion").get()
 val assertjVersion = providers.gradleProperty("assertjVersion").get()
 val javaToolchainVersion = providers.gradleProperty("javaToolchainVersion").get()
@@ -30,9 +31,11 @@ dependencies {
     api(project(":core:heron-platform-runtime"))
     implementation(project(":bricks:heron-platform-registry"))
     implementation("info.picocli:picocli:$picocliVersion")
+    implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
     implementation("org.slf4j:slf4j-api:$slf4jVersion")
     runtimeOnly("org.slf4j:slf4j-simple:$slf4jVersion")
     testImplementation("com.tngtech.archunit:archunit-junit5:$archunitVersion")
+    testRuntimeOnly(project(":bricks:heron-platform-host-helidon"))
 }
 
 publishing {

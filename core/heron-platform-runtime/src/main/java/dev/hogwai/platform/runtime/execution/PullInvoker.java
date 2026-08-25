@@ -116,7 +116,9 @@ public final class PullInvoker {
                 return materialized;
             }
             if (result instanceof StreamingDataSet streamed) {
-                return streamed.toMaterialized();
+                try (streamed) {
+                    return streamed.toMaterialized();
+                }
             }
             throw providerFailure();
         }

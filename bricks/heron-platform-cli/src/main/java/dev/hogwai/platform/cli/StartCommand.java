@@ -21,6 +21,9 @@ public final class StartCommand implements Callable<Integer> {
     /** Default generation store root used when no explicit store is supplied. */
     public static final String DEFAULT_STORE = "registry";
 
+    /** Conventional location of the exported UI widget manifest. */
+    public static final String DEFAULT_UI_MANIFEST = "web/ui-shell/generated/widgets.json";
+
     @Option(names = "--config", converter = ReadablePathConverter.class,
             description = "readable YAML application configuration (mutually exclusive with --app)")
     private Path configuration;
@@ -42,6 +45,13 @@ public final class StartCommand implements Callable<Integer> {
     @Option(names = "--port", defaultValue = "" + DEFAULT_PORT, converter = PortConverter.class,
             description = "HTTP bind port (0..65535)")
     private int port;
+
+    @Option(names = "--ui-manifest", defaultValue = DEFAULT_UI_MANIFEST,
+            description = "path of the exported UI widget manifest checked for generation "
+                    + "affinity before boot (default: " + DEFAULT_UI_MANIFEST + ")")
+    private Path uiManifest;
+
+    private HeronLauncher.ShutdownWaiter shutdownWaiter = HeronLauncher::awaitShutdown;
 
     @Spec
     private CommandSpec commandSpec;
@@ -87,6 +97,16 @@ public final class StartCommand implements Callable<Integer> {
         return port;
     }
 
+    /**
+     * Replaces the shutdown waiter (test seam: production blocks on the JVM
+     * shutdown hook).
+     *
+     * @param waiter the shutdown waiter to use
+     */
+    void shutdownWaiter(HeronLauncher.ShutdownWaiter waiter) {
+        this.shutdownWaiter = java.util.Objects.requireNonNull(waiter, "waiter must not be null");
+    }
+
     @Override
     public Integer call() {
         Integer invalid = validateSourceOptions();
@@ -113,6 +133,7 @@ public final class StartCommand implements Callable<Integer> {
     }
 
     private Integer startFromStore() {
-        return new GenerationStarter(store, applicationId, generationId, port, commandSpec).start();
+        return new GenerationStarter(store, applicationId, generationId, port, uiManifest,
+                commandSpec, shutdownWaiter).start();
     }
 }

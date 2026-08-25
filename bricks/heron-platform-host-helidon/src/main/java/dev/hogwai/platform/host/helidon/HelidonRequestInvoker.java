@@ -3,17 +3,18 @@ package dev.hogwai.platform.host.helidon;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
 
 import dev.hogwai.platform.spi.host.CancellationSignal;
 import dev.hogwai.platform.spi.host.EntrypointDescriptor;
+import dev.hogwai.platform.spi.host.ExecutionOutcome;
 import dev.hogwai.platform.spi.host.FailureCode;
 import dev.hogwai.platform.spi.host.HostApplication;
 import dev.hogwai.platform.spi.host.HostConfiguration;
 import dev.hogwai.platform.spi.host.InvocationFailure;
 import dev.hogwai.platform.spi.host.InvocationRequest;
 import dev.hogwai.platform.spi.host.InvocationResult;
+import dev.hogwai.platform.spi.host.InvocationSuccess;
 import dev.hogwai.platform.spi.host.StreamingPayload;
 import io.helidon.webserver.http.ServerRequest;
 import io.helidon.webserver.http.ServerResponse;
@@ -26,6 +27,7 @@ final class HelidonRequestInvoker {
 
     private static final String REQUEST_ID_HEADER = "X-Request-ID";
     private static final String CORRELATION_ID_HEADER = "X-Correlation-ID";
+    public static final String INTERNAL_INVOCATION_FAILURE = "internal invocation failure";
 
     private final HostApplication application;
     private final HostConfiguration configuration;
@@ -57,46 +59,36 @@ final class HelidonRequestInvoker {
         InvocationRequest invocationRequest =
                 new InvocationRequest(descriptor.id(), requestId, correlationId, deadline, cancellation);
 
-        if (tryStream(response, invocationRequest, deadline)) {
-            return;
-        }
-
-        InvocationResult result;
+        ExecutionOutcome outcome;
         try {
-            result = application.invoke(invocationRequest);
+            outcome = application.execute(invocationRequest);
         } catch (RuntimeException _) {
-            result = new InvocationFailure(FailureCode.INTERNAL, "internal invocation failure");
+            outcome = ExecutionOutcome.failure(
+                    new InvocationFailure(FailureCode.INTERNAL, INTERNAL_INVOCATION_FAILURE));
         }
-        if (result == null) {
-            result = new InvocationFailure(FailureCode.INTERNAL, "internal invocation failure");
+        if (outcome == null) {
+            outcome = ExecutionOutcome.failure(
+                    new InvocationFailure(FailureCode.INTERNAL, INTERNAL_INVOCATION_FAILURE));
         }
         if (!Instant.now().isBefore(deadline)) {
-            result = new InvocationFailure(FailureCode.DEADLINE_EXCEEDED, "deadline exceeded");
+            // Release any opened stream before surfacing the deadline error.
+            outcome.streaming().ifPresent(StreamingPayload::close);
+            outcome = ExecutionOutcome.failure(new InvocationFailure(FailureCode.DEADLINE_EXCEEDED,
+                    "deadline exceeded"));
         }
-        responseWriter.write(response, result);
+        writeOutcome(response, outcome);
     }
 
-    /**
-     * Attempts the streaming path; falls back to materialized invocation when
-     * the application does not support streaming for this entrypoint or when
-     * the deadline already elapsed.
-     */
-    private boolean tryStream(ServerResponse response, InvocationRequest request, Instant deadline) {
-        Optional<StreamingPayload> streamed;
-        try {
-            streamed = application.invokeStreaming(request);
-        } catch (RuntimeException _) {
-            streamed = Optional.empty();
+    private void writeOutcome(ServerResponse response, ExecutionOutcome outcome) {
+        if (outcome.isStreaming()) {
+            responseWriter.writeStreaming(response, outcome.streaming().orElseThrow());
+            return;
         }
-        if (streamed.isEmpty()) {
-            return false;
-        }
-        if (!Instant.now().isBefore(deadline)) {
-            streamed.get().close();
-            return false;
-        }
-        responseWriter.writeStreaming(response, streamed.get());
-        return true;
+        InvocationResult result = outcome.materialized()
+                .<InvocationResult>map(InvocationSuccess::new)
+                .orElseGet(() -> outcome.failure().orElse(new InvocationFailure(
+                        FailureCode.INTERNAL, INTERNAL_INVOCATION_FAILURE)));
+        responseWriter.write(response, result);
     }
 
     private static String newId() {

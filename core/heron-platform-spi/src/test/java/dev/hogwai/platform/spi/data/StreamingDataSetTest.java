@@ -109,6 +109,32 @@ class StreamingDataSetTest {
         assertThatThrownBy(stream::nextBatch).isInstanceOf(IllegalStateException.class);
     }
 
+    @Test
+    void toMaterializedClosesTheUnderlyingCursor() {
+        CloseableIterator rows = new CloseableIterator(records(3).iterator());
+        StreamingDataSet stream = StreamingDataSet.over(SCHEMA, rows,
+                new DataSetLimits(100, 100_000), 2, FAR_FUTURE, () -> false);
+
+        MaterializedDataSet materialized = stream.toMaterialized();
+
+        assertThat(materialized.records()).hasSize(3);
+        assertThat(rows.closed).isTrue();
+        assertThatThrownBy(stream::nextBatch).isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void toMaterializedClosesEvenWhenDrainFails() {
+        CloseableIterator rows = new CloseableIterator(records(5).iterator());
+        StreamingDataSet stream = StreamingDataSet.over(SCHEMA, rows,
+                new DataSetLimits(2, 100_000), 2, FAR_FUTURE, () -> false);
+
+        assertThatThrownBy(stream::toMaterialized)
+                .isInstanceOf(PlatformException.class)
+                .extracting(exception -> ((PlatformException) exception).code())
+                .isEqualTo(PlatformErrorCode.DATASET_LIMIT_EXCEEDED);
+        assertThat(rows.closed).isTrue();
+    }
+
     private static List<SchemaRecord> records(int count) {
         List<SchemaRecord> records = new ArrayList<>();
         for (int index = 0; index < count; index++) {

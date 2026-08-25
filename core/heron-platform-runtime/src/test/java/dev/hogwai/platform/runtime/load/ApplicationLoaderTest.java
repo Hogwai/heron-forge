@@ -25,7 +25,6 @@ import dev.hogwai.platform.spi.host.FailureCode;
 import dev.hogwai.platform.spi.host.HostApplication;
 import dev.hogwai.platform.spi.host.InvocationFailure;
 import dev.hogwai.platform.spi.host.InvocationRequest;
-import dev.hogwai.platform.spi.host.InvocationSuccess;
 import dev.hogwai.platform.spi.provider.BuildContext;
 import dev.hogwai.platform.spi.provider.CapabilityInputs;
 import dev.hogwai.platform.spi.provider.CapabilityInstance;
@@ -45,7 +44,7 @@ class ApplicationLoaderTest {
         try (HostApplication application = load(fixture, yaml("source", "source"))) {
             assertThat(application.entrypoints()).containsExactly(
                     new EntrypointDescriptor("read", "/read"));
-            assertThat(application.invoke(request("read", () -> false))).isInstanceOf(InvocationSuccess.class);
+            assertThat(application.execute(request("read", () -> false)).materialized()).isPresent();
         }
         assertThat(fixture.closed).isTrue();
     }
@@ -119,13 +118,13 @@ class ApplicationLoaderTest {
     void mapsMissingEntrypointProviderDeadlineAndCancellationFailures() {
         TestFixture fixture = sourceFixture("source");
         try (HostApplication application = load(fixture, yaml("source", "source"))) {
-            assertThat(application.invoke(request("other", () -> false)))
-                    .isEqualTo(new InvocationFailure(FailureCode.ENTRYPOINT_NOT_FOUND, "entrypoint not found"));
-            assertThat(application.invoke(request("read", () -> false,
-                    Instant.parse("2000-01-01T00:00:00Z"))))
-                    .isEqualTo(new InvocationFailure(FailureCode.DEADLINE_EXCEEDED, "deadline exceeded"));
-            assertThat(application.invoke(request("read", () -> true)))
-                    .isEqualTo(new InvocationFailure(FailureCode.CANCELLATION_REQUESTED,
+            assertThat(application.execute(request("other", () -> false)).failure())
+                    .contains(new InvocationFailure(FailureCode.ENTRYPOINT_NOT_FOUND, "entrypoint not found"));
+            assertThat(application.execute(request("read", () -> false,
+                    Instant.parse("2000-01-01T00:00:00Z"))).failure())
+                    .contains(new InvocationFailure(FailureCode.DEADLINE_EXCEEDED, "deadline exceeded"));
+            assertThat(application.execute(request("read", () -> true)).failure())
+                    .contains(new InvocationFailure(FailureCode.CANCELLATION_REQUESTED,
                             "cancellation requested"));
         }
 
@@ -133,8 +132,8 @@ class ApplicationLoaderTest {
             throw new IllegalStateException("provider secret");
         });
         try (HostApplication application = load(failing, yaml("source", "source"))) {
-            assertThat(application.invoke(request("read", () -> false)))
-                    .isEqualTo(new InvocationFailure(FailureCode.PROVIDER, "provider execution failed"));
+            assertThat(application.execute(request("read", () -> false)).failure())
+                    .contains(new InvocationFailure(FailureCode.PROVIDER, "provider execution failed"));
         }
     }
 
@@ -144,7 +143,7 @@ class ApplicationLoaderTest {
         AtomicBoolean cancelled = new AtomicBoolean();
         CancellationSignal signal = cancelled::get;
         try (HostApplication application = load(fixture, yaml("source", "source"))) {
-            assertThat(application.invoke(request("read", signal))).isInstanceOf(InvocationSuccess.class);
+            assertThat(application.execute(request("read", signal)).materialized()).isPresent();
             assertThat(fixture.lastContext.get()).isNotNull();
             assertThat(fixture.lastContext.get().cancellationToken().isCancellationRequested()).isFalse();
             cancelled.set(true);
@@ -158,8 +157,8 @@ class ApplicationLoaderTest {
         HostApplication application = load(fixture, yaml("source", "source"));
         application.close();
         application.close();
-        assertThat(application.invoke(request("read", () -> false)))
-                .isEqualTo(new InvocationFailure(FailureCode.INTERNAL, "application is closed"));
+        assertThat(application.execute(request("read", () -> false)).failure())
+                .contains(new InvocationFailure(FailureCode.INTERNAL, "application is closed"));
         assertThat(fixture.closedCount.get()).isEqualTo(1);
     }
 

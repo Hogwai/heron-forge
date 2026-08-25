@@ -38,10 +38,12 @@ public non-sealed interface StreamingDataSet extends AutoCloseable, DataSet {
      */
     default MaterializedDataSet toMaterialized() {
         List<SchemaRecord> rows = new ArrayList<>();
-        Optional<List<SchemaRecord>> batch = nextBatch();
-        while (batch.isPresent()) {
-            rows.addAll(batch.get());
-            batch = nextBatch();
+        try (StreamingDataSet stream = this) {
+            Optional<List<SchemaRecord>> batch = stream.nextBatch();
+            while (batch.isPresent()) {
+                rows.addAll(batch.get());
+                batch = stream.nextBatch();
+            }
         }
         long bytes = rows.size() * ROW_ESTIMATE_BYTES;
         return new MaterializedDataSet(schema(), rows,

@@ -20,7 +20,8 @@ import java.util.concurrent.CountDownLatch;
 /** The sole standard process bootstrap for Heron applications. */
 @Command(name = "heron", mixinStandardHelpOptions = true,
         subcommands = {StartCommand.class, InitCommand.class, CreateCommand.class,
-                RegisterCommand.class, GenerationsCommand.class, RollbackCommand.class},
+                RegisterCommand.class, GenerationsCommand.class, RollbackCommand.class,
+                WidgetsCommand.class},
         description = "Heron application launcher")
 @SuppressWarnings("PMD.CyclomaticComplexity")
 public final class HeronLauncher implements Runnable {

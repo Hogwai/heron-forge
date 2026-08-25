@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -25,15 +26,73 @@ class HostContractTest {
     public static final String CORRELATION = "correlation";
 
     @Test
-    void listsEntrypointsAndInvokesWithRequestMetadata() {
+    void listsEntrypointsAndExecutesWithRequestMetadata() {
         EntrypointDescriptor descriptor = new EntrypointDescriptor("exceptions", "/exceptions");
         FakeApplication application = new FakeApplication(List.of(descriptor));
         InvocationRequest request = new InvocationRequest("exceptions", "request-1", "correlation-1", DEADLINE,
                 NOT_CANCELLED);
 
         assertThat(application.entrypoints()).containsExactly(descriptor);
-        assertThat(application.invoke(request)).isEqualTo(application.success);
+        assertThat(application.execute(request)).isSameAs(application.outcome);
         assertThat(application.lastRequest).isEqualTo(request);
+    }
+
+    @Test
+    void executionOutcomeCarriesExactlyOneShape() {
+        StructuredPayload payload = new StructuredPayload(Map.of("value", "row"));
+        StreamingPayload stream = new StreamingPayload() {
+            @Override
+            public Optional<List<Map<String, Object>>> nextBatch() {
+                return Optional.empty();
+            }
+
+            @Override
+            public String schemaId() {
+                return "s";
+            }
+
+            @Override
+            public int schemaVersion() {
+                return 1;
+            }
+
+            @Override
+            public long deliveredRowCount() {
+                return 0;
+            }
+
+            @Override
+            public void close() {
+                // No-op
+            }
+        };
+        InvocationFailure failure = new InvocationFailure(FailureCode.PROVIDER, "provider failed");
+
+        ExecutionOutcome materialized = ExecutionOutcome.materialized(payload);
+        ExecutionOutcome streaming = ExecutionOutcome.streaming(stream);
+        ExecutionOutcome failed = ExecutionOutcome.failure(failure);
+
+        assertThat(materialized.isStreaming()).isFalse();
+        assertThat(materialized.materialized()).contains(payload);
+        assertThat(materialized.streaming()).isEmpty();
+        assertThat(materialized.failure()).isEmpty();
+
+        assertThat(streaming.isStreaming()).isTrue();
+        assertThat(streaming.streaming()).contains(stream);
+        assertThat(streaming.materialized()).isEmpty();
+        assertThat(streaming.failure()).isEmpty();
+
+        assertThat(failed.isStreaming()).isFalse();
+        assertThat(failed.failure()).contains(failure);
+        assertThat(failed.materialized()).isEmpty();
+        assertThat(failed.streaming()).isEmpty();
+
+        assertThatThrownBy(() -> ExecutionOutcome.materialized(null))
+                .isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> ExecutionOutcome.streaming(null))
+                .isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> ExecutionOutcome.failure(null))
+                .isInstanceOf(NullPointerException.class);
     }
 
     @Test
@@ -147,13 +206,13 @@ class HostContractTest {
 
     private static final class FakeApplication implements HostApplication {
         private final List<EntrypointDescriptor> entrypoints;
-        private final InvocationResult success;
+        private final ExecutionOutcome outcome;
         private InvocationRequest lastRequest;
         private int closeCount;
 
         private FakeApplication(List<EntrypointDescriptor> entrypoints) {
             this.entrypoints = List.copyOf(entrypoints);
-            this.success = new InvocationFailure(FailureCode.INTERNAL, "not configured");
+            this.outcome = ExecutionOutcome.failure(new InvocationFailure(FailureCode.INTERNAL, "not configured"));
         }
 
         @Override
@@ -162,9 +221,9 @@ class HostContractTest {
         }
 
         @Override
-        public InvocationResult invoke(InvocationRequest request) {
+        public ExecutionOutcome execute(InvocationRequest request) {
             lastRequest = request;
-            return success;
+            return outcome;
         }
 
         @Override

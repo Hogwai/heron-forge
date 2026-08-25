@@ -5,6 +5,7 @@ import dev.hogwai.platform.runtime.config.ApplicationConfig;
 import dev.hogwai.platform.runtime.config.CapabilityConfig;
 import dev.hogwai.platform.runtime.config.Diagnostics;
 import dev.hogwai.platform.runtime.config.EntrypointConfig;
+import dev.hogwai.platform.runtime.config.WidgetConfig;
 import dev.hogwai.platform.spi.Diagnostic;
 
 import java.util.List;
@@ -18,7 +19,8 @@ import java.util.Set;
 final class ApplicationMapper {
 
     private static final String API_VERSION = "heron.dev/v1";
-    private static final Set<String> ROOT_FIELDS = Set.of("apiVersion", "application", "capabilities", "endpoints");
+    private static final Set<String> ROOT_FIELDS =
+            Set.of("apiVersion", "application", "capabilities", "endpoints", "widgets");
 
     private ApplicationMapper() {
         // no instances
@@ -37,10 +39,11 @@ final class ApplicationMapper {
         List<CapabilityConfig> capabilities = CapabilityMapper.mapCapabilities(root.get("capabilities"), diagnostics);
         List<EntrypointConfig> entrypoints = EntrypointMapper.mapEntrypoints(
                 root.get("endpoints"), "/endpoints", diagnostics);
+        List<WidgetConfig> widgets = WidgetMapper.mapWidgets(root.get("widgets"), "/widgets", diagnostics);
 
         if (!diagnostics.isEmpty()) {
             return null;
         }
-        return new ApplicationConfig(apiVersion, name, capabilities, entrypoints);
+        return new ApplicationConfig(apiVersion, name, capabilities, entrypoints, widgets);
     }
 }

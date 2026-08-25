@@ -8,13 +8,14 @@ import java.util.Objects;
  * Immutable model of an application configuration.
  *
  * <p>Holds the root {@code apiVersion}, normalized application name, and the
- * lists of {@link CapabilityConfig}s and {@link EntrypointConfig}s. All collections are
- * defensively copied.
+ * lists of {@link CapabilityConfig}s, {@link EntrypointConfig}s and
+ * {@link WidgetConfig}s. All collections are defensively copied.
  */
 public record ApplicationConfig(String apiVersion,
                                 String name,
                                 List<CapabilityConfig> capabilities,
-                                List<EntrypointConfig> entrypoints) {
+                                List<EntrypointConfig> entrypoints,
+                                List<WidgetConfig> widgets) {
 
     /**
      * Creates an application configuration.
@@ -25,7 +26,7 @@ public record ApplicationConfig(String apiVersion,
      * @throws NullPointerException if any argument is {@code null}
      */
     public ApplicationConfig(String apiVersion, String name, List<CapabilityConfig> capabilities) {
-        this(apiVersion, name, capabilities, List.of());
+        this(apiVersion, name, capabilities, List.of(), List.of());
     }
 
     /**
@@ -39,10 +40,27 @@ public record ApplicationConfig(String apiVersion,
      */
     public ApplicationConfig(String apiVersion, String name,
                              List<CapabilityConfig> capabilities, List<EntrypointConfig> entrypoints) {
+        this(apiVersion, name, capabilities, entrypoints, List.of());
+    }
+
+    /**
+     * Creates an application configuration with its entrypoints and widgets.
+     *
+     * @param apiVersion   the API version
+     * @param name         the application name
+     * @param capabilities the capabilities
+     * @param entrypoints  the entrypoints
+     * @param widgets      the widget declarations
+     * @throws NullPointerException if any argument is {@code null}
+     */
+    public ApplicationConfig(String apiVersion, String name,
+                             List<CapabilityConfig> capabilities, List<EntrypointConfig> entrypoints,
+                             List<WidgetConfig> widgets) {
         this.apiVersion = Objects.requireNonNull(apiVersion, "apiVersion must not be null");
         this.name = Objects.requireNonNull(name, "name must not be null");
         this.capabilities = List.copyOf(Objects.requireNonNull(capabilities, "capabilities must not be null"));
         this.entrypoints = List.copyOf(Objects.requireNonNull(entrypoints, "entrypoints must not be null"));
+        this.widgets = List.copyOf(Objects.requireNonNull(widgets, "widgets must not be null"));
     }
 
     /**
@@ -75,5 +93,13 @@ public record ApplicationConfig(String apiVersion,
     @Override
     public List<EntrypointConfig> entrypoints() {
         return entrypoints;
+    }
+
+    /**
+     * @return an immutable view of the widget declarations
+     */
+    @Override
+    public List<WidgetConfig> widgets() {
+        return widgets;
     }
 }

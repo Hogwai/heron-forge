@@ -9,12 +9,12 @@ import java.util.List;
 
 import dev.hogwai.platform.host.helidon.http.HttpHelper;
 import dev.hogwai.platform.spi.host.EntrypointDescriptor;
+import dev.hogwai.platform.spi.host.ExecutionOutcome;
 import dev.hogwai.platform.spi.host.FailureCode;
 import dev.hogwai.platform.spi.host.HostApplication;
 import dev.hogwai.platform.spi.host.HostConfiguration;
 import dev.hogwai.platform.spi.host.InvocationFailure;
 import dev.hogwai.platform.spi.host.InvocationRequest;
-import dev.hogwai.platform.spi.host.InvocationResult;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -63,11 +63,11 @@ class HelidonErrorMappingTest {
             }
 
             @Override
-            public InvocationResult invoke(InvocationRequest request) {
+            public ExecutionOutcome execute(InvocationRequest request) {
                 if (code == FailureCode.INTERNAL) {
                     throw new IllegalStateException("sensitive provider detail");
                 }
-                return new InvocationFailure(code, "safe\nfailure message");
+                return ExecutionOutcome.failure(new InvocationFailure(code, "safe\nfailure message"));
             }
 
             @Override

@@ -66,7 +66,7 @@ demo-run: db-up
 	$(GRADLE) :examples:factory-demo:installDist
 	HERON_DB_URL=$(HERON_DB_URL) HERON_DB_USER=$(HERON_DB_USER) \
 	HERON_DB_PASSWORD=$(HERON_DB_PASSWORD) \
-	examples/factory-demo/build/install/factory-demo/bin/heron start \
+	examples/factory-demo/build/install/heron/bin/heron start \
 	  --config examples/factory-demo/src/main/resources/supply-chain.yaml
 
 .PHONY: e2e

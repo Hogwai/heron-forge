@@ -15,12 +15,11 @@ import dev.hogwai.platform.spi.error.PlatformException;
 import dev.hogwai.platform.spi.execution.CancellationToken;
 import dev.hogwai.platform.spi.execution.ExecutionContext;
 import dev.hogwai.platform.spi.host.EntrypointDescriptor;
+import dev.hogwai.platform.spi.host.ExecutionOutcome;
 import dev.hogwai.platform.spi.host.FailureCode;
 import dev.hogwai.platform.spi.host.HostApplication;
 import dev.hogwai.platform.spi.host.InvocationFailure;
 import dev.hogwai.platform.spi.host.InvocationRequest;
-import dev.hogwai.platform.spi.host.InvocationResult;
-import dev.hogwai.platform.spi.host.InvocationSuccess;
 import dev.hogwai.platform.spi.host.StreamingPayload;
 
 /**
@@ -49,52 +48,45 @@ public final class RuntimeApplication implements HostApplication {
         return entrypoints;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Runs the graph exactly once and adapts the result shape for the host.
+     */
     @Override
-    public InvocationResult invoke(InvocationRequest request) {
-        if (closed.get()) {
-            return new InvocationFailure(FailureCode.INTERNAL, "application is closed");
-        }
-        if (request == null) {
-            return new InvocationFailure(FailureCode.INVALID_REQUEST, "invalid request");
-        }
-        RuntimeEntrypoint entrypoint = find(request);
-        if (entrypoint == null) {
-            return new InvocationFailure(FailureCode.ENTRYPOINT_NOT_FOUND, "entrypoint not found");
-        }
-
-        try {
-            ExecutionContext context = new ExecutionContext(request.requestId(), candidate.snapshot().generationId(),
-                    request.deadline(), cancellationToken(request), request.correlationId());
-            DataSet result = invoker.invokeTarget(candidate.snapshot(), entrypoint.target(), context);
-            return new InvocationSuccess(StructuredPayloadProjector.project(result));
-        } catch (PlatformException failure) {
-            return failure(failure.code());
-        } catch (RuntimeException _) {
-            return new InvocationFailure(FailureCode.INTERNAL, "internal invocation failure");
-        }
+    public ExecutionOutcome execute(InvocationRequest request) {
+        return executeOnce(request);
     }
 
-    @Override
-    public Optional<dev.hogwai.platform.spi.host.StreamingPayload> invokeStreaming(InvocationRequest request) {
-        if (closed.get() || request == null) {
-            return Optional.empty();
+    /**
+     * Single-execution core: guards, entrypoint resolution and exactly one
+     * target evaluation.
+     */
+    private ExecutionOutcome executeOnce(InvocationRequest request) {
+        if (closed.get()) {
+            return ExecutionOutcome.failure(new InvocationFailure(FailureCode.INTERNAL, "application is closed"));
+        }
+        if (request == null) {
+            return ExecutionOutcome.failure(new InvocationFailure(FailureCode.INVALID_REQUEST, "invalid request"));
         }
         RuntimeEntrypoint entrypoint = find(request);
         if (entrypoint == null) {
-            return Optional.empty();
+            return ExecutionOutcome.failure(
+                    new InvocationFailure(FailureCode.ENTRYPOINT_NOT_FOUND, "entrypoint not found"));
         }
         try {
             ExecutionContext context = new ExecutionContext(request.requestId(), candidate.snapshot().generationId(),
                     request.deadline(), cancellationToken(request), request.correlationId());
             DataSet result = invoker.invokeTarget(candidate.snapshot(), entrypoint.target(), context);
-            // Only targets that declared a streaming result flow lazily to the
-            // host; anything else falls back to the materialized invocation.
             if (result instanceof StreamingDataSet streamed) {
-                return Optional.of(new StreamedPayload(streamed));
+                return ExecutionOutcome.streaming(new StreamedPayload(streamed));
             }
-            return Optional.empty();
+            return ExecutionOutcome.materialized(StructuredPayloadProjector.project(result));
+        } catch (PlatformException failure) {
+            return ExecutionOutcome.failure(failure(failure.code()));
         } catch (RuntimeException _) {
-            return Optional.empty();
+            return ExecutionOutcome.failure(
+                    new InvocationFailure(FailureCode.INTERNAL, "internal invocation failure"));
         }
     }
 

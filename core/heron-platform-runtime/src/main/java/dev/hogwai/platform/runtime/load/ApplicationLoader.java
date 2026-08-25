@@ -12,6 +12,7 @@ import java.util.UUID;
 
 import dev.hogwai.platform.runtime.compile.CapabilityGraph;
 import dev.hogwai.platform.runtime.compile.GraphCompiler;
+import dev.hogwai.platform.runtime.compile.WidgetValidator;
 import dev.hogwai.platform.runtime.compile.provider.ProviderRegistry;
 import dev.hogwai.platform.runtime.compile.provider.ProviderResolver;
 import dev.hogwai.platform.runtime.config.CapabilityConfig;
@@ -92,12 +93,22 @@ public final class ApplicationLoader {
             List<Diagnostic> diagnostics = new ArrayList<>(failure.diagnostics());
             diagnostics.addAll(EntrypointValidator.validate(
                     declaredCapabilityIds(parsed), entrypoints));
+            diagnostics.addAll(WidgetValidator.validate(
+                    entrypointIds(entrypoints), parsed.application().widgets()));
             return new ValidationReport(diagnostics);
         }
 
         List<Diagnostic> diagnostics = new ArrayList<>(compilation.diagnostics());
         diagnostics.addAll(EntrypointValidator.validate(compilation.graph(), entrypoints));
+        diagnostics.addAll(WidgetValidator.validate(
+                entrypointIds(entrypoints), parsed.application().widgets()));
         return new ValidationReport(diagnostics);
+    }
+
+    private static Set<String> entrypointIds(List<EntrypointConfig> entrypoints) {
+        Set<String> ids = LinkedHashSet.newLinkedHashSet(entrypoints.size());
+        entrypoints.forEach(entrypoint -> ids.add(entrypoint.id()));
+        return ids;
     }
 
     private static Set<String> declaredCapabilityIds(ParsedApplication parsed) {
@@ -168,6 +179,11 @@ public final class ApplicationLoader {
                     candidate.snapshot().graph(), parsed.application().entrypoints());
             if (!entrypointDiagnostics.isEmpty()) {
                 throw new PlatformException(PlatformErrorCode.GRAPH_REFERENCE_ERROR, entrypointDiagnostics);
+            }
+            List<Diagnostic> widgetDiagnostics = WidgetValidator.validate(
+                    entrypointIds(parsed.application().entrypoints()), parsed.application().widgets());
+            if (!widgetDiagnostics.isEmpty()) {
+                throw new PlatformException(PlatformErrorCode.GRAPH_REFERENCE_ERROR, widgetDiagnostics);
             }
             List<RuntimeEntrypoint> entrypoints = runtimeEntrypoints(parsed);
             return new RuntimeApplication(candidate, entrypoints, Clock.systemUTC());

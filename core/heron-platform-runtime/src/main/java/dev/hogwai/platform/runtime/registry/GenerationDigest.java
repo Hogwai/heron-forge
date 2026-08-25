@@ -10,11 +10,12 @@ import java.util.HexFormat;
  *
  * <p>The identity of a generation is the full SHA-256 hexadecimal digest
  * (64 characters) of the UTF-8 bytes of its raw, unresolved YAML. Both
- * {@link RegistryService} (sealing on registration) and
- * {@link GenerationActivator} (integrity check on activation) derive the
- * identity through this single helper so the digest definition cannot drift.
+ * {@link RegistryService} (sealing on registration),
+ * {@link GenerationActivator} (integrity check on activation) and widget
+ * surface exports (source stamping) derive the identity through this single
+ * helper so the digest definition cannot drift.
  */
-final class GenerationDigest {
+public final class GenerationDigest {
 
     private static final String ALGORITHM = "SHA-256";
 
@@ -28,7 +29,7 @@ final class GenerationDigest {
      * @param content the content to seal
      * @return the lowercase hexadecimal digest, always 64 characters long
      */
-    static String sha256Hex(String content) {
+    public static String sha256Hex(String content) {
         MessageDigest digest;
         try {
             digest = MessageDigest.getInstance(ALGORITHM);
