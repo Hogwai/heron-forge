@@ -22,7 +22,9 @@ import java.time.Duration;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
-/** End-to-end acceptance checks for the real factory-demo shell path. */
+/**
+ * End-to-end acceptance checks for the real factory-demo shell path.
+ */
 @SuppressWarnings("PMD.CyclomaticComplexity")
 class FactoryDemoAcceptanceTest {
 
@@ -154,7 +156,9 @@ class FactoryDemoAcceptanceTest {
         }
     }
 
-    /** Configuration with the credential placeholders resolved locally for checks that never reach the database. */
+    /**
+     * Configuration with the credential placeholders resolved locally for checks that never reach the database.
+     */
     private static String configurationWithoutSecret() {
         return configuration()
                 .replace("${HERON_DB_URL}", DATABASE_URL)

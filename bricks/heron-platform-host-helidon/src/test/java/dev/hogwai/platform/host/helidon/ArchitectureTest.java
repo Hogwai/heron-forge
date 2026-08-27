@@ -7,7 +7,9 @@ import com.tngtech.archunit.lang.ArchRule;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
-/** Verifies the Helidon host brick only crosses the host contract boundary. */
+/**
+ * Verifies the Helidon host brick only crosses the host contract boundary.
+ */
 @AnalyzeClasses(packages = "dev.hogwai.platform.host.helidon", importOptions = ImportOption.DoNotIncludeTests.class)
 class ArchitectureTest {
 

@@ -82,8 +82,9 @@ class ParsedApplicationTest {
         entrypoints.add(new EntrypointConfig("health", "GET", "/health", "detector"));
 
         assertThat(application.entrypoints()).hasSize(1);
-        assertThatThrownBy(() -> application.entrypoints().add(
-                new EntrypointConfig("health", "GET", "/health", "detector")))
+        var entryPoint = new EntrypointConfig("health", "GET", "/health", "detector");
+        var entryPoints = application.entrypoints();
+        assertThatThrownBy(() -> entryPoints.add(entryPoint))
                 .isInstanceOf(UnsupportedOperationException.class);
     }
 

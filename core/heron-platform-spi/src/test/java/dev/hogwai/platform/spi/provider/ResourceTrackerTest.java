@@ -13,7 +13,8 @@ class ResourceTrackerTest {
     void registerAcceptsAutoCloseable() {
         List<AutoCloseable> registered = new ArrayList<>();
         ResourceTracker tracker = registered::add;
-        AutoCloseable resource = () -> { };
+        AutoCloseable resource = () -> {
+        };
         tracker.register(resource);
         assertThat(registered).containsExactly(resource);
     }

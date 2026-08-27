@@ -196,7 +196,7 @@ class SafeYamlParserTest {
                 .containsEntry("enabled", true)
                 .containsKey("nothing");
         assertThat(config.get("nothing")).isNull();
-        assertThat(config).containsEntry("nested",Map.of("key", "value"));
+        assertThat(config).containsEntry("nested", Map.of("key", "value"));
     }
 
     @Test

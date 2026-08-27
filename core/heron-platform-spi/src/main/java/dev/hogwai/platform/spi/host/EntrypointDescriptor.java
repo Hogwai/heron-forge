@@ -2,14 +2,17 @@ package dev.hogwai.platform.spi.host;
 
 import java.util.Objects;
 
-/** Describes an application entrypoint exposed by a host.
+/**
+ * Describes an application entrypoint exposed by a host.
  *
  * @param id   stable entrypoint identifier
  * @param path absolute transport path
  */
 public record EntrypointDescriptor(String id, String path) {
 
-    /** Validates the entrypoint identifier and path. */
+    /**
+     * Validates the entrypoint identifier and path.
+     */
     public EntrypointDescriptor {
         requireNonBlank(id, "id");
         requireNonBlank(path, "path");

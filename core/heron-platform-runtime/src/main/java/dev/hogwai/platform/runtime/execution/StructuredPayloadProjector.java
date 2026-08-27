@@ -14,7 +14,9 @@ import dev.hogwai.platform.spi.data.SchemaRecord;
 import dev.hogwai.platform.spi.data.StreamingDataSet;
 import dev.hogwai.platform.spi.host.StructuredPayload;
 
-/** Converts SPI datasets to the generic value shape exposed by the Host API. */
+/**
+ * Converts SPI datasets to the generic value shape exposed by the Host API.
+ */
 @SuppressWarnings("PMD.CyclomaticComplexity")
 public final class StructuredPayloadProjector {
 

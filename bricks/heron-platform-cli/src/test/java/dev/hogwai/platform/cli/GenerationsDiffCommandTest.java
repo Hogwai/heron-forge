@@ -11,7 +11,9 @@ import picocli.CommandLine;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** Tests for {@link GenerationsDiffCommand}. */
+/**
+ * Tests for {@link GenerationsDiffCommand}.
+ */
 class GenerationsDiffCommandTest {
 
     private static final Instant BASE = Instant.parse("2026-06-01T00:00:00Z");

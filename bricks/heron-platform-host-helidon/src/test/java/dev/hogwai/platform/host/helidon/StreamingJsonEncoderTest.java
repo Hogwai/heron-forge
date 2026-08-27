@@ -14,7 +14,9 @@ import org.junit.jupiter.api.Test;
 
 import dev.hogwai.platform.spi.host.StreamingPayload;
 
-/** Verifies the wire format of streamed responses. */
+/**
+ * Verifies the wire format of streamed responses.
+ */
 class StreamingJsonEncoderTest {
 
     @Test

@@ -27,7 +27,7 @@ public interface DataAccess extends AutoCloseable {
      *
      * @param request the query request
      * @param context the query context
-     * @param <T> the mapped row type
+     * @param <T>     the mapped row type
      * @return the mapped rows
      */
     <T> List<T> query(QueryRequest<T> request, QueryContext context);
@@ -36,10 +36,10 @@ public interface DataAccess extends AutoCloseable {
      * Executes a query and returns a materialized data set conforming to the
      * supplied schema.
      *
-     * @param context      the query context
-     * @param operation    the logical operation name
-     * @param sql          the SQL statement
-     * @param schema       the schema the returned records conform to
+     * @param context       the query context
+     * @param operation     the logical operation name
+     * @param sql           the SQL statement
+     * @param schema        the schema the returned records conform to
      * @param columnByField the mapping from schema field name to source column
      * @return the materialized data set
      */
@@ -53,12 +53,12 @@ public interface DataAccess extends AutoCloseable {
      * Executes a query and returns a materialized data set conforming to the
      * supplied schema, bounded by the supplied limits.
      *
-     * @param context      the query context
-     * @param operation    the logical operation name
-     * @param sql          the SQL statement
-     * @param schema       the schema the returned records conform to
+     * @param context       the query context
+     * @param operation     the logical operation name
+     * @param sql           the SQL statement
+     * @param schema        the schema the returned records conform to
      * @param columnByField the mapping from schema field name to source column
-     * @param limits       the dataset limits
+     * @param limits        the dataset limits
      * @return the materialized data set
      */
     MaterializedDataSet queryToDataSet(QueryContext context,
@@ -72,11 +72,11 @@ public interface DataAccess extends AutoCloseable {
      * Executes a parameterized query and returns a materialized data set
      * conforming to the supplied schema.
      *
-     * @param context      the query context
-     * @param operation    the logical operation name
-     * @param sql          the SQL statement
-     * @param parameters   the named parameters bound to the SQL
-     * @param schema       the schema the returned records conform to
+     * @param context       the query context
+     * @param operation     the logical operation name
+     * @param sql           the SQL statement
+     * @param parameters    the named parameters bound to the SQL
+     * @param schema        the schema the returned records conform to
      * @param columnByField the mapping from schema field name to source column
      * @return the materialized data set
      */
@@ -91,13 +91,13 @@ public interface DataAccess extends AutoCloseable {
      * Executes a parameterized query and returns a materialized data set
      * conforming to the supplied schema, bounded by the supplied limits.
      *
-     * @param context      the query context
-     * @param operation    the logical operation name
-     * @param sql          the SQL statement
-     * @param parameters   the named parameters bound to the SQL
-     * @param schema       the schema the returned records conform to
+     * @param context       the query context
+     * @param operation     the logical operation name
+     * @param sql           the SQL statement
+     * @param parameters    the named parameters bound to the SQL
+     * @param schema        the schema the returned records conform to
      * @param columnByField the mapping from schema field name to source column
-     * @param limits       the dataset limits
+     * @param limits        the dataset limits
      * @return the materialized data set
      */
     MaterializedDataSet queryToDataSet(QueryContext context,
@@ -145,7 +145,9 @@ public interface DataAccess extends AutoCloseable {
      */
     int execute(QueryContext context, String operation, String sql, Map<String, ?> parameters);
 
-    /** Closes this data access and releases its owned resources. */
+    /**
+     * Closes this data access and releases its owned resources.
+     */
     @Override
     void close();
 }

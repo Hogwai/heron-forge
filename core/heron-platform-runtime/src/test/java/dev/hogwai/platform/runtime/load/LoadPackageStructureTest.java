@@ -10,7 +10,9 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** Verifies the public facade boundary of the load package. */
+/**
+ * Verifies the public facade boundary of the load package.
+ */
 class LoadPackageStructureTest {
 
     @Test

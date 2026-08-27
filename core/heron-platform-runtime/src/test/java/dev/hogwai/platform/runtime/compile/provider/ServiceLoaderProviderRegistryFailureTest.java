@@ -155,7 +155,7 @@ class ServiceLoaderProviderRegistryFailureTest {
     }
 
     private static URLClassLoader loader(Path tempDir) throws IOException {
-        return new URLClassLoader(new URL[] {tempDir.toUri().toURL()},
+        return new URLClassLoader(new URL[]{tempDir.toUri().toURL()},
                 ServiceLoaderProviderRegistryFailureTest.class.getClassLoader());
     }
 }

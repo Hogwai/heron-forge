@@ -1,6 +1,8 @@
 package dev.hogwai.platform.spi.data.access;
 
-/** Maps one data row to an application value. */
+/**
+ * Maps one data row to an application value.
+ */
 @FunctionalInterface
 public interface RowMapper<T> {
 

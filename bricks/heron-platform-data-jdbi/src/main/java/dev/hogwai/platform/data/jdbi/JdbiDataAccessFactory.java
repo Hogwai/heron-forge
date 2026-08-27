@@ -16,14 +16,18 @@ import org.jdbi.v3.core.spi.JdbiPlugin;
 import java.util.List;
 import java.util.Objects;
 
-/** Opens generic Jdbi-backed data access clients. */
+/**
+ * Opens generic Jdbi-backed data access clients.
+ */
 @SuppressWarnings("PMD.CyclomaticComplexity")
 public final class JdbiDataAccessFactory implements DataAccessFactory {
 
     private final List<JdbiPlugin> plugins;
     private final JdbiPoolOptions poolOptions;
 
-    /** Creates a factory without any database-specific Jdbi plugins and without pooling. */
+    /**
+     * Creates a factory without any database-specific Jdbi plugins and without pooling.
+     */
     public JdbiDataAccessFactory() {
         this(List.of(), JdbiPoolOptions.disabled());
     }

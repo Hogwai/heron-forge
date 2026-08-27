@@ -37,7 +37,9 @@ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/** Real PostgreSQL integration test, opt-in because it requires Compose. */
+/**
+ * Real PostgreSQL integration test, opt-in because it requires Compose.
+ */
 @EnabledIfEnvironmentVariable(named = "RUN_POSTGRES_TESTS", matches = "true")
 class SupplyChainPostgresIntegrationTest {
 
@@ -51,19 +53,23 @@ class SupplyChainPostgresIntegrationTest {
         BuildContext buildContext = new BuildContext(Clock.systemUTC(), resources::add, DATA_ACCESS_FACTORY);
         try {
             Map<String, Object> databaseConfig = databaseConfig();
-            CapabilityInstance ordersProvider = new DemoOrdersProviderFactory().create(databaseConfig, buildContext);
-            CapabilityInstance deliveriesProvider = new DemoDeliveriesProviderFactory().create(databaseConfig(), buildContext);
+            CapabilityInstance ordersProvider =
+                    new DemoOrdersProviderFactory().create(databaseConfig, buildContext);
+            CapabilityInstance deliveriesProvider =
+                    new DemoDeliveriesProviderFactory().create(databaseConfig(), buildContext);
             DataSet ordersDataSet = ordersProvider.execute(CapabilityInputs.of(Map.of()), context());
-            MaterializedDataSet orders = ordersDataSet instanceof dev.hogwai.platform.spi.data.StreamingDataSet streamed
-                    ? streamed.toMaterialized() : (MaterializedDataSet) ordersDataSet;
-            MaterializedDataSet deliveries = (MaterializedDataSet) deliveriesProvider.execute(
-                    CapabilityInputs.of(Map.of()), context());
+            MaterializedDataSet orders = ordersDataSet instanceof StreamingDataSet streamed ?
+                    streamed.toMaterialized() : (MaterializedDataSet) ordersDataSet;
+            MaterializedDataSet deliveries =
+                    (MaterializedDataSet) deliveriesProvider.execute(CapabilityInputs.of(Map.of()), context());
 
             assertThat(orders.rowCount()).isEqualTo(3);
             assertThat(deliveries.rowCount()).isEqualTo(5);
-            assertThat(orders.records()).extracting(schemaRecord -> schemaRecord.value(new FieldId("orderId")))
+            assertThat(orders.records())
+                    .extracting(schemaRecord -> schemaRecord.value(new FieldId("orderId")))
                     .containsExactly("LATE-001", "OK-001", "SHORT-001");
-            assertThat(deliveries.records()).extracting(schemaRecord -> schemaRecord.value(new FieldId("orderId")))
+            assertThat(deliveries.records())
+                    .extracting(schemaRecord -> schemaRecord.value(new FieldId("orderId")))
                     .contains("LATE-001", "SHORT-001", "OK-001");
 
             CapabilityInstance detector = new SupplyChainExceptionDetectorFactory().create(Map.of(
@@ -74,9 +80,11 @@ class SupplyChainPostgresIntegrationTest {
                     new PortId("orders"), orders,
                     new PortId("deliveries"), deliveries)), context());
 
-            assertThat(exceptions.records()).extracting(schemaRecord -> schemaRecord.value(new FieldId("exceptionType")))
+            assertThat(exceptions.records())
+                    .extracting(schemaRecord -> schemaRecord.value(new FieldId("exceptionType")))
                     .contains("LATE_DELIVERY", "INSUFFICIENT_QUANTITY", "PRIORITY_RISK");
-            assertThat(exceptions.records()).noneMatch(schemaRecord -> "OK-001"
+            assertThat(exceptions.records())
+                    .noneMatch(schemaRecord -> "OK-001"
                     .equals(schemaRecord.value(new FieldId("orderId"))));
         } finally {
             closeInReverseOrder(resources);
@@ -109,9 +117,12 @@ class SupplyChainPostgresIntegrationTest {
                 .isInstanceOf(PlatformException.class)
                 .satisfies(failure -> {
                     PlatformException exception = (PlatformException) failure;
-                    assertThat(exception.getMessage()).doesNotContain("probe-password", "127.0.0.1");
-                    assertThat(exception.diagnostics()).extracting(Diagnostic::message)
-                            .allSatisfy(message -> assertThat(message).doesNotContain("probe-password", "127.0.0.1"));
+                    assertThat(exception.getMessage())
+                            .doesNotContain("probe-password", "127.0.0.1");
+                    assertThat(exception.diagnostics())
+                            .extracting(Diagnostic::message)
+                            .allSatisfy(message -> assertThat(message)
+                                    .doesNotContain("probe-password", "127.0.0.1"));
                 });
     }
 
@@ -144,29 +155,46 @@ class SupplyChainPostgresIntegrationTest {
         public <T> List<T> query(QueryRequest<T> request, QueryContext context) {
             return delegate.query(request, context);
         }
+
         @Override
-        public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
-                Schema schema, Map<String, String> columnByField) {
+        public MaterializedDataSet queryToDataSet(QueryContext context,
+                                                  String operation,
+                                                  String sql,
+                                                  Schema schema,
+                                                  Map<String, String> columnByField) {
             return queryToDataSet(context, operation, sql, Map.of(), schema, columnByField,
                     FakeDataAccessSupport.DEFAULT_LIMITS);
         }
 
         @Override
-        public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
-                Schema schema, Map<String, String> columnByField, DataSetLimits limits) {
+        public MaterializedDataSet queryToDataSet(QueryContext context,
+                                                  String operation,
+                                                  String sql,
+                                                  Schema schema,
+                                                  Map<String, String> columnByField,
+                                                  DataSetLimits limits) {
             return queryToDataSet(context, operation, sql, Map.of(), schema, columnByField, limits);
         }
 
         @Override
-        public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
-                Map<String, ?> parameters, Schema schema, Map<String, String> columnByField) {
+        public MaterializedDataSet queryToDataSet(QueryContext context,
+                                                  String operation,
+                                                  String sql,
+                                                  Map<String, ?> parameters,
+                                                  Schema schema,
+                                                  Map<String, String> columnByField) {
             return queryToDataSet(context, operation, sql, parameters, schema, columnByField,
                     FakeDataAccessSupport.DEFAULT_LIMITS);
         }
 
         @Override
-        public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
-                Map<String, ?> parameters, Schema schema, Map<String, String> columnByField, DataSetLimits limits) {
+        public MaterializedDataSet queryToDataSet(QueryContext context,
+                                                  String operation,
+                                                  String sql,
+                                                  Map<String, ?> parameters,
+                                                  Schema schema,
+                                                  Map<String, String> columnByField,
+                                                  DataSetLimits limits) {
             QueryRequest<SchemaRecord> request = new QueryRequest<>(operation, sql, parameters,
                     row -> FakeDataAccessSupport.toRecord(row, schema, columnByField));
             List<SchemaRecord> records = query(request, context);
@@ -174,11 +202,16 @@ class SupplyChainPostgresIntegrationTest {
         }
 
         @Override
-        public StreamingDataSet streamQuery(QueryContext context, String operation, String sql,
-                                            Schema schema, Map<String, String> columnByField,
-                                            DataSetLimits limits, int batchSize) {
+        public StreamingDataSet streamQuery(QueryContext context,
+                                            String operation,
+                                            String sql,
+                                            Schema schema,
+                                            Map<String, String> columnByField,
+                                            DataSetLimits limits,
+                                            int batchSize) {
             return delegate.streamQuery(context, operation, sql, schema, columnByField, limits, batchSize);
         }
+
         @Override
         public int execute(QueryContext context, String operation, String sql, Map<String, ?> parameters) {
             throw new UnsupportedOperationException();

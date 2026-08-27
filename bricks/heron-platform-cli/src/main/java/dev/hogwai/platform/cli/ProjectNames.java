@@ -5,7 +5,9 @@ import java.util.regex.Pattern;
 
 import javax.lang.model.SourceVersion;
 
-/** Validates names used by generated Heron projects and Java sources. */
+/**
+ * Validates names used by generated Heron projects and Java sources.
+ */
 @SuppressWarnings("PMD.CyclomaticComplexity")
 final class ProjectNames {
 

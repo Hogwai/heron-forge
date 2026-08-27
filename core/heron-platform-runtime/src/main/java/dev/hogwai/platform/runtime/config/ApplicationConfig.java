@@ -15,7 +15,8 @@ public record ApplicationConfig(String apiVersion,
                                 String name,
                                 List<CapabilityConfig> capabilities,
                                 List<EntrypointConfig> entrypoints,
-                                List<WidgetConfig> widgets) {
+                                List<WidgetConfig> widgets,
+                                List<WorkerConfig> workers) {
 
     /**
      * Creates an application configuration.
@@ -56,11 +57,29 @@ public record ApplicationConfig(String apiVersion,
     public ApplicationConfig(String apiVersion, String name,
                              List<CapabilityConfig> capabilities, List<EntrypointConfig> entrypoints,
                              List<WidgetConfig> widgets) {
+        this(apiVersion, name, capabilities, entrypoints, widgets, List.of());
+    }
+
+    /**
+     * Creates an application configuration with workers.
+     *
+     * @param apiVersion   the API version
+     * @param name         the application name
+     * @param capabilities the capabilities
+     * @param entrypoints  the entrypoints
+     * @param widgets      the widget declarations
+     * @param workers      the worker declarations
+     * @throws NullPointerException if any argument is {@code null}
+     */
+    public ApplicationConfig(String apiVersion, String name,
+                             List<CapabilityConfig> capabilities, List<EntrypointConfig> entrypoints,
+                             List<WidgetConfig> widgets, List<WorkerConfig> workers) {
         this.apiVersion = Objects.requireNonNull(apiVersion, "apiVersion must not be null");
         this.name = Objects.requireNonNull(name, "name must not be null");
         this.capabilities = List.copyOf(Objects.requireNonNull(capabilities, "capabilities must not be null"));
         this.entrypoints = List.copyOf(Objects.requireNonNull(entrypoints, "entrypoints must not be null"));
         this.widgets = List.copyOf(Objects.requireNonNull(widgets, "widgets must not be null"));
+        this.workers = List.copyOf(Objects.requireNonNull(workers, "workers must not be null"));
     }
 
     /**
@@ -101,5 +120,13 @@ public record ApplicationConfig(String apiVersion,
     @Override
     public List<WidgetConfig> widgets() {
         return widgets;
+    }
+
+    /**
+     * @return an immutable view of the worker declarations
+     */
+    @Override
+    public List<WorkerConfig> workers() {
+        return workers;
     }
 }

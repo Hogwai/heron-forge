@@ -6,12 +6,15 @@ import dev.hogwai.platform.spi.data.FieldId;
 import dev.hogwai.platform.spi.data.MaterializedDataSet;
 import dev.hogwai.platform.spi.data.Schema;
 import dev.hogwai.platform.spi.data.SchemaRecord;
+
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/** Dataset construction and typed record access for the example. */
+/**
+ * Dataset construction and typed record access for the example.
+ */
 public final class SupplyChainData {
 
     private SupplyChainData() {

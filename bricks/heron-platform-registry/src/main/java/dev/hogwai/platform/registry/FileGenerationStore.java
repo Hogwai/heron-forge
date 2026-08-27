@@ -56,7 +56,9 @@ import dev.hogwai.platform.spi.registry.GenerationStore;
 @HeronService(value = GenerationStore.class, id = "registry.file")
 public final class FileGenerationStore implements GenerationStore {
 
-    /** Explicit lifecycle order; never derived from {@code ordinal()}. */
+    /**
+     * Explicit lifecycle order; never derived from {@code ordinal()}.
+     */
     private static final List<GenerationStatus> LIFECYCLE = List.of(
             GenerationStatus.EXPERIMENTAL,
             GenerationStatus.STABLE,
@@ -68,7 +70,9 @@ public final class FileGenerationStore implements GenerationStore {
     private static final String DEFAULT_ROOT = "registry";
     private static final String ROOT_ENV_VARIABLE = "HERON_REGISTRY_DIR";
 
-    /** Shared mapper; {@code ObjectMapper} is thread-safe for read and write. */
+    /**
+     * Shared mapper; {@code ObjectMapper} is thread-safe for read and write.
+     */
     private static final ObjectMapper JSON = new ObjectMapper();
     public static final String GENERATION_ID = "generationId";
     public static final String APPLICATION_ID = "applicationId";
@@ -212,14 +216,15 @@ public final class FileGenerationStore implements GenerationStore {
     /**
      * Parses a flat JSON object produced by {@link #serialize}.
      *
-     * @throws IOException          when the text is not well-formed JSON or a
-     *                              value is not a string; callers translate this
-     *                              into silent skipping of corrupted entries
+     * @throws IOException              when the text is not well-formed JSON or a
+     *                                  value is not a string; callers translate this
+     *                                  into silent skipping of corrupted entries
      * @throws IllegalArgumentException when a field is missing or unparseable;
-     *                              handled like any other corruption signal
+     *                                  handled like any other corruption signal
      */
     private static GenerationRecord deserialize(String json) throws IOException {
-        Map<String, String> fields = JSON.readValue(json, new TypeReference<>() { });
+        Map<String, String> fields = JSON.readValue(json, new TypeReference<>() {
+        });
         return new GenerationRecord(
                 required(fields, APPLICATION_ID),
                 required(fields, GENERATION_ID),

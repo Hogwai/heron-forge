@@ -41,7 +41,9 @@ public final class GenerationsDiffCommand implements Callable<Integer> {
     @Spec
     private CommandSpec commandSpec;
 
-    /** Creates the picocli generations diff command. */
+    /**
+     * Creates the picocli generations diff command.
+     */
     public GenerationsDiffCommand() {
         // populated by picocli
     }

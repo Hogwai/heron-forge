@@ -126,7 +126,9 @@ class FactoryDemoRegistryAcceptanceTest {
         }
     }
 
-    /** Mirrors the sealing identity: SHA-256 hex digest of the UTF-8 YAML bytes. */
+    /**
+     * Mirrors the sealing identity: SHA-256 hex digest of the UTF-8 YAML bytes.
+     */
     private static String sha256Hex(String content) {
         MessageDigest digest;
         try {

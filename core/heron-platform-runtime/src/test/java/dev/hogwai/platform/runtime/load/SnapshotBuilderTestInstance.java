@@ -4,9 +4,12 @@ import dev.hogwai.platform.spi.data.MaterializedDataSet;
 import dev.hogwai.platform.spi.execution.ExecutionContext;
 import dev.hogwai.platform.spi.provider.CapabilityInputs;
 import dev.hogwai.platform.spi.provider.CapabilityInstance;
+
 import java.util.List;
 
-/** Capability fixture recording close order and optional close failures. */
+/**
+ * Capability fixture recording close order and optional close failures.
+ */
 final class SnapshotBuilderTestInstance implements CapabilityInstance {
 
     private final String id;

@@ -5,9 +5,12 @@ import dev.hogwai.platform.spi.data.DataSetLimits;
 import dev.hogwai.platform.spi.data.MaterializedDataSet;
 import dev.hogwai.platform.spi.data.access.DataAccess;
 import dev.hogwai.platform.spi.data.access.QueryContext;
+
 import java.util.Map;
 
-/** Reader for the deliveries source query. */
+/**
+ * Reader for the deliveries source query.
+ */
 final class DeliveriesQuery {
 
     private static final String SQL = "SELECT order_id, delivered_quantity, delivered_at "

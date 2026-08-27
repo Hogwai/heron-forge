@@ -50,7 +50,7 @@ public interface GenerationStore extends AutoCloseable {
      *
      * @param applicationId identifier of the application
      * @return the application's records in deterministic order; never {@code null},
-     *         empty when the application has no generations
+     * empty when the application has no generations
      */
     List<GenerationRecord> history(String applicationId);
 

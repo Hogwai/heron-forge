@@ -1,6 +1,8 @@
 package dev.hogwai.platform.spi.host;
 
-/** Signals whether cancellation has been requested for an invocation. */
+/**
+ * Signals whether cancellation has been requested for an invocation.
+ */
 @FunctionalInterface
 public interface CancellationSignal {
 

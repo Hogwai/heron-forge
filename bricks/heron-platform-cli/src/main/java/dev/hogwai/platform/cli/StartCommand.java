@@ -9,19 +9,27 @@ import picocli.CommandLine.Spec;
 import java.nio.file.Path;
 import java.util.concurrent.Callable;
 
-/** Picocli subcommand that starts the standard Heron host. */
+/**
+ * Picocli subcommand that starts the standard Heron host.
+ */
 @Command(name = "start",
         description = "Start the Heron host from a YAML configuration or from a stored generation")
 @SuppressWarnings("PMD.CyclomaticComplexity")
 public final class StartCommand implements Callable<Integer> {
 
-    /** Default HTTP port used when no explicit port is supplied. */
+    /**
+     * Default HTTP port used when no explicit port is supplied.
+     */
     public static final int DEFAULT_PORT = 8080;
 
-    /** Default generation store root used when no explicit store is supplied. */
+    /**
+     * Default generation store root used when no explicit store is supplied.
+     */
     public static final String DEFAULT_STORE = "registry";
 
-    /** Conventional location of the exported UI widget manifest. */
+    /**
+     * Conventional location of the exported UI widget manifest.
+     */
     public static final String DEFAULT_UI_MANIFEST = "web/ui-shell/generated/widgets.json";
 
     @Option(names = "--config", converter = ReadablePathConverter.class,
@@ -56,7 +64,9 @@ public final class StartCommand implements Callable<Integer> {
     @Spec
     private CommandSpec commandSpec;
 
-    /** Creates the picocli start command. */
+    /**
+     * Creates the picocli start command.
+     */
     public StartCommand() {
         // populated by picocli
     }
@@ -81,7 +91,8 @@ public final class StartCommand implements Callable<Integer> {
         return subcommand.getCommand();
     }
 
-    /** Returns the validated YAML configuration path.
+    /**
+     * Returns the validated YAML configuration path.
      *
      * @return the validated YAML configuration path
      */
@@ -89,7 +100,8 @@ public final class StartCommand implements Callable<Integer> {
         return configuration;
     }
 
-    /** Returns the validated HTTP bind port.
+    /**
+     * Returns the validated HTTP bind port.
      *
      * @return the validated HTTP bind port
      */

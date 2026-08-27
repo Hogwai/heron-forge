@@ -13,10 +13,10 @@ class SafeYamlParserReadBoundedTest {
     private static final SafeYamlParser PARSER = new SafeYamlParser();
 
     private static final String VALID = """
-        apiVersion: heron.dev/v1
-        application: x
-        capabilities: []
-        """;
+            apiVersion: heron.dev/v1
+            application: x
+            capabilities: []
+            """;
 
     @Test
     void maxBytesIntegerMaxRequestsSafely() {

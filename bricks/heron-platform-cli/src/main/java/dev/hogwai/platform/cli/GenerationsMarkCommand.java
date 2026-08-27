@@ -47,7 +47,9 @@ public final class GenerationsMarkCommand implements Callable<Integer> {
     @Spec
     private CommandSpec commandSpec;
 
-    /** Creates the picocli generations mark command. */
+    /**
+     * Creates the picocli generations mark command.
+     */
     public GenerationsMarkCommand() {
         // populated by picocli
     }

@@ -2,6 +2,7 @@ package dev.hogwai.platform.runtime.snapshot;
 
 import dev.hogwai.platform.runtime.compile.CapabilityGraph;
 import dev.hogwai.platform.spi.provider.CapabilityInstance;
+
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;

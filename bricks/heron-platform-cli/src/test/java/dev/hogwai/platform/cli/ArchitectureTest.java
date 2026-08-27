@@ -7,7 +7,9 @@ import com.tngtech.archunit.lang.ArchRule;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
-/** Verifies the CLI module dependency boundaries. */
+/**
+ * Verifies the CLI module dependency boundaries.
+ */
 @AnalyzeClasses(packages = "dev.hogwai.platform.cli", importOptions = ImportOption.DoNotIncludeTests.class)
 class ArchitectureTest {
 

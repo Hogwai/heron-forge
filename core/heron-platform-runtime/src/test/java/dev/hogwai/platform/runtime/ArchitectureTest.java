@@ -7,7 +7,9 @@ import com.tngtech.archunit.lang.ArchRule;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
-/** Verifies the runtime stays framework-independent and only depends on the SPI. */
+/**
+ * Verifies the runtime stays framework-independent and only depends on the SPI.
+ */
 @AnalyzeClasses(packages = "dev.hogwai.platform.runtime", importOptions = ImportOption.DoNotIncludeTests.class)
 class ArchitectureTest {
 

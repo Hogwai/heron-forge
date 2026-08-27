@@ -24,7 +24,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-/** Immutable, synchronous supply-chain exception detection engine. */
+/**
+ * Immutable, synchronous supply-chain exception detection engine.
+ */
 @SuppressWarnings("PMD.CyclomaticComplexity")
 final class ExceptionDetector implements CapabilityInstance {
 
@@ -71,7 +73,7 @@ final class ExceptionDetector implements CapabilityInstance {
     }
 
     private void evaluateOrder(SchemaRecord order, Map<String, List<SchemaRecord>> deliveries,
-            List<SchemaRecord> exceptions, Instant now) {
+                               List<SchemaRecord> exceptions, Instant now) {
         String orderId = SupplyChainData.string(order, ORDER_ID);
         long ordered = SupplyChainData.longValue(order, "orderedQuantity");
         Instant requiredAt = SupplyChainData.instant(order, "requiredAt");

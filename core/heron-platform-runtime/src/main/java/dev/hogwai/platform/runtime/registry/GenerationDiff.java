@@ -71,7 +71,7 @@ public final class GenerationDiff {
     }
 
     private static void diffCapabilities(ApplicationConfig before, ApplicationConfig after,
-            List<DiffEntry> entries) {
+                                         List<DiffEntry> entries) {
         Map<String, CapabilityConfig> previous = byId(before.capabilities(), CapabilityConfig::id);
         Map<String, CapabilityConfig> current = byId(after.capabilities(), CapabilityConfig::id);
         for (String id : sortedUnion(previous.keySet(), current.keySet())) {
@@ -90,7 +90,7 @@ public final class GenerationDiff {
     }
 
     private static void diffCapability(String id, CapabilityConfig was, CapabilityConfig is,
-            List<DiffEntry> entries) {
+                                       List<DiffEntry> entries) {
         if (!was.providerId().equals(is.providerId())
                 || !was.providerVersion().equals(is.providerVersion())) {
             entries.add(new DiffEntry(ChangeType.MODIFIED, CAPABILITY, id,
@@ -102,7 +102,7 @@ public final class GenerationDiff {
     }
 
     private static void diffCapabilityConfig(String id, Map<String, Object> was,
-            Map<String, Object> is, List<DiffEntry> entries) {
+                                             Map<String, Object> is, List<DiffEntry> entries) {
         for (String key : sortedUnion(was.keySet(), is.keySet())) {
             Object previous = was.get(key);
             Object current = is.get(key);
@@ -120,7 +120,7 @@ public final class GenerationDiff {
     }
 
     private static void diffCapabilityInputs(String id, List<InputBindingConfig> was,
-            List<InputBindingConfig> is, List<DiffEntry> entries) {
+                                             List<InputBindingConfig> is, List<DiffEntry> entries) {
         Map<String, InputBindingConfig> previous = byId(was, InputBindingConfig::inputPort);
         Map<String, InputBindingConfig> current = byId(is, InputBindingConfig::inputPort);
         for (String port : sortedUnion(previous.keySet(), current.keySet())) {
@@ -145,7 +145,7 @@ public final class GenerationDiff {
     }
 
     private static void diffEndpoints(ApplicationConfig before, ApplicationConfig after,
-            List<DiffEntry> entries) {
+                                      List<DiffEntry> entries) {
         Map<String, EntrypointConfig> previous = byId(before.entrypoints(), EntrypointConfig::id);
         Map<String, EntrypointConfig> current = byId(after.entrypoints(), EntrypointConfig::id);
         for (String id : sortedUnion(previous.keySet(), current.keySet())) {
@@ -164,7 +164,7 @@ public final class GenerationDiff {
     }
 
     private static void diffEndpoint(String id, EntrypointConfig was, EntrypointConfig is,
-            List<DiffEntry> entries) {
+                                     List<DiffEntry> entries) {
         List<String> changes = new ArrayList<>();
         if (!was.method().equals(is.method())) {
             changes.add("method %s -> %s".formatted(was.method(), is.method()));
@@ -192,16 +192,24 @@ public final class GenerationDiff {
         return List.copyOf(union);
     }
 
-    /** Kind of change carried by a {@link DiffEntry}. */
+    /**
+     * Kind of change carried by a {@link DiffEntry}.
+     */
     public enum ChangeType {
 
-        /** The item exists only in the {@code to} generation. */
+        /**
+         * The item exists only in the {@code to} generation.
+         */
         ADDED,
 
-        /** The item exists only in the {@code from} generation. */
+        /**
+         * The item exists only in the {@code from} generation.
+         */
         REMOVED,
 
-        /** The item exists in both generations with different content. */
+        /**
+         * The item exists in both generations with different content.
+         */
         MODIFIED
     }
 

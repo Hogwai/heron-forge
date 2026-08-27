@@ -11,6 +11,7 @@ import dev.hogwai.platform.spi.data.Schema;
 import dev.hogwai.platform.spi.provider.ConfigurationSchema;
 import dev.hogwai.platform.spi.provider.PortDescriptor;
 import dev.hogwai.platform.spi.provider.ProviderDescriptor;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -44,8 +45,8 @@ final class TestProviders {
     }
 
     static ProviderDescriptor transform(String providerId, String version, int spiMajor, String inPort,
-                                       Schema inSchema, String outPort, Schema outSchema,
-                                       ConfigurationSchema configSchema) {
+                                        Schema inSchema, String outPort, Schema outSchema,
+                                        ConfigurationSchema configSchema) {
         return new ProviderDescriptor(
                 new ProviderId(providerId), ProviderVersion.parse(version), CapabilityKind.TRANSFORM, spiMajor,
                 Map.of(new PortId(inPort), port(inPort, inSchema, true)),

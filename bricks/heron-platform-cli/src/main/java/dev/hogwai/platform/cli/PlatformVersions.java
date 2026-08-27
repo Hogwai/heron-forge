@@ -5,7 +5,9 @@ import java.io.InputStream;
 import java.util.Map;
 import java.util.Properties;
 
-/** Loads dependency versions embedded in the CLI distribution. */
+/**
+ * Loads dependency versions embedded in the CLI distribution.
+ */
 final class PlatformVersions {
 
     private static final Properties VALUES = load();

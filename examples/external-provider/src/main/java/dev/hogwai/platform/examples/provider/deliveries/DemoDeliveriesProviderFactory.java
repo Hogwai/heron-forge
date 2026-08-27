@@ -24,17 +24,21 @@ import dev.hogwai.platform.spi.provider.PortDescriptor;
 import dev.hogwai.platform.spi.provider.ProviderDescriptor;
 import dev.hogwai.platform.spi.provider.ProviderFactory;
 
-/** Deterministic source of the example delivery records. */
+/**
+ * Deterministic source of the example delivery records.
+ */
 @HeronService(value = ProviderFactory.class, id = "demo.deliveries")
 public final class DemoDeliveriesProviderFactory implements ProviderFactory {
 
     private static final ProviderDescriptor DESCRIPTOR = new ProviderDescriptor(
             new ProviderId("demo.deliveries"), ProviderVersion.parse("1.0.0"), CapabilityKind.SOURCE, SpiMajor.V1,
             Map.of(), Map.of(new PortId("records"), new PortDescriptor(
-                    new PortId("records"), SupplyChainSchemas.deliveries(), true)),
+            new PortId("records"), SupplyChainSchemas.deliveries(), true)),
             SupplyChainDatabaseConfig.databaseConfigSchema());
 
-    /** Creates the deliveries factory. */
+    /**
+     * Creates the deliveries factory.
+     */
     public DemoDeliveriesProviderFactory() {
         // Default constructor
     }

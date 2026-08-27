@@ -1,6 +1,7 @@
 package dev.hogwai.platform.spi.provider;
 
 import dev.hogwai.platform.spi.Diagnostic;
+
 import java.util.List;
 import java.util.Map;
 

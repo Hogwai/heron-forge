@@ -3,7 +3,9 @@ package dev.hogwai.platform.cli;
 import java.io.Console;
 import java.io.PrintWriter;
 
-/** Console session backed by {@link System#console()}. */
+/**
+ * Console session backed by {@link System#console()}.
+ */
 final class SystemConsoleSession implements ConsoleSession {
 
     private final Console console;

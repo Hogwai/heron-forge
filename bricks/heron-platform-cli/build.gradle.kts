@@ -50,14 +50,18 @@ publishing {
 // InitCommand never hard-codes them; the single source of truth is
 // gradle.properties and the root project version.
 tasks.processResources {
-    filter(mapOf("tokens" to mapOf(
-        "platformVersion" to project.version.toString(),
-        "slf4jVersion" to slf4jVersion,
-        "junitJupiterVersion" to junitJupiterVersion,
-        "assertjVersion" to assertjVersion,
-        "javaToolchainVersion" to javaToolchainVersion,
-        "gradleVersion" to gradleVersion,
-        "kotlinPluginVersion" to kotlinPluginVersion,
-        "platformSpiVersion" to platformSpiVersion
-    )), ReplaceTokens::class.java)
+    filter(
+        mapOf(
+            "tokens" to mapOf(
+                "platformVersion" to project.version.toString(),
+                "slf4jVersion" to slf4jVersion,
+                "junitJupiterVersion" to junitJupiterVersion,
+                "assertjVersion" to assertjVersion,
+                "javaToolchainVersion" to javaToolchainVersion,
+                "gradleVersion" to gradleVersion,
+                "kotlinPluginVersion" to kotlinPluginVersion,
+                "platformSpiVersion" to platformSpiVersion
+            )
+        ), ReplaceTokens::class.java
+    )
 }

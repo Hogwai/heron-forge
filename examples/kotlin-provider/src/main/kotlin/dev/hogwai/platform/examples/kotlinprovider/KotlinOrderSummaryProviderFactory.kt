@@ -95,7 +95,8 @@ class KotlinOrderSummaryProviderFactory : ProviderFactory {
             throw registrationFailure
         }
 
-        val limits = DataSetLimits(positiveLong(rawConfig["maxRows"], 1_000), positiveLong(rawConfig["maxBytes"], 1_000_000))
+        val limits =
+            DataSetLimits(positiveLong(rawConfig["maxRows"], 1_000), positiveLong(rawConfig["maxBytes"], 1_000_000))
         return CapabilityInstance { inputs, executionContext ->
             executionContext.cancellationToken().throwIfCancellationRequested()
             if (!Instant.now().isBefore(executionContext.deadline())) {
@@ -104,7 +105,10 @@ class KotlinOrderSummaryProviderFactory : ProviderFactory {
             requireNotNull(inputs) { "inputs must not be null" }
             KotlinOrderSummaryQuery.read(
                 dataAccess,
-                QueryContext(executionContext.deadline(), executionContext.cancellationToken()::isCancellationRequested),
+                QueryContext(
+                    executionContext.deadline(),
+                    executionContext.cancellationToken()::isCancellationRequested
+                ),
                 limits
             )
         }

@@ -12,7 +12,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-/** Picocli command that scaffolds a Heron application project. */
+/**
+ * Picocli command that scaffolds a Heron application project.
+ */
 @Command(name = "app", description = "Scaffold a new Heron application project")
 public final class CreateAppCommand implements Callable<Integer> {
 
@@ -26,12 +28,16 @@ public final class CreateAppCommand implements Callable<Integer> {
     @Option(names = "--package", description = "base Java package for the sample provider")
     String packageName;
 
-    /** Creates an application command rooted at the current directory. */
+    /**
+     * Creates an application command rooted at the current directory.
+     */
     public CreateAppCommand() {
         this(Path.of(""));
     }
 
-    /** Creates an application command rooted at the given directory for tests. */
+    /**
+     * Creates an application command rooted at the given directory for tests.
+     */
     CreateAppCommand(Path baseDirectory) {
         this.baseDirectory = baseDirectory;
     }

@@ -18,7 +18,9 @@ public record JdbiPoolOptions(boolean enabled,
                               long connectionTimeoutMillis,
                               long maxLifetimeMillis) {
 
-    /** Creates options, rejecting incoherent pool sizing. */
+    /**
+     * Creates options, rejecting incoherent pool sizing.
+     */
     public JdbiPoolOptions {
         if (maximumPoolSize < 1) {
             throw new IllegalArgumentException("maximumPoolSize must be positive");

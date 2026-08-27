@@ -348,7 +348,9 @@ final class YamlEventValidator {
 
     private static final InvalidNumber INVALID = InvalidNumber.INSTANCE;
 
-    /** Sentinel type used to keep conversion failure separate from null. */
+    /**
+     * Sentinel type used to keep conversion failure separate from null.
+     */
     private enum InvalidNumber {
         INSTANCE
     }

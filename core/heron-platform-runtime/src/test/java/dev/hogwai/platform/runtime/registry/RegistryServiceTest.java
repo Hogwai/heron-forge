@@ -17,7 +17,9 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/** Tests for {@link RegistryService}: sealing, idempotence and validation gating. */
+/**
+ * Tests for {@link RegistryService}: sealing, idempotence and validation gating.
+ */
 class RegistryServiceTest {
 
     private static final Instant NOW = Instant.parse("2026-06-01T12:00:00Z");

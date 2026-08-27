@@ -7,7 +7,9 @@ import java.util.Optional;
 import dev.hogwai.platform.runtime.compile.provider.ProviderRegistry;
 import dev.hogwai.platform.spi.ProviderId;
 
-/** In-memory provider registry fixture for the registry tests. */
+/**
+ * In-memory provider registry fixture for the registry tests.
+ */
 final class RegistryTestProviderRegistry implements ProviderRegistry {
 
     private final Map<ProviderId, Registration> registrations = new LinkedHashMap<>();

@@ -8,7 +8,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-/** Internal copier and validator for structured payload values. */
+/**
+ * Internal copier and validator for structured payload values.
+ */
 final class StructuredValues {
 
     private StructuredValues() {

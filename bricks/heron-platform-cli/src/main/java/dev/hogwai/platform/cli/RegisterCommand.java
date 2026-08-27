@@ -17,7 +17,9 @@ import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Spec;
 
-/** Picocli subcommand that seals and stores one application generation. */
+/**
+ * Picocli subcommand that seals and stores one application generation.
+ */
 @Command(name = "register",
         description = "Validate, seal (SHA-256) and store a generation of an application")
 public final class RegisterCommand implements Callable<Integer> {
@@ -37,7 +39,9 @@ public final class RegisterCommand implements Callable<Integer> {
     @Spec
     private CommandSpec commandSpec;
 
-    /** Creates the picocli register command. */
+    /**
+     * Creates the picocli register command.
+     */
     public RegisterCommand() {
         // populated by picocli
     }

@@ -74,7 +74,8 @@ class ResourceTrackerTest {
         SnapshotResourceTracker tracker = new SnapshotResourceTracker();
         tracker.close();
 
-        assertThatThrownBy(() -> tracker.register(() -> { }))
+        assertThatThrownBy(() -> tracker.register(() -> {
+        }))
                 .isInstanceOf(PlatformException.class)
                 .satisfies(e -> assertThat(((PlatformException) e).code())
                         .isEqualTo(PlatformErrorCode.CANCELLATION_REQUESTED));

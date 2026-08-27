@@ -1,4 +1,4 @@
 apiVersion: heron.dev/v1
 application: factory-demo
 application: duplicate
-capabilities: []
+capabilities: [ ]

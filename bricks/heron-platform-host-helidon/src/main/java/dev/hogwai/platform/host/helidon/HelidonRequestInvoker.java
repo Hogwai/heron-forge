@@ -21,7 +21,9 @@ import io.helidon.webserver.http.ServerResponse;
 
 import static dev.hogwai.platform.host.helidon.http.HttpHelper.getIdFromHeader;
 
-/** Handles one HTTP request for a host entrypoint. */
+/**
+ * Handles one HTTP request for a host entrypoint.
+ */
 @SuppressWarnings("PMD.CyclomaticComplexity")
 final class HelidonRequestInvoker {
 

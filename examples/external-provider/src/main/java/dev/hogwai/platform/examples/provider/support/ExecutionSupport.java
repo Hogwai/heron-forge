@@ -4,11 +4,14 @@ import dev.hogwai.platform.spi.data.access.QueryContext;
 import dev.hogwai.platform.spi.error.PlatformErrorCode;
 import dev.hogwai.platform.spi.error.PlatformException;
 import dev.hogwai.platform.spi.execution.ExecutionContext;
+
 import java.time.Clock;
 import java.util.List;
 import java.util.Objects;
 
-/** Execution and input validation helpers shared by provider capabilities. */
+/**
+ * Execution and input validation helpers shared by provider capabilities.
+ */
 public final class ExecutionSupport {
 
     private ExecutionSupport() {
@@ -22,7 +25,9 @@ public final class ExecutionSupport {
         }
     }
 
-    /** Checks the query-side cancellation and deadline contract. */
+    /**
+     * Checks the query-side cancellation and deadline contract.
+     */
     public static void checkQuery(QueryContext context) {
         Objects.requireNonNull(context, "context must not be null");
         if (context.isCancellationRequested()) {

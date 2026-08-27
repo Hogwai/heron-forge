@@ -13,7 +13,9 @@ import dev.hogwai.platform.spi.data.access.DataAccessFactory;
 import dev.hogwai.platform.spi.data.access.QueryContext;
 import dev.hogwai.platform.spi.data.access.QueryRequest;
 
-/** In-memory data access fixtures for snapshot ownership tests. */
+/**
+ * In-memory data access fixtures for snapshot ownership tests.
+ */
 final class SnapshotBuilderTestDataAccessFactory implements DataAccessFactory {
 
     private SnapshotBuilderTestDataAccess lastOpened;
@@ -42,7 +44,7 @@ final class SnapshotBuilderTestDataAccess implements DataAccess {
     public MaterializedDataSet queryToDataSet(QueryContext context,
                                               String operation,
                                               String sql,
-            Schema schema, Map<String, String> columnByField) {
+                                              Schema schema, Map<String, String> columnByField) {
         throw new UnsupportedOperationException();
     }
 

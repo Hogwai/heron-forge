@@ -11,7 +11,9 @@ import picocli.CommandLine;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** Tests for {@link RegisterCommand}. */
+/**
+ * Tests for {@link RegisterCommand}.
+ */
 class RegisterCommandTest {
 
     @TempDir

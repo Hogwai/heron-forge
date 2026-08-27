@@ -78,7 +78,7 @@ public final class SchemaCompatibility {
      * @param diagnostics the diagnostics accumulator
      */
     private static void checkInputFieldPresenceAndCompatibility(Schema output, Schema input,
-            List<Diagnostic> diagnostics) {
+                                                                List<Diagnostic> diagnostics) {
         for (Field inputField : input.fields()) {
             Optional<Field> outputFieldOpt = output.field(inputField.id());
             if (outputFieldOpt.isEmpty()) {

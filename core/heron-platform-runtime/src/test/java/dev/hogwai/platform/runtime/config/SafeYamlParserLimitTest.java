@@ -14,10 +14,10 @@ class SafeYamlParserLimitTest {
     private static final SafeYamlParser PARSER = new SafeYamlParser();
 
     private static final String VALID = """
-        apiVersion: heron.dev/v1
-        application: x
-        capabilities: []
-        """;
+            apiVersion: heron.dev/v1
+            application: x
+            capabilities: []
+            """;
 
     private static ParsedApplication parse(YamlLimits limits) {
         return PARSER.parse(new ByteArrayInputStream(SafeYamlParserLimitTest.VALID.getBytes(StandardCharsets.UTF_8)), limits);

@@ -15,7 +15,9 @@ import io.helidon.webserver.WebServer;
 
 import static dev.hogwai.platform.host.helidon.http.HttpHelper.writeHealth;
 
-/** Minimal Helidon transport adapter for the host API. */
+/**
+ * Minimal Helidon transport adapter for the host API.
+ */
 @HeronService(value = HostAdapter.class, id = "host.helidon")
 @SuppressWarnings("PMD.CyclomaticComplexity")
 public final class HelidonHostAdapter implements HostAdapter {
@@ -26,7 +28,9 @@ public final class HelidonHostAdapter implements HostAdapter {
     private final HelidonResponseWriter responseWriter;
     private WebServer server;
 
-    /** Creates a stopped adapter. */
+    /**
+     * Creates a stopped adapter.
+     */
     public HelidonHostAdapter() {
         responseWriter = new HelidonResponseWriter();
     }
@@ -81,7 +85,9 @@ public final class HelidonHostAdapter implements HostAdapter {
         return server != null && server.isRunning();
     }
 
-    /** Returns the effective listening port, or {@code -1} while stopped. */
+    /**
+     * Returns the effective listening port, or {@code -1} while stopped.
+     */
     public synchronized int port() {
         return server == null ? -1 : server.port();
     }

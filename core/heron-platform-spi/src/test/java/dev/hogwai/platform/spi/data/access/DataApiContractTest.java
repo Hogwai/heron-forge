@@ -133,26 +133,26 @@ class DataApiContractTest {
 
             @Override
             public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
-                    Schema schema, Map<String, String> columnByField) {
+                                                      Schema schema, Map<String, String> columnByField) {
                 throw new UnsupportedOperationException();
             }
 
             @Override
             public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
-                    Map<String, ?> parameters, Schema schema, Map<String, String> columnByField) {
+                                                      Map<String, ?> parameters, Schema schema, Map<String, String> columnByField) {
                 throw new UnsupportedOperationException();
             }
 
             @Override
             public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
-                    Schema schema, Map<String, String> columnByField, DataSetLimits limits) {
+                                                      Schema schema, Map<String, String> columnByField, DataSetLimits limits) {
                 throw new UnsupportedOperationException();
             }
 
             @Override
             public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
-                    Map<String, ?> parameters, Schema schema, Map<String, String> columnByField,
-                    DataSetLimits limits) {
+                                                      Map<String, ?> parameters, Schema schema, Map<String, String> columnByField,
+                                                      DataSetLimits limits) {
                 throw new UnsupportedOperationException();
             }
 

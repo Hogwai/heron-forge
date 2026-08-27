@@ -8,7 +8,9 @@ package dev.hogwai.platform.spi;
  */
 public final class SpiMajor {
 
-    /** The first major version of the SPI contract. */
+    /**
+     * The first major version of the SPI contract.
+     */
     public static final int V1 = 1;
 
     private SpiMajor() {

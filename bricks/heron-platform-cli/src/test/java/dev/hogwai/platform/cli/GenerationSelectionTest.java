@@ -10,7 +10,9 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/** Unit tests for the generation selection policy used by {@code heron start}. */
+/**
+ * Unit tests for the generation selection policy used by {@code heron start}.
+ */
 class GenerationSelectionTest {
 
     private static final Instant BASE = Instant.parse("2026-06-01T00:00:00Z");

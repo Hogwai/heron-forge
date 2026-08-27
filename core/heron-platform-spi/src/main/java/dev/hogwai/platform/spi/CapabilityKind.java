@@ -5,8 +5,12 @@ package dev.hogwai.platform.spi;
  *
  */
 public enum CapabilityKind {
-    /** A capability that produces data. */
+    /**
+     * A capability that produces data.
+     */
     SOURCE,
-    /** A capability that transforms data. */
+    /**
+     * A capability that transforms data.
+     */
     TRANSFORM
 }

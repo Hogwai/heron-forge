@@ -51,7 +51,9 @@ public non-sealed interface StreamingDataSet extends AutoCloseable, DataSet {
                 bytes);
     }
 
-    /** Byte estimate charged per streamed record, mirroring MaterializedDataSet. */
+    /**
+     * Byte estimate charged per streamed record, mirroring MaterializedDataSet.
+     */
     long ROW_ESTIMATE_BYTES = 256L;
 
     /**
@@ -66,7 +68,7 @@ public non-sealed interface StreamingDataSet extends AutoCloseable, DataSet {
      * Returns the next bounded batch of records, or empty once exhausted.
      *
      * @return the next batch, or empty at exhaustion
-     * @throws PlatformException   when canceled, past the deadline, or over limits
+     * @throws PlatformException     when canceled, past the deadline, or over limits
      * @throws IllegalStateException when the dataset is closed
      */
     Optional<List<SchemaRecord>> nextBatch();
@@ -78,7 +80,9 @@ public non-sealed interface StreamingDataSet extends AutoCloseable, DataSet {
      */
     long deliveredRowCount();
 
-    /** Releases the underlying cursor; idempotent. */
+    /**
+     * Releases the underlying cursor; idempotent.
+     */
     @Override
     void close();
 
@@ -86,17 +90,17 @@ public non-sealed interface StreamingDataSet extends AutoCloseable, DataSet {
      * Wraps a row iterator into a bounded, deadline- and cancellation-aware
      * streaming dataset.
      *
-     * @param schema      the schema records conform to
-     * @param rows        the lazy row source; closed on {@link #close()} when it
-     *                    implements {@link AutoCloseable}
-     * @param limits      cumulative row and byte bounds
-     * @param batchSize   maximum records per batch, strictly positive
-     * @param deadline    execution deadline re-checked before every batch
-     * @param cancelled   cancellation signal re-checked before every batch
+     * @param schema    the schema records conform to
+     * @param rows      the lazy row source; closed on {@link #close()} when it
+     *                  implements {@link AutoCloseable}
+     * @param limits    cumulative row and byte bounds
+     * @param batchSize maximum records per batch, strictly positive
+     * @param deadline  execution deadline re-checked before every batch
+     * @param cancelled cancellation signal re-checked before every batch
      * @return the streaming dataset
      */
     static StreamingDataSet over(Schema schema, Iterator<SchemaRecord> rows,
-            DataSetLimits limits, int batchSize, Instant deadline, BooleanSupplier cancelled) {
+                                 DataSetLimits limits, int batchSize, Instant deadline, BooleanSupplier cancelled) {
         Objects.requireNonNull(schema, "schema must not be null");
         Objects.requireNonNull(rows, "rows must not be null");
         Objects.requireNonNull(limits, "limits must not be null");
@@ -108,7 +112,9 @@ public non-sealed interface StreamingDataSet extends AutoCloseable, DataSet {
         return new Bounded(schema, rows, limits, batchSize, deadline, cancelled);
     }
 
-    /** Default implementation enforcing bounds between pulls. */
+    /**
+     * Default implementation enforcing bounds between pulls.
+     */
     @SuppressWarnings("PMD.CyclomaticComplexity")
     final class Bounded implements StreamingDataSet {
 

@@ -38,7 +38,9 @@ public final class RollbackCommand implements Callable<Integer> {
     @Spec
     private CommandSpec commandSpec;
 
-    /** Creates the picocli rollback command. */
+    /**
+     * Creates the picocli rollback command.
+     */
     public RollbackCommand() {
         // populated by picocli
     }

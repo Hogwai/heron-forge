@@ -56,7 +56,9 @@ public final class WidgetsExportCommand implements Callable<Integer> {
     @Spec
     private CommandSpec commandSpec;
 
-    /** Creates the picocli widgets export command. */
+    /**
+     * Creates the picocli widgets export command.
+     */
     public WidgetsExportCommand() {
         // populated by picocli
     }

@@ -15,7 +15,9 @@ import org.junit.jupiter.api.Test;
 import dev.hogwai.platform.spi.error.PlatformErrorCode;
 import dev.hogwai.platform.spi.error.PlatformException;
 
-/** Verifies bounded streaming semantics: batches, limits, signals, closing. */
+/**
+ * Verifies bounded streaming semantics: batches, limits, signals, closing.
+ */
 class StreamingDataSetTest {
 
     private static final Schema SCHEMA = new Schema("s", 1,

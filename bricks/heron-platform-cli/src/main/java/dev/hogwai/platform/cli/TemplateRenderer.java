@@ -5,7 +5,9 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
-/** Loads and renders templates embedded in the CLI distribution. */
+/**
+ * Loads and renders templates embedded in the CLI distribution.
+ */
 final class TemplateRenderer {
 
     private TemplateRenderer() {

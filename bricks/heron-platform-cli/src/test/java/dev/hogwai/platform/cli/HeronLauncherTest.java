@@ -38,12 +38,12 @@ class HeronLauncherTest {
     void parsesTheTwoSupportedCommandForms() throws IOException {
         Path configuration = configurationFile();
 
-        assertThat(StartCommand.parse(new String[] {START, CONFIG, configuration.toString()}))
+        assertThat(StartCommand.parse(new String[]{START, CONFIG, configuration.toString()}))
                 .satisfies(command -> {
                     assertThat(command.configuration()).isEqualTo(configuration);
                     assertThat(command.port()).isEqualTo(8080);
                 });
-        assertThat(StartCommand.parse(new String[] {START, CONFIG, configuration.toString(), PORT, "0"}))
+        assertThat(StartCommand.parse(new String[]{START, CONFIG, configuration.toString(), PORT, "0"}))
                 .satisfies(command -> assertThat(command.port()).isZero());
     }
 
@@ -68,10 +68,11 @@ class HeronLauncherTest {
         RecordingAdapter adapter = new RecordingAdapter();
         RecordingApplication application = new RecordingApplication(adapter.events);
         StartCommand command = StartCommand.parse(
-                new String[] {START, CONFIG, configuration.toString(), PORT, "0"});
+                new String[]{START, CONFIG, configuration.toString(), PORT, "0"});
 
         int status = HeronLauncher.run(command,
-                ignored -> application, () -> adapter, () -> { });
+                ignored -> application, () -> adapter, () -> {
+                });
 
         assertThat(status).isZero();
         assertThat(adapter.configuration.port()).isZero();
@@ -84,10 +85,11 @@ class HeronLauncherTest {
         RecordingApplication application = new RecordingApplication(events);
         RecordingAdapter adapter = new RecordingAdapter(events);
         adapter.failOnStart = true;
-        StartCommand command = StartCommand.parse(new String[] {START, CONFIG, configuration.toString()});
+        StartCommand command = StartCommand.parse(new String[]{START, CONFIG, configuration.toString()});
 
         int status = HeronLauncher.run(command,
-                ignored -> application, () -> adapter, () -> { });
+                ignored -> application, () -> adapter, () -> {
+                });
 
         assertThat(status).isNotZero();
         assertThat(application.closeCount).isEqualTo(1);
@@ -100,10 +102,11 @@ class HeronLauncherTest {
         List<String> events = new ArrayList<>();
         try (RecordingApplication application = new RecordingApplication(events);
              RecordingAdapter adapter = new RecordingAdapter(events)) {
-            StartCommand command = StartCommand.parse(new String[] {START, CONFIG, configuration.toString()});
+            StartCommand command = StartCommand.parse(new String[]{START, CONFIG, configuration.toString()});
 
             int status = HeronLauncher.run(command,
-                    ignored -> application, () -> adapter, () -> { });
+                    ignored -> application, () -> adapter, () -> {
+                    });
 
             assertThat(status).isZero();
             assertThat(events).containsSubsequence(HOST_START, HOST_STOP, HOST_CLOSE, APPLICATION_CLOSE);
@@ -114,8 +117,8 @@ class HeronLauncherTest {
 
     @Test
     void printsUsageInsteadOfThrowingWhenNoCommandIsSupplied() {
-        assertThat(HeronLauncher.run(new String[] { })).isZero();
-        assertThatThrownBy(() -> StartCommand.parse(new String[] { }))
+        assertThat(HeronLauncher.run(new String[]{})).isZero();
+        assertThatThrownBy(() -> StartCommand.parse(new String[]{}))
                 .isInstanceOf(ParameterException.class);
     }
 

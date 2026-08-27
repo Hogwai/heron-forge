@@ -17,7 +17,7 @@ class CapabilityInstanceTest {
     private static final CapabilityInstance INSTANCE = (_, _) ->
             new MaterializedDataSet(ProviderTestSupport.schema("s"),
                     List.of(),
-                    new DataSetMetadata("ds",new DataSetLimits(10, 1000)),
+                    new DataSetMetadata("ds", new DataSetLimits(10, 1000)),
                     0);
 
     @Test

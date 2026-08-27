@@ -57,7 +57,7 @@ final class RuntimeApplicationFactory {
     /**
      * Builds the live application for an already validated parsed configuration.
      *
-     * @param parsed the validated parsed application
+     * @param parsed           the validated parsed application
      * @param generationRecord the sealed generation generationRecord supplying the generation id
      * @return the live application owning its provider resources
      * @throws PlatformException when compilation, instance creation or

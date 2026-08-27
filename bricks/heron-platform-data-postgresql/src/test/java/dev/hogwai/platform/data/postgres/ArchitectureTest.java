@@ -7,7 +7,9 @@ import com.tngtech.archunit.lang.ArchRule;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
-/** Verifies the PostgreSQL data brick only depends on the SPI data contract. */
+/**
+ * Verifies the PostgreSQL data brick only depends on the SPI data contract.
+ */
 @AnalyzeClasses(packages = "dev.hogwai.platform.data", importOptions = ImportOption.DoNotIncludeTests.class)
 class ArchitectureTest {
 

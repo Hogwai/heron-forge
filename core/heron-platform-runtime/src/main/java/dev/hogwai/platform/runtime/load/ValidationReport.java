@@ -2,10 +2,13 @@ package dev.hogwai.platform.runtime.load;
 
 import dev.hogwai.platform.spi.Diagnostic;
 import dev.hogwai.platform.spi.error.Severity;
+
 import java.util.List;
 import java.util.Objects;
 
-/** Immutable result of validating an application configuration. */
+/**
+ * Immutable result of validating an application configuration.
+ */
 public record ValidationReport(List<Diagnostic> diagnostics) {
 
     /**

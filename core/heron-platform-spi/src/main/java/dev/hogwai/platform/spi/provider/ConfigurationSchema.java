@@ -31,13 +31,21 @@ public record ConfigurationSchema(
      * Scalar kind of a configuration field.
      */
     public enum ScalarKind {
-        /** A UTF-8 string value. */
+        /**
+         * A UTF-8 string value.
+         */
         STRING,
-        /** A boolean value. */
+        /**
+         * A boolean value.
+         */
         BOOLEAN,
-        /** A 64-bit signed integer value. */
+        /**
+         * A 64-bit signed integer value.
+         */
         INTEGER,
-        /** An arbitrary-precision decimal value. */
+        /**
+         * An arbitrary-precision decimal value.
+         */
         NUMBER
     }
 

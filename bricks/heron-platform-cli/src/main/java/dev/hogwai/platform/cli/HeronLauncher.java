@@ -17,7 +17,9 @@ import java.util.Objects;
 import java.util.ServiceLoader;
 import java.util.concurrent.CountDownLatch;
 
-/** The sole standard process bootstrap for Heron applications. */
+/**
+ * The sole standard process bootstrap for Heron applications.
+ */
 @Command(name = "heron", mixinStandardHelpOptions = true,
         subcommands = {StartCommand.class, InitCommand.class, CreateCommand.class,
                 RegisterCommand.class, GenerationsCommand.class, RollbackCommand.class,
@@ -31,7 +33,9 @@ public final class HeronLauncher implements Runnable {
     private static final String DEFAULT_BIND_ADDRESS = "127.0.0.1";
     private static final Duration DEFAULT_REQUEST_TIMEOUT = Duration.ofSeconds(30);
 
-    /** Creates the picocli root command. */
+    /**
+     * Creates the picocli root command.
+     */
     public HeronLauncher() {
         // populated by picocli
     }
@@ -76,7 +80,7 @@ public final class HeronLauncher implements Runnable {
     }
 
     static int run(StartCommand command, ApplicationLoaderFunction loader,
-            HostAdapterFactory adapterFactory, ShutdownWaiter shutdownWaiter) {
+                   HostAdapterFactory adapterFactory, ShutdownWaiter shutdownWaiter) {
         Objects.requireNonNull(command, "command must not be null");
         Objects.requireNonNull(loader, "loader must not be null");
         Objects.requireNonNull(adapterFactory, "adapterFactory must not be null");
@@ -94,7 +98,7 @@ public final class HeronLauncher implements Runnable {
     }
 
     static int run(int port, HostApplication application,
-            HostAdapterFactory adapterFactory, ShutdownWaiter shutdownWaiter) {
+                   HostAdapterFactory adapterFactory, ShutdownWaiter shutdownWaiter) {
         Objects.requireNonNull(application, "application must not be null");
         Objects.requireNonNull(adapterFactory, "adapterFactory must not be null");
         Objects.requireNonNull(shutdownWaiter, "shutdownWaiter must not be null");
@@ -127,7 +131,7 @@ public final class HeronLauncher implements Runnable {
     }
 
     private static HostApplication loadApplication(StartCommand command,
-            ApplicationLoaderFunction loader) throws Exception {
+                                                   ApplicationLoaderFunction loader) throws Exception {
         try (InputStream input = Files.newInputStream(command.configuration())) {
             return loader.load(input);
         }

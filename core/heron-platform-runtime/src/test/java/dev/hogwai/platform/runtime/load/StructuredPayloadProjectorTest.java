@@ -62,7 +62,8 @@ class StructuredPayloadProjectorTest {
 
     @Test
     void rejectsUnsupportedValuesBeforeHostPayloadConstruction() {
-        assertThatThrownBy(() -> StructuredPayloadProjector.normalizeValue(new Object()))
+        var object = new Object();
+        assertThatThrownBy(() -> StructuredPayloadProjector.normalizeValue(object))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("unsupported structured value type");
         assertThatThrownBy(() -> StructuredPayloadProjector.project(null))

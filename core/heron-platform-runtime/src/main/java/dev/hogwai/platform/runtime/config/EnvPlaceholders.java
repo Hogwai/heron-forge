@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import dev.hogwai.platform.spi.Diagnostic;
 
 import java.util.List;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -56,12 +56,12 @@ final class EnvPlaceholders {
      * @param lookup      maps a variable name to its value, or {@code null}
      * @return the resolved tree (unchanged when nothing matched)
      */
-    static JsonNode resolve(JsonNode root, List<Diagnostic> diagnostics, Function<String, String> lookup) {
+    static JsonNode resolve(JsonNode root, List<Diagnostic> diagnostics, UnaryOperator<String> lookup) {
         return resolveNode(root, "", diagnostics, lookup);
     }
 
     private static JsonNode resolveNode(JsonNode node, String path,
-                                        List<Diagnostic> diagnostics, Function<String, String> lookup) {
+                                        List<Diagnostic> diagnostics, UnaryOperator<String> lookup) {
         if (node.isObject()) {
             ObjectNode resolved = NODES.objectNode();
             node.properties().forEach(entry -> resolved.set(entry.getKey(),
@@ -83,7 +83,7 @@ final class EnvPlaceholders {
     }
 
     private static String resolveText(String value, String path,
-                                      List<Diagnostic> diagnostics, Function<String, String> lookup) {
+                                      List<Diagnostic> diagnostics, UnaryOperator<String> lookup) {
         if (!value.contains("${")) {
             return value;
         }

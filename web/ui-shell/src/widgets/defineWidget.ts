@@ -1,5 +1,5 @@
-import type { ComponentType } from "react";
-import type { WidgetProps } from "./types";
+import type {ComponentType} from "react";
+import type {WidgetProps} from "./types";
 
 /**
  * Presentation slot — decides the widget's grid span and ordering rank in
@@ -8,12 +8,12 @@ import type { WidgetProps } from "./types";
 export type LayoutSlot = "compact" | "medium" | "wide";
 
 export interface WidgetDefinition<T extends string = string> {
-  /** Discriminant — by convention, the folder name. Registered at runtime. */
-  type: T;
-  /** Grid placement travels with the widget. */
-  slot: LayoutSlot;
-  /** Renderer for descriptors of this type. */
-  component: ComponentType<WidgetProps>;
+    /** Discriminant — by convention, the folder name. Registered at runtime. */
+    type: T;
+    /** Grid placement travels with the widget. */
+    slot: LayoutSlot;
+    /** Renderer for descriptors of this type. */
+    component: ComponentType<WidgetProps>;
 }
 
 /**
@@ -23,7 +23,7 @@ export interface WidgetDefinition<T extends string = string> {
  * the widget's own folder — never in a central registry.
  */
 export function defineWidget<T extends string>(
-  definition: WidgetDefinition<T>,
+    definition: WidgetDefinition<T>,
 ): WidgetDefinition<T> {
-  return definition;
+    return definition;
 }

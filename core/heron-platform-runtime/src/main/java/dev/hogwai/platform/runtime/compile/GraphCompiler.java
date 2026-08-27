@@ -93,7 +93,9 @@ public final class GraphCompiler {
         return new CompilationResult(graph, diagnostics);
     }
 
-    /** Immutable result of compilation, including warnings produced en route. */
+    /**
+     * Immutable result of compilation, including warnings produced en route.
+     */
     public record CompilationResult(CapabilityGraph graph, List<Diagnostic> diagnostics) {
         /**
          * Creates a result with immutable components.

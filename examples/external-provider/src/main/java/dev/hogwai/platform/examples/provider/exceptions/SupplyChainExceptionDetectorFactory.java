@@ -20,7 +20,9 @@ import dev.hogwai.platform.spi.provider.PortDescriptor;
 import dev.hogwai.platform.spi.provider.ProviderDescriptor;
 import dev.hogwai.platform.spi.provider.ProviderFactory;
 
-/** SPI factory for the supply-chain exception detector. */
+/**
+ * SPI factory for the supply-chain exception detector.
+ */
 @HeronService(value = ProviderFactory.class, id = "supply-chain.exception-detector")
 public final class SupplyChainExceptionDetectorFactory implements ProviderFactory {
 
@@ -34,7 +36,9 @@ public final class SupplyChainExceptionDetectorFactory implements ProviderFactor
                     new PortDescriptor(new PortId("records"), SupplyChainSchemas.exceptions(), true)),
             DetectorConfig.configurationSchema());
 
-    /** Creates the detector factory. */
+    /**
+     * Creates the detector factory.
+     */
     public SupplyChainExceptionDetectorFactory() {
         // intentionally empty
     }

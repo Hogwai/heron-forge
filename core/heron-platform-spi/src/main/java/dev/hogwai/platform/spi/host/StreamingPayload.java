@@ -43,7 +43,9 @@ public interface StreamingPayload extends AutoCloseable {
      */
     long deliveredRowCount();
 
-    /** Releases the underlying resources; idempotent. */
+    /**
+     * Releases the underlying resources; idempotent.
+     */
     @Override
     void close();
 }

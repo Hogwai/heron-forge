@@ -28,12 +28,12 @@ final class EntrypointMapper {
      * Maps entrypoints in YAML order.
      *
      * @param entrypointsNode the entrypoints node, or null when omitted
-     * @param path the structural path of the entrypoints list
-     * @param diagnostics the diagnostics collector
+     * @param path            the structural path of the entrypoints list
+     * @param diagnostics     the diagnostics collector
      * @return the mapped entrypoints
      */
     static List<EntrypointConfig> mapEntrypoints(JsonNode entrypointsNode, String path,
-                                                  List<Diagnostic> diagnostics) {
+                                                 List<Diagnostic> diagnostics) {
         if (entrypointsNode == null) {
             return List.of();
         }
@@ -59,8 +59,8 @@ final class EntrypointMapper {
     }
 
     private static void reportDuplicates(EntrypointConfig entrypoint, String path,
-                                          Set<String> seenIds, Set<String> seenPaths,
-                                          List<Diagnostic> diagnostics) {
+                                         Set<String> seenIds, Set<String> seenPaths,
+                                         List<Diagnostic> diagnostics) {
         if (!seenIds.add(entrypoint.id())) {
             diagnostics.add(Diagnostics.schemaError(path + PATH_SEPARATOR + "id",
                     "duplicate entrypoint id", "use a unique id"));
@@ -72,7 +72,9 @@ final class EntrypointMapper {
     }
 }
 
-/** Maps and validates one entrypoint declaration. */
+/**
+ * Maps and validates one entrypoint declaration.
+ */
 final class EntrypointDeclarationMapper {
 
     public static final String METHOD = "method";
@@ -113,7 +115,9 @@ final class EntrypointDeclarationMapper {
     }
 }
 
-/** Validates scalar entrypoint fields and reports their structural paths. */
+/**
+ * Validates scalar entrypoint fields and reports their structural paths.
+ */
 final class EntrypointFieldValidator {
 
     public static final String METHOD = "method";

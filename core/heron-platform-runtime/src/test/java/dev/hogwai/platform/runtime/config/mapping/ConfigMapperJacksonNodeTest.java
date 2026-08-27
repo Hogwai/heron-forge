@@ -18,7 +18,7 @@ class ConfigMapperJacksonNodeTest {
         // A config value that is not one of the supported v1 node types must be
         // explicitly refused rather than silently converted via asText().
         ObjectNode config = JsonNodeFactory.instance.objectNode();
-        config.set("binary", JsonNodeFactory.instance.binaryNode(new byte[] {1, 2, 3}));
+        config.set("binary", JsonNodeFactory.instance.binaryNode(new byte[]{1, 2, 3}));
 
         ObjectNode capability = JsonNodeFactory.instance.objectNode();
         capability.put("id", "c");

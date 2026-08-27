@@ -48,7 +48,7 @@ class ProviderResolverValidationTest {
     void genericWrongTypePreventsProviderValidate() {
         FakeFactory factory = new FakeFactory(sourceDescriptor("orders", "1.0.0", TestProviders.hostConfigSchema()));
         registry.add(factory);
-        var ordersConfig = config("orders", "orders", "1.0.0",  Map.of("host", 42L));
+        var ordersConfig = config("orders", "orders", "1.0.0", Map.of("host", 42L));
 
         assertThatThrownBy(() -> resolver.resolve(ordersConfig))
                 .isInstanceOf(PlatformException.class)

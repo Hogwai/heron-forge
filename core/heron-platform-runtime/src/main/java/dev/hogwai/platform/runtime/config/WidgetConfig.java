@@ -12,13 +12,15 @@ import java.util.Set;
  */
 public record WidgetConfig(String id, String type, String title, String target) {
 
-    /** Allowed widget types. */
+    /**
+     * Allowed widget types.
+     */
     public static final Set<String> ALLOWED_TYPES = Set.of("kpi", "table", "chart");
 
     /**
      * Rejects null and blank components.
      *
-     * @throws NullPointerException   if a component is null
+     * @throws NullPointerException     if a component is null
      * @throws IllegalArgumentException if a component is blank
      */
     public WidgetConfig {

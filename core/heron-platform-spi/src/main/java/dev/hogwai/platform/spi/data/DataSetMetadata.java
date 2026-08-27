@@ -5,7 +5,6 @@ import java.util.Objects;
 /**
  * Immutable metadata describing a {@link MaterializedDataSet}.
  *
- *
  * @param name   the non-blank dataset name
  * @param limits the dataset limits
  */

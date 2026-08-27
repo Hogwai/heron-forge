@@ -24,7 +24,9 @@ import dev.hogwai.platform.spi.provider.PortDescriptor;
 import dev.hogwai.platform.spi.provider.ProviderDescriptor;
 import dev.hogwai.platform.spi.provider.ProviderFactory;
 
-/** Deterministic source of the example order records. */
+/**
+ * Deterministic source of the example order records.
+ */
 @HeronService(value = ProviderFactory.class, id = "demo.orders")
 public final class DemoOrdersProviderFactory implements ProviderFactory {
 
@@ -38,7 +40,9 @@ public final class DemoOrdersProviderFactory implements ProviderFactory {
             SupplyChainDatabaseConfig.databaseConfigSchema()
     );
 
-    /** Creates the orders factory. */
+    /**
+     * Creates the orders factory.
+     */
     public DemoOrdersProviderFactory() {
         // Default constructor
     }

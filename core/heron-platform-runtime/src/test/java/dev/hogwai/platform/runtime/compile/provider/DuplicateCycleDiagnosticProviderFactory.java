@@ -10,7 +10,9 @@ import dev.hogwai.platform.spi.provider.ProviderDescriptor;
 import java.util.List;
 import java.util.Map;
 
-/** Provider fixture that deliberately duplicates the graph cycle diagnostic. */
+/**
+ * Provider fixture that deliberately duplicates the graph cycle diagnostic.
+ */
 public final class DuplicateCycleDiagnosticProviderFactory extends AbstractFixtureFactory {
 
     @Override

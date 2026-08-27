@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.math.BigDecimal;
 import java.util.Map;
+
 import org.junit.jupiter.api.Test;
 
 class DetectorConfigTest {

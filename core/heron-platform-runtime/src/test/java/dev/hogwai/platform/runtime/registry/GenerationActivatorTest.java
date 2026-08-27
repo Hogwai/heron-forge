@@ -22,7 +22,9 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/** Tests for {@link GenerationActivator}: integrity gate, rebuild and execution. */
+/**
+ * Tests for {@link GenerationActivator}: integrity gate, rebuild and execution.
+ */
 class GenerationActivatorTest {
 
     private static final Instant DEADLINE = Instant.parse("2099-01-01T00:00:00Z");

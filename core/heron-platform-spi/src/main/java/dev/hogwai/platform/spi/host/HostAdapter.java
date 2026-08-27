@@ -1,12 +1,14 @@
 package dev.hogwai.platform.spi.host;
 
-/** Synchronous lifecycle contract for a host transport adapter. */
+/**
+ * Synchronous lifecycle contract for a host transport adapter.
+ */
 public interface HostAdapter extends AutoCloseable {
 
     /**
      * Starts serving the application with the supplied configuration.
      *
-     * @param application application to serve
+     * @param application   application to serve
      * @param configuration host configuration
      * @throws HostException if startup fails
      */
@@ -26,7 +28,9 @@ public interface HostAdapter extends AutoCloseable {
      */
     void stop() throws HostException;
 
-    /** Closes the adapter. */
+    /**
+     * Closes the adapter.
+     */
     @Override
     void close();
 }

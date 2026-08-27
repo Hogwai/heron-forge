@@ -3,6 +3,7 @@ package dev.hogwai.platform.runtime.config.mapping;
 import com.fasterxml.jackson.databind.JsonNode;
 import dev.hogwai.platform.runtime.config.Diagnostics;
 import dev.hogwai.platform.spi.Diagnostic;
+
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -73,7 +74,7 @@ final class FieldChecks {
      * @param diagnostics the diagnostics collector
      */
     static void rejectUnknownFields(JsonNode object, Set<String> allowed, String path,
-                                           List<Diagnostic> diagnostics) {
+                                    List<Diagnostic> diagnostics) {
         object.fieldNames().forEachRemaining(field -> {
             if (!allowed.contains(field)) {
                 diagnostics.add(Diagnostics.schemaError(Diagnostics.genericChildPath(path),

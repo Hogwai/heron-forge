@@ -24,7 +24,9 @@ import javax.tools.ToolProvider;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** Verifies descriptor generation and compile-time validation rules. */
+/**
+ * Verifies descriptor generation and compile-time validation rules.
+ */
 class HeronServiceProcessorTest {
 
     private static final String PROVIDER_FACTORY = "dev.hogwai.platform.spi.provider.ProviderFactory";
@@ -36,20 +38,20 @@ class HeronServiceProcessorTest {
     void generatesDescriptorForAnnotatedProviderFactory() throws IOException {
         Compilation compilation = compile("demo.orders.DemoOrdersProviderFactory", """
                 package demo.orders;
-
+                
                 import dev.hogwai.platform.spi.annotation.HeronService;
                 import dev.hogwai.platform.spi.provider.ProviderFactory;
-
+                
                 @HeronService(value = ProviderFactory.class, id = "demo.orders")
                 public class DemoOrdersProviderFactory implements ProviderFactory {
                     public dev.hogwai.platform.spi.provider.ProviderDescriptor descriptor() {
                         return null;
                     }
-
+                
                     public java.util.List<dev.hogwai.platform.spi.Diagnostic> validate(java.util.Map<String, Object> rawConfig) {
                         return java.util.List.of();
                     }
-
+                
                     public dev.hogwai.platform.spi.provider.CapabilityInstance create(
                             java.util.Map<String, Object> rawConfig, dev.hogwai.platform.spi.provider.BuildContext context) {
                         return null;
@@ -65,10 +67,10 @@ class HeronServiceProcessorTest {
     void rejectsClassNotImplementingDeclaredContract() throws IOException {
         Compilation compilation = compile("demo.bad.NotAProvider", """
                 package demo.bad;
-
+                
                 import dev.hogwai.platform.spi.annotation.HeronService;
                 import dev.hogwai.platform.spi.provider.ProviderFactory;
-
+                
                 @HeronService(value = ProviderFactory.class, id = "demo.bad")
                 public class NotAProvider {
                 }
@@ -83,9 +85,9 @@ class HeronServiceProcessorTest {
     void rejectsUnsupportedContract() throws IOException {
         Compilation compilation = compile("demo.bad.UnsupportedContract", """
                 package demo.bad;
-
+                
                 import dev.hogwai.platform.spi.annotation.HeronService;
-
+                
                 @HeronService(value = Runnable.class, id = "demo.bad")
                 public class UnsupportedContract implements Runnable {
                     public void run() {
@@ -101,10 +103,10 @@ class HeronServiceProcessorTest {
     void rejectsAbstractClass() throws IOException {
         Compilation compilation = compile("demo.bad.AbstractProvider", """
                 package demo.bad;
-
+                
                 import dev.hogwai.platform.spi.annotation.HeronService;
                 import dev.hogwai.platform.spi.provider.ProviderFactory;
-
+                
                 @HeronService(value = ProviderFactory.class, id = "demo.bad")
                 public abstract class AbstractProvider implements ProviderFactory {
                 }
@@ -118,23 +120,23 @@ class HeronServiceProcessorTest {
     void rejectsPrivateConstructor() throws IOException {
         Compilation compilation = compile("demo.bad.HiddenConstructor", """
                 package demo.bad;
-
+                
                 import dev.hogwai.platform.spi.annotation.HeronService;
                 import dev.hogwai.platform.spi.provider.ProviderFactory;
-
+                
                 @HeronService(value = ProviderFactory.class, id = "demo.bad")
                 public class HiddenConstructor implements ProviderFactory {
                     private HiddenConstructor() {
                     }
-
+                
                     public dev.hogwai.platform.spi.provider.ProviderDescriptor descriptor() {
                         return null;
                     }
-
+                
                     public java.util.List<dev.hogwai.platform.spi.Diagnostic> validate(java.util.Map<String, Object> rawConfig) {
                         return java.util.List.of();
                     }
-
+                
                     public dev.hogwai.platform.spi.provider.CapabilityInstance create(
                             java.util.Map<String, Object> rawConfig, dev.hogwai.platform.spi.provider.BuildContext context) {
                         return null;
@@ -150,10 +152,10 @@ class HeronServiceProcessorTest {
     void rejectsNonPublicClass() throws IOException {
         Compilation compilation = compile("demo.bad.PackagePrivate", """
                 package demo.bad;
-
+                
                 import dev.hogwai.platform.spi.annotation.HeronService;
                 import dev.hogwai.platform.spi.provider.ProviderFactory;
-
+                
                 @HeronService(value = ProviderFactory.class, id = "demo.bad")
                 class PackagePrivate implements ProviderFactory {
                 }
@@ -167,20 +169,20 @@ class HeronServiceProcessorTest {
     void rejectsNonCanonicalVersion() throws IOException {
         Compilation compilation = compile("demo.bad.BadVersion", """
                 package demo.bad;
-
+                
                 import dev.hogwai.platform.spi.annotation.HeronService;
                 import dev.hogwai.platform.spi.provider.ProviderFactory;
-
+                
                 @HeronService(value = ProviderFactory.class, id = "demo.bad", version = "1.0")
                 public class BadVersion implements ProviderFactory {
                     public dev.hogwai.platform.spi.provider.ProviderDescriptor descriptor() {
                         return null;
                     }
-
+                
                     public java.util.List<dev.hogwai.platform.spi.Diagnostic> validate(java.util.Map<String, Object> rawConfig) {
                         return java.util.List.of();
                     }
-
+                
                     public dev.hogwai.platform.spi.provider.CapabilityInstance create(
                             java.util.Map<String, Object> rawConfig, dev.hogwai.platform.spi.provider.BuildContext context) {
                         return null;
@@ -196,20 +198,20 @@ class HeronServiceProcessorTest {
     void rejectsDuplicateIdForSameContract() throws IOException {
         String factoryTemplate = """
                 package demo.dup;
-
+                
                 import dev.hogwai.platform.spi.annotation.HeronService;
                 import dev.hogwai.platform.spi.provider.ProviderFactory;
-
+                
                 @HeronService(value = ProviderFactory.class, id = "demo.same")
                 public class %s implements ProviderFactory {
                     public dev.hogwai.platform.spi.provider.ProviderDescriptor descriptor() {
                         return null;
                     }
-
+                
                     public java.util.List<dev.hogwai.platform.spi.Diagnostic> validate(java.util.Map<String, Object> rawConfig) {
                         return java.util.List.of();
                     }
-
+                
                     public dev.hogwai.platform.spi.provider.CapabilityInstance create(
                             java.util.Map<String, Object> rawConfig, dev.hogwai.platform.spi.provider.BuildContext context) {
                         return null;
@@ -227,9 +229,9 @@ class HeronServiceProcessorTest {
     private Compilation compile(String firstQualifiedName, String firstSource, String... moreQualifiedNameAndSource)
             throws IOException {
         List<String[]> units = new ArrayList<>();
-        units.add(new String[] {firstQualifiedName, firstSource});
+        units.add(new String[]{firstQualifiedName, firstSource});
         for (int index = 0; index < moreQualifiedNameAndSource.length; index += 2) {
-            units.add(new String[] {moreQualifiedNameAndSource[index], moreQualifiedNameAndSource[index + 1]});
+            units.add(new String[]{moreQualifiedNameAndSource[index], moreQualifiedNameAndSource[index + 1]});
         }
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();

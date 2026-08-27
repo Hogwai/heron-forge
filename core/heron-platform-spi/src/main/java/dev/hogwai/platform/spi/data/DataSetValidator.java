@@ -23,10 +23,10 @@ final class DataSetValidator {
     /**
      * Validates the arguments of a {@link MaterializedDataSet} construction.
      *
-     * @param schema       the schema of the records
-     * @param schemaRecords      the ordered list of records
-     * @param metadata     the dataset metadata
-     * @param byteEstimate the estimated size in bytes
+     * @param schema        the schema of the records
+     * @param schemaRecords the ordered list of records
+     * @param metadata      the dataset metadata
+     * @param byteEstimate  the estimated size in bytes
      */
     static void validate(Schema schema, List<SchemaRecord> schemaRecords, DataSetMetadata metadata, long byteEstimate) {
         Objects.requireNonNull(schema, "schema must not be null");

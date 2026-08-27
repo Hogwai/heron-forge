@@ -14,7 +14,7 @@ public record EntrypointConfig(String id, String method, String path, String tar
     /**
      * Rejects null and blank components.
      *
-     * @throws NullPointerException if a component is null
+     * @throws NullPointerException     if a component is null
      * @throws IllegalArgumentException if a component is blank
      */
     public EntrypointConfig {

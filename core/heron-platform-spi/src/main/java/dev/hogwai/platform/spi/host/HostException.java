@@ -3,7 +3,9 @@ package dev.hogwai.platform.spi.host;
 import java.io.Serial;
 import java.util.Objects;
 
-/** Checked host lifecycle error with a safe public message. */
+/**
+ * Checked host lifecycle error with a safe public message.
+ */
 public final class HostException extends Exception {
 
     @Serial
@@ -30,7 +32,9 @@ public final class HostException extends Exception {
         localCause = cause;
     }
 
-    /** Returns the retained local cause, which is not serialized by this module. */
+    /**
+     * Returns the retained local cause, which is not serialized by this module.
+     */
     @Override
     public synchronized Throwable getCause() {
         return localCause;

@@ -9,16 +9,22 @@ import picocli.CommandLine.Parameters;
 import java.nio.file.Path;
 import java.util.concurrent.Callable;
 
-/** Compatibility command for the former application-only starter. */
+/**
+ * Compatibility command for the former application-only starter.
+ */
 @Command(name = "init", description = "Deprecated alias for create app")
 public final class InitCommand implements Callable<Integer> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InitCommand.class);
 
-    /** Platform version exposed for existing tests and generated-build assertions. */
+    /**
+     * Platform version exposed for existing tests and generated-build assertions.
+     */
     static final String PLATFORM_VERSION = PlatformVersions.value("platform.version");
 
-    /** SLF4J version exposed for existing tests and generated-build assertions. */
+    /**
+     * SLF4J version exposed for existing tests and generated-build assertions.
+     */
     static final String SLF4J_VERSION = PlatformVersions.value("slf4j.version");
 
     private final Path baseDirectory;
@@ -29,12 +35,16 @@ public final class InitCommand implements Callable<Integer> {
     @Option(names = "--package", description = "base Java package for the sample provider")
     String packageName;
 
-    /** Creates a compatibility command rooted at the current directory. */
+    /**
+     * Creates a compatibility command rooted at the current directory.
+     */
     public InitCommand() {
         this(Path.of(""));
     }
 
-    /** Creates a compatibility command rooted at the given directory for tests. */
+    /**
+     * Creates a compatibility command rooted at the given directory for tests.
+     */
     InitCommand(Path baseDirectory) {
         this.baseDirectory = baseDirectory;
     }

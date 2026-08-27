@@ -7,7 +7,9 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.stream.Stream;
 
-/** Writes a complete generated project without overwriting existing content. */
+/**
+ * Writes a complete generated project without overwriting existing content.
+ */
 final class ProjectWriter {
 
     private ProjectWriter() {

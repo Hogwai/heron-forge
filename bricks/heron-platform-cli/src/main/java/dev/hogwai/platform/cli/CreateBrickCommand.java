@@ -13,7 +13,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-/** Picocli command that scaffolds a Heron data or host brick. */
+/**
+ * Picocli command that scaffolds a Heron data or host brick.
+ */
 @Command(name = "brick", description = "Scaffold a new Heron data or host brick")
 public final class CreateBrickCommand implements Callable<Integer> {
 
@@ -30,12 +32,16 @@ public final class CreateBrickCommand implements Callable<Integer> {
     @Option(names = "--type", description = "brick type: data or host")
     String type;
 
-    /** Creates a brick command rooted at the current directory. */
+    /**
+     * Creates a brick command rooted at the current directory.
+     */
     public CreateBrickCommand() {
         this(Path.of(""));
     }
 
-    /** Creates a brick command rooted at the given directory for tests. */
+    /**
+     * Creates a brick command rooted at the given directory for tests.
+     */
     CreateBrickCommand(Path baseDirectory) {
         this.baseDirectory = baseDirectory;
     }

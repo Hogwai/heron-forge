@@ -55,10 +55,10 @@ class ApplicationLoaderTest {
         SnapshotBuilderTestProviderFactory provider =
                 new SnapshotBuilderTestProviderFactory(
                         SnapshotBuilderTestSupport.source("source", "1.0.0"), context -> {
-                            captured.set(context);
-                            return new SnapshotBuilderTestInstance("source", new java.util.ArrayList<>(),
-                                    false);
-                        });
+                    captured.set(context);
+                    return new SnapshotBuilderTestInstance("source", new java.util.ArrayList<>(),
+                            false);
+                });
         ProviderRegistry registry = new SnapshotBuilderTestRegistry(
                 new ProviderRegistry.Registration(provider, provider.descriptor()));
         DataAccessFactory dataAccessFactory = SnapshotBuilderTestSupport.dataAccessFactory();
@@ -232,11 +232,11 @@ class ApplicationLoaderTest {
         SnapshotBuilderTestProviderFactory factory =
                 new SnapshotBuilderTestProviderFactory(
                         SnapshotBuilderTestSupport.source(id, "1.0.0"), context -> {
-                            created.incrementAndGet();
-                            CapabilityInstance instance = creator.apply(context);
-                            return new CloseTrackingInstance(instance, closed, fixture.closedCount,
-                                    fixture.lastContext);
-                        }, diagnostics);
+                    created.incrementAndGet();
+                    CapabilityInstance instance = creator.apply(context);
+                    return new CloseTrackingInstance(instance, closed, fixture.closedCount,
+                            fixture.lastContext);
+                }, diagnostics);
         fixture.registry = new SnapshotBuilderTestRegistry(
                 new ProviderRegistry.Registration(factory, factory.descriptor()));
         return fixture;
@@ -265,36 +265,36 @@ class ApplicationLoaderTest {
                                          AtomicReference<ExecutionContext> lastContext) implements CapabilityInstance {
 
         @Override
-            public DataSet execute(
-                    CapabilityInputs inputs,
-                    ExecutionContext context) {
-                lastContext.set(context);
-                return delegate.execute(inputs, context);
-            }
-
-            @Override
-            public void close() {
-                closed.set(true);
-                closeCount.incrementAndGet();
-                delegate.close();
-            }
+        public DataSet execute(
+                CapabilityInputs inputs,
+                ExecutionContext context) {
+            lastContext.set(context);
+            return delegate.execute(inputs, context);
         }
+
+        @Override
+        public void close() {
+            closed.set(true);
+            closeCount.incrementAndGet();
+            delegate.close();
+        }
+    }
 
     private record RecordingInstance(MaterializedDataSet dataset,
                                      AtomicInteger executions,
                                      AtomicReference<ExecutionContext> lastContext) implements CapabilityInstance {
 
         @Override
-            public MaterializedDataSet execute(
-                    CapabilityInputs inputs,
-                    ExecutionContext context) {
-                executions.incrementAndGet();
-                if (lastContext != null) {
-                    lastContext.set(context);
-                }
-                return dataset;
+        public MaterializedDataSet execute(
+                CapabilityInputs inputs,
+                ExecutionContext context) {
+            executions.incrementAndGet();
+            if (lastContext != null) {
+                lastContext.set(context);
             }
+            return dataset;
         }
+    }
 
     private static final class MaterializedDataSetFactory {
         private static dev.hogwai.platform.spi.data.MaterializedDataSet dataset() {

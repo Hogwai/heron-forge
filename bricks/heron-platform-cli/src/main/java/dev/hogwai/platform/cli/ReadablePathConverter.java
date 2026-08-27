@@ -8,10 +8,14 @@ import java.util.Objects;
 import picocli.CommandLine.ITypeConverter;
 import picocli.CommandLine.TypeConversionException;
 
-/** Picocli converter accepting only readable regular files. */
+/**
+ * Picocli converter accepting only readable regular files.
+ */
 final class ReadablePathConverter implements ITypeConverter<Path> {
 
-    /** Creates the converter. */
+    /**
+     * Creates the converter.
+     */
     ReadablePathConverter() {
         // no instances needed; picocli instantiates it reflectively
     }

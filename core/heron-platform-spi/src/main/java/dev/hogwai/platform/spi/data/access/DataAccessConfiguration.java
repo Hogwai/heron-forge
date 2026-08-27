@@ -2,10 +2,14 @@ package dev.hogwai.platform.spi.data.access;
 
 import java.util.Objects;
 
-/** Connection settings used to open a data access. */
+/**
+ * Connection settings used to open a data access.
+ */
 public record DataAccessConfiguration(String url, String username, String password) {
 
-    /** Validates the connection settings. */
+    /**
+     * Validates the connection settings.
+     */
     public DataAccessConfiguration {
         Objects.requireNonNull(url, "url must not be null");
         if (url.isBlank()) {

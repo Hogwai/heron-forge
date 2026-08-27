@@ -4,10 +4,14 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.function.BooleanSupplier;
 
-/** Deadline and cancellation signal for one query. */
+/**
+ * Deadline and cancellation signal for one query.
+ */
 public record QueryContext(Instant deadline, BooleanSupplier cancellationSignal) {
 
-    /** Validates the query context values. */
+    /**
+     * Validates the query context values.
+     */
     public QueryContext {
         Objects.requireNonNull(deadline, "deadline must not be null");
         Objects.requireNonNull(cancellationSignal, "cancellationSignal must not be null");

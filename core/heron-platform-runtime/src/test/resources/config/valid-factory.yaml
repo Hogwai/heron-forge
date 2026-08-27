@@ -9,7 +9,7 @@ capabilities:
       host: localhost
       port: 8080
       retries: 3
-      tags: [a, b]
+      tags: [ a, b ]
   - id: enrich
     provider:
       id: acme

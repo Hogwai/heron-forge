@@ -3,10 +3,14 @@ package dev.hogwai.platform.cli;
 import picocli.CommandLine.ITypeConverter;
 import picocli.CommandLine.TypeConversionException;
 
-/** Picocli converter validating HTTP bind ports (0..65535). */
+/**
+ * Picocli converter validating HTTP bind ports (0..65535).
+ */
 final class PortConverter implements ITypeConverter<Integer> {
 
-    /** Creates the converter; picocli instantiates it reflectively. */
+    /**
+     * Creates the converter; picocli instantiates it reflectively.
+     */
     PortConverter() {
         // no instances needed
     }

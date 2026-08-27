@@ -1,8 +1,8 @@
-import { defineWidget } from "../defineWidget";
-import { RatioChart } from "./RatioChart";
+import {defineWidget} from "../defineWidget";
+import {RatioChart} from "./RatioChart";
 
 export default defineWidget({
-  type: "chart",
-  slot: "medium",
-  component: RatioChart,
+    type: "chart",
+    slot: "medium",
+    component: RatioChart,
 });

@@ -3,11 +3,14 @@ package dev.hogwai.platform.runtime.load;
 import dev.hogwai.platform.runtime.config.ApplicationConfig;
 import dev.hogwai.platform.runtime.config.ParsedApplication;
 import dev.hogwai.platform.runtime.config.SafeYamlParser;
+
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-/** YAML fixtures shared by snapshot builder tests. */
+/**
+ * YAML fixtures shared by snapshot builder tests.
+ */
 final class SnapshotBuilderTestYaml {
 
     private SnapshotBuilderTestYaml() {

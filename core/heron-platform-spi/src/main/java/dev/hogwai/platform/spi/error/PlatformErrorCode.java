@@ -11,30 +11,56 @@ import dev.hogwai.platform.spi.Diagnostic;
  */
 public enum PlatformErrorCode {
 
-    /** The configuration could not be parsed. */
+    /**
+     * The configuration could not be parsed.
+     */
     CONFIG_PARSE_ERROR,
-    /** The configuration failed schema validation. */
+    /**
+     * The configuration failed schema validation.
+     */
     CONFIG_SCHEMA_ERROR,
-    /** A referenced provider was not found. */
+    /**
+     * A referenced provider was not found.
+     */
     PROVIDER_NOT_FOUND,
-    /** A provider version does not match the required version. */
+    /**
+     * A provider version does not match the required version.
+     */
     PROVIDER_VERSION_MISMATCH,
-    /** A provider reported a configuration error. */
+    /**
+     * A provider reported a configuration error.
+     */
     PROVIDER_CONFIG_ERROR,
-    /** A graph references an unknown node or edge. */
+    /**
+     * A graph references an unknown node or edge.
+     */
     GRAPH_REFERENCE_ERROR,
-    /** The graph contains a cycle. */
+    /**
+     * The graph contains a cycle.
+     */
     GRAPH_CYCLE_ERROR,
-    /** A schema is incompatible with the expected contract. */
+    /**
+     * A schema is incompatible with the expected contract.
+     */
     SCHEMA_INCOMPATIBLE,
-    /** A dataset limit was exceeded. */
+    /**
+     * A dataset limit was exceeded.
+     */
     DATASET_LIMIT_EXCEEDED,
-    /** A capability failed during execution. */
+    /**
+     * A capability failed during execution.
+     */
     CAPABILITY_EXECUTION_ERROR,
-    /** A deadline was exceeded. */
+    /**
+     * A deadline was exceeded.
+     */
     DEADLINE_EXCEEDED,
-    /** The operation was canceled. */
+    /**
+     * The operation was canceled.
+     */
     CANCELLATION_REQUESTED,
-    /** No data access implementation was found on the classpath. */
+    /**
+     * No data access implementation was found on the classpath.
+     */
     DATA_ACCESS_UNAVAILABLE
 }

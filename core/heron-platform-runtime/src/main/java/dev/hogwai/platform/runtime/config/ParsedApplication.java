@@ -1,6 +1,7 @@
 package dev.hogwai.platform.runtime.config;
 
 import dev.hogwai.platform.spi.Diagnostic;
+
 import java.util.List;
 
 /**

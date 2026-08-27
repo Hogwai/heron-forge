@@ -17,8 +17,8 @@ public final class SnapshotCandidate implements AutoCloseable {
     /**
      * Creates a candidate.
      *
-     * @param snapshot   the immutable snapshot
-     * @param tracker    the resource tracker owning the instances
+     * @param snapshot the immutable snapshot
+     * @param tracker  the resource tracker owning the instances
      * @throws NullPointerException if any argument is {@code null}
      */
     public SnapshotCandidate(RuntimeSnapshot snapshot, SnapshotResourceTracker tracker) {

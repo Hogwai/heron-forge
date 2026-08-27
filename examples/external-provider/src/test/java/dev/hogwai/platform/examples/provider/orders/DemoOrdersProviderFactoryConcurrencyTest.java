@@ -149,8 +149,8 @@ class DemoOrdersProviderFactoryConcurrencyTest {
 
         @Override
         public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
-                Map<String, ?> parameters, Schema schema, Map<String, String> columnByField,
-                DataSetLimits limits) {
+                                                  Map<String, ?> parameters, Schema schema, Map<String, String> columnByField,
+                                                  DataSetLimits limits) {
             QueryRequest<SchemaRecord> request = new QueryRequest<>(operation, sql, parameters,
                     row -> FakeDataAccessSupport.toRecord(row, schema, columnByField));
             List<SchemaRecord> records = query(request, context);

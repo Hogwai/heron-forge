@@ -43,7 +43,7 @@ public final class SafeYamlParser {
     /**
      * Parses a configuration document with explicit limits.
      *
-     * @param input the input stream
+     * @param input  the input stream
      * @param limits the limits to apply
      * @return the parsed application with any diagnostics
      */

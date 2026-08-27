@@ -15,7 +15,9 @@ import dev.hogwai.platform.spi.registry.GenerationRecord;
 import dev.hogwai.platform.spi.registry.GenerationStatus;
 import picocli.CommandLine;
 
-/** Shared fixtures for the registry CLI tests. */
+/**
+ * Shared fixtures for the registry CLI tests.
+ */
 final class RegistryCliTestSupport {
 
     static final String APPLICATION = "cli-demo";
@@ -51,7 +53,7 @@ final class RegistryCliTestSupport {
     }
 
     static void save(FileGenerationStore store, String generationId, GenerationStatus status,
-            Instant createdAt, String rawYaml) {
+                     Instant createdAt, String rawYaml) {
         String digest = sha256(rawYaml);
         store.save(new GenerationRecord(APPLICATION, generationId, digest, rawYaml, status,
                 createdAt, "tester"));
@@ -76,7 +78,9 @@ final class RegistryCliTestSupport {
         return HexFormat.of().formatHex(digest.digest(content.getBytes(StandardCharsets.UTF_8)));
     }
 
-    /** Captured outcome of a picocli execution. */
+    /**
+     * Captured outcome of a picocli execution.
+     */
     record Execution(int status, String out, String err) {
     }
 }

@@ -24,7 +24,9 @@ import dev.hogwai.platform.spi.ProviderVersion;
 import dev.hogwai.platform.spi.SpiMajor;
 import dev.hogwai.platform.spi.execution.ExecutionContext;
 
-/** Contract tests for the streaming factory/instance pair. */
+/**
+ * Contract tests for the streaming factory/instance pair.
+ */
 class StreamingProviderContractTest {
 
     private static final Schema SCHEMA = new Schema("s", 1,

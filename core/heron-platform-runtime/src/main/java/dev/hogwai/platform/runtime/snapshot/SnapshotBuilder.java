@@ -10,14 +10,18 @@ import dev.hogwai.platform.spi.data.access.DataAccessFactory;
 import dev.hogwai.platform.spi.error.PlatformErrorCode;
 import dev.hogwai.platform.spi.error.PlatformException;
 import dev.hogwai.platform.spi.error.Severity;
+import dev.hogwai.platform.runtime.invocation.InMemoryWorkerRegistry;
+import dev.hogwai.platform.spi.invocation.WorkerRegistry;
 import dev.hogwai.platform.spi.provider.BuildContext;
 import dev.hogwai.platform.spi.provider.CapabilityInstance;
 
 import java.time.Clock;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.ServiceLoader;
 import java.util.function.Supplier;
 
 /**
@@ -54,6 +58,7 @@ public final class SnapshotBuilder {
     private final Clock clock;
     private final DataAccessFactory dataAccessFactory;
     private final Supplier<String> generationIdSupplier;
+    private final WorkerRegistry workerRegistry;
 
     /**
      * Creates a snapshot builder with the given collaborators.
@@ -66,13 +71,32 @@ public final class SnapshotBuilder {
      * @throws NullPointerException if any argument is {@code null}
      */
     public SnapshotBuilder(ProviderResolver resolver, GraphCompiler compiler,
-                    Clock clock, DataAccessFactory dataAccessFactory,
-                    Supplier<String> generationIdSupplier) {
+                           Clock clock, DataAccessFactory dataAccessFactory,
+                           Supplier<String> generationIdSupplier) {
+        this(resolver, compiler, clock, dataAccessFactory, generationIdSupplier,
+                new InMemoryWorkerRegistry());
+    }
+
+    /**
+     * Creates a snapshot builder with an explicit worker registry.
+     *
+     * @param resolver             the provider resolver
+     * @param compiler             the graph compiler
+     * @param clock                the clock exposed to providers
+     * @param dataAccessFactory    the data access factory exposed to providers
+     * @param generationIdSupplier supplies the non-blank generation id
+     * @param workerRegistry       the worker registry
+     * @throws NullPointerException if any argument is {@code null}
+     */
+    public SnapshotBuilder(ProviderResolver resolver, GraphCompiler compiler,
+                           Clock clock, DataAccessFactory dataAccessFactory,
+                           Supplier<String> generationIdSupplier, WorkerRegistry workerRegistry) {
         this.resolver = Objects.requireNonNull(resolver, "resolver must not be null");
         this.compiler = Objects.requireNonNull(compiler, "compiler must not be null");
         this.clock = Objects.requireNonNull(clock, "clock must not be null");
         this.dataAccessFactory = Objects.requireNonNull(dataAccessFactory, "dataAccessFactory must not be null");
         this.generationIdSupplier = Objects.requireNonNull(generationIdSupplier, "generationIdSupplier must not be null");
+        this.workerRegistry = Objects.requireNonNull(workerRegistry, "workerRegistry must not be null");
     }
 
     /**
@@ -81,8 +105,8 @@ public final class SnapshotBuilder {
      * @param application the validated application configuration
      * @return the immutable lifecycle candidate
      * @throws NullPointerException if {@code application} is {@code null}
-     * @throws PlatformException if graph compilation, provider resolution or
-     *                           instance creation fails
+     * @throws PlatformException    if graph compilation, provider resolution or
+     *                              instance creation fails
      */
     public SnapshotCandidate build(ApplicationConfig application) {
         Objects.requireNonNull(application, "application must not be null");
@@ -92,7 +116,8 @@ public final class SnapshotBuilder {
         SnapshotResourceTracker tracker = new SnapshotResourceTracker();
         Map<String, CapabilityInstance> instances;
         try {
-            instances = InstanceBuilder.createInstances(graph, tracker, clock, dataAccessFactory);
+            populateWorkers(application);
+            instances = InstanceBuilder.createInstances(graph, tracker, clock, dataAccessFactory, workerRegistry);
         } catch (RuntimeException _) {
             throw FailureHandler.wrapFailure(tracker);
         }
@@ -109,6 +134,29 @@ public final class SnapshotBuilder {
         }
     }
 
+    private void populateWorkers(ApplicationConfig application) {
+        if (application.workers().isEmpty()) {
+            return;
+        }
+        Map<String, dev.hogwai.platform.spi.invocation.WorkerFactory> factories = new HashMap<>();
+        for (dev.hogwai.platform.spi.invocation.WorkerFactory factory
+                : ServiceLoader.load(dev.hogwai.platform.spi.invocation.WorkerFactory.class)) {
+            factories.put(factory.transport(), factory);
+        }
+        for (dev.hogwai.platform.runtime.config.WorkerConfig worker : application.workers()) {
+            dev.hogwai.platform.spi.invocation.WorkerFactory factory = factories.get(worker.transport());
+            if (factory == null) {
+                throw new PlatformException(PlatformErrorCode.PROVIDER_CONFIG_ERROR, List.of(
+                        new Diagnostic(PlatformErrorCode.PROVIDER_CONFIG_ERROR, Severity.ERROR, null,
+                                "unknown worker transport '" + worker.transport() + "'",
+                                "use one of " + String.join(", ", factories.keySet()))));
+            }
+            dev.hogwai.platform.spi.invocation.AsyncWorker asyncWorker =
+                    factory.create(worker.id(), worker.config());
+            workerRegistry.register(asyncWorker);
+        }
+    }
+
     /**
      * Private nested helper that creates one instance per graph node.
      *
@@ -122,10 +170,11 @@ public final class SnapshotBuilder {
         }
 
         static Map<String, CapabilityInstance> createInstances(CapabilityGraph graph, SnapshotResourceTracker tracker,
-                                                               Clock clock, DataAccessFactory dataAccessFactory) {
+                                                               Clock clock, DataAccessFactory dataAccessFactory,
+                                                               WorkerRegistry workerRegistry) {
             Map<String, CapabilityInstance> instances = new LinkedHashMap<>();
             for (CapabilityNode node : graph.nodes()) {
-                BuildContext context = new BuildContext(clock, tracker, dataAccessFactory);
+                BuildContext context = new BuildContext(clock, tracker, dataAccessFactory, workerRegistry);
                 CapabilityInstance instance = node.factory().create(node.config(), context);
                 if (instance == null) {
                     throw new PlatformException(PlatformErrorCode.PROVIDER_CONFIG_ERROR, List.of(

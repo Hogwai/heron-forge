@@ -1,6 +1,7 @@
 package dev.hogwai.platform.data.jdbi;
 
 import dev.hogwai.platform.spi.data.access.DataRow;
+
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -8,7 +9,9 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 
-/** Result-set-backed implementation of the row contract. */
+/**
+ * Result-set-backed implementation of the row contract.
+ */
 @SuppressWarnings("PMD.CyclomaticComplexity")
 final class JdbiDataRow implements DataRow {
 
@@ -23,7 +26,9 @@ final class JdbiDataRow implements DataRow {
         this.resultSet = Objects.requireNonNull(resultSet, "resultSet must not be null");
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String string(String column) {
         Object value = value(column);
@@ -33,7 +38,9 @@ final class JdbiDataRow implements DataRow {
         throw incompatible(column, String.class);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public long longValue(String column) {
         Object value = value(column);
@@ -47,7 +54,9 @@ final class JdbiDataRow implements DataRow {
         throw incompatible(column, Long.class);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Instant instant(String column) {
         validateColumn(column);

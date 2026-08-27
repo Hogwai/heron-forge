@@ -147,7 +147,7 @@ class HelidonHostAdapterTest {
     }
 
     private static HttpResponse<String> request(HttpClient client, int port, String path,
-            Map<String, String> headers) throws IOException, InterruptedException {
+                                                Map<String, String> headers) throws IOException, InterruptedException {
         HttpRequest.Builder builder = HttpRequest.newBuilder(uri(port, path)).GET();
         headers.forEach(builder::header);
         return client.send(builder.build(), HttpResponse.BodyHandlers.ofString());
@@ -285,7 +285,7 @@ class HelidonHostAdapterTest {
             Thread.interrupted();
             return cancelled
                     ? ExecutionOutcome.failure(
-                            new InvocationFailure(FailureCode.CANCELLATION_REQUESTED, "interrupted"))
+                    new InvocationFailure(FailureCode.CANCELLATION_REQUESTED, "interrupted"))
                     : ExecutionOutcome.failure(new InvocationFailure(FailureCode.INTERNAL, "signal failed"));
         }
 

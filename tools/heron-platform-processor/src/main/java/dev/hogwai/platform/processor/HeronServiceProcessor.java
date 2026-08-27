@@ -35,7 +35,10 @@ import javax.tools.StandardLocation;
 
 import dev.hogwai.platform.spi.annotation.HeronService;
 import dev.hogwai.platform.spi.data.access.DataAccessFactory;
+import dev.hogwai.platform.spi.event.EventBus;
 import dev.hogwai.platform.spi.host.HostAdapter;
+import dev.hogwai.platform.spi.invocation.AsyncWorker;
+import dev.hogwai.platform.spi.invocation.WorkerFactory;
 import dev.hogwai.platform.spi.provider.ProviderFactory;
 import dev.hogwai.platform.spi.registry.GenerationStore;
 
@@ -44,8 +47,8 @@ import dev.hogwai.platform.spi.registry.GenerationStore;
  *
  * <p>For every annotated class the processor verifies that it is a public,
  * non-abstract class with a public no-argument constructor implementing the service contract declared in the annotation,
- * and that one of the supported contracts ({@link ProviderFactory}, {@link DataAccessFactory}, {@link HostAdapter}
- * or {@link GenerationStore}) is named.
+ * and that one of the supported contracts ({@link ProviderFactory}, {@link DataAccessFactory}, {@link HostAdapter},
+ * {@link GenerationStore}, {@link AsyncWorker}, {@link WorkerFactory} or {@link EventBus}) is named.
  * It also validates the declared metadata:
  * the identifier must be non-blank and free of whitespace, the version must be a canonical {@code major.minor.patch} string,
  * and two services of the same contract may not declare the same identifier inside a single compilation.
@@ -54,7 +57,9 @@ import dev.hogwai.platform.spi.registry.GenerationStore;
 @SupportedAnnotationTypes(HeronServiceProcessor.ANNOTATION)
 public final class HeronServiceProcessor extends AbstractProcessor {
 
-    /** Fully qualified name of the annotation triggering this processor. */
+    /**
+     * Fully qualified name of the annotation triggering this processor.
+     */
     public static final String ANNOTATION = "dev.hogwai.platform.spi.annotation.HeronService";
 
     @SuppressWarnings("java:S6353")
@@ -65,7 +70,10 @@ public final class HeronServiceProcessor extends AbstractProcessor {
             ProviderFactory.class.getName(),
             DataAccessFactory.class.getName(),
             HostAdapter.class.getName(),
-            GenerationStore.class.getName());
+            GenerationStore.class.getName(),
+            AsyncWorker.class.getName(),
+            WorkerFactory.class.getName(),
+            EventBus.class.getName());
 
     private final SortedMap<String, SortedSet<String>> registrations = new TreeMap<>();
     private final Map<String, String> declaredIds = new HashMap<>();
@@ -130,7 +138,7 @@ public final class HeronServiceProcessor extends AbstractProcessor {
                     .formatted(service.id(), contract, previous));
             return;
         }
-        registrations.computeIfAbsent(contract, name -> new TreeSet<>()).add(implementation);
+        registrations.computeIfAbsent(contract, _ -> new TreeSet<>()).add(implementation);
     }
 
     private void fail(Element element, String reason) {

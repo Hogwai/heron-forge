@@ -33,16 +33,16 @@ final class GenerationStarter {
     /**
      * Creates a starter for one invocation of {@code heron start --store}.
      *
-     * @param store         the generation store root directory
-     * @param applicationId the application id in the store
-     * @param generationId  the explicitly requested generation id, or {@code null}
-     * @param port          the HTTP bind port
-     * @param uiManifest    the path of the exported UI widget manifest
-     * @param commandSpec   the picocli spec used for user-facing output
+     * @param store          the generation store root directory
+     * @param applicationId  the application id in the store
+     * @param generationId   the explicitly requested generation id, or {@code null}
+     * @param port           the HTTP bind port
+     * @param uiManifest     the path of the exported UI widget manifest
+     * @param commandSpec    the picocli spec used for user-facing output
      * @param shutdownWaiter the waiter blocking until JVM shutdown
      */
     GenerationStarter(Path store, String applicationId, String generationId, int port,
-            Path uiManifest, CommandSpec commandSpec, HeronLauncher.ShutdownWaiter shutdownWaiter) {
+                      Path uiManifest, CommandSpec commandSpec, HeronLauncher.ShutdownWaiter shutdownWaiter) {
         this.store = Objects.requireNonNull(store, "store must not be null");
         this.applicationId = Objects.requireNonNull(applicationId, "applicationId must not be null");
         this.generationId = generationId;

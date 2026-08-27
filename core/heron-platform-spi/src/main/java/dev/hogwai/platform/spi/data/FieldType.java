@@ -12,7 +12,7 @@ import java.util.Objects;
  */
 public sealed interface FieldType
         permits FieldType.StringType, FieldType.BooleanType, FieldType.Int64Type,
-                FieldType.DecimalType, FieldType.InstantType, FieldType.EnumType {
+        FieldType.DecimalType, FieldType.InstantType, FieldType.EnumType {
 
     /**
      * Returns whether the given value is assignable to this type.
@@ -22,7 +22,9 @@ public sealed interface FieldType
      */
     boolean accepts(Object value);
 
-    /** A UTF-8 string value. */
+    /**
+     * A UTF-8 string value.
+     */
     record StringType() implements FieldType {
         @Override
         public boolean accepts(Object value) {
@@ -30,7 +32,9 @@ public sealed interface FieldType
         }
     }
 
-    /** A boolean value. */
+    /**
+     * A boolean value.
+     */
     record BooleanType() implements FieldType {
         @Override
         public boolean accepts(Object value) {
@@ -38,7 +42,9 @@ public sealed interface FieldType
         }
     }
 
-    /** A 64-bit signed integer value. */
+    /**
+     * A 64-bit signed integer value.
+     */
     record Int64Type() implements FieldType {
         @Override
         public boolean accepts(Object value) {
@@ -46,7 +52,9 @@ public sealed interface FieldType
         }
     }
 
-    /** An arbitrary-precision decimal value. */
+    /**
+     * An arbitrary-precision decimal value.
+     */
     record DecimalType() implements FieldType {
         @Override
         public boolean accepts(Object value) {
@@ -54,7 +62,9 @@ public sealed interface FieldType
         }
     }
 
-    /** An instant in time. */
+    /**
+     * An instant in time.
+     */
     record InstantType() implements FieldType {
         @Override
         public boolean accepts(Object value) {

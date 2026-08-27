@@ -4,6 +4,7 @@ import dev.hogwai.platform.spi.Diagnostic;
 import dev.hogwai.platform.spi.error.PlatformErrorCode;
 import dev.hogwai.platform.spi.error.PlatformException;
 import dev.hogwai.platform.spi.error.Severity;
+
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;

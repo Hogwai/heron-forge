@@ -61,7 +61,9 @@ public final class CliTestOrdersProviderFactory implements ProviderFactory {
                 false);
     }
 
-    /** Capability instance returning an empty materialized dataset. */
+    /**
+     * Capability instance returning an empty materialized dataset.
+     */
     private record EmptyInstance() implements CapabilityInstance {
 
         @Override

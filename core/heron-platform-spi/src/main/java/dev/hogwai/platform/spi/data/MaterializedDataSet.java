@@ -25,10 +25,10 @@ public final class MaterializedDataSet implements DataSet {
     /**
      * Creates a materialized data set.
      *
-     * @param schema       the schema of the records
-     * @param schemaRecords      the ordered, immutable list of records
-     * @param metadata     the dataset metadata
-     * @param byteEstimate the non-negative estimated size in bytes
+     * @param schema        the schema of the records
+     * @param schemaRecords the ordered, immutable list of records
+     * @param metadata      the dataset metadata
+     * @param byteEstimate  the non-negative estimated size in bytes
      * @throws NullPointerException     if {@code schema}, {@code records} or
      *                                  {@code metadata} is {@code null}
      * @throws IllegalArgumentException if {@code byteEstimate} is negative, or

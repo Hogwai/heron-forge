@@ -25,7 +25,9 @@ public record GenerationRecord(String applicationId, String generationId, String
                                String rawYaml, GenerationStatus status, Instant createdAt,
                                String createdBy) {
 
-    /** Validates the record components. */
+    /**
+     * Validates the record components.
+     */
     public GenerationRecord {
         Objects.requireNonNull(applicationId, "applicationId must not be null");
         if (applicationId.isBlank()) {

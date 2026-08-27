@@ -2,7 +2,9 @@ package dev.hogwai.platform.spi.host;
 
 import java.util.List;
 
-/** Application contract owned by a host. */
+/**
+ * Application contract owned by a host.
+ */
 public interface HostApplication extends AutoCloseable {
 
     /**
@@ -24,7 +26,9 @@ public interface HostApplication extends AutoCloseable {
      */
     ExecutionOutcome execute(InvocationRequest request);
 
-    /** Closes application-owned resources. */
+    /**
+     * Closes application-owned resources.
+     */
     @Override
     void close();
 }

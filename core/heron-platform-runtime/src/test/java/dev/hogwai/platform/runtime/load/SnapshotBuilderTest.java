@@ -357,7 +357,7 @@ class SnapshotBuilderTest {
                 new ProviderRegistry.Registration(orders, orders.descriptor()));
         SnapshotBuilder builder = SnapshotBuilderTestSupport.builder(registry, "gen-1", CLOCK);
 
-        try (var  _ = builder.build(SnapshotBuilderTestSupport.application("my-app",
+        try (var _ = builder.build(SnapshotBuilderTestSupport.application("my-app",
                 new SnapshotBuilderTestYaml.TestCap("orders", "orders", "1.0.0")))) {
             BuildContext ctx = orders.contexts().getFirst();
             assertThat(ctx.clock()).isSameAs(CLOCK);
@@ -377,16 +377,16 @@ class SnapshotBuilderTest {
         SnapshotBuilderTestProviderFactory provider =
                 new SnapshotBuilderTestProviderFactory(
                         SnapshotBuilderTestSupport.source("orders", "1.0.0"), context -> {
-                            DataAccess access = context.dataAccessFactory().open(
-                                    new DataAccessConfiguration("jdbc:test", "user", "password"));
-                            context.resourceTracker().register(access);
-                            return new SnapshotBuilderTestInstance("orders", new ArrayList<>(), false);
-                        });
+                    DataAccess access = context.dataAccessFactory().open(
+                            new DataAccessConfiguration("jdbc:test", "user", "password"));
+                    context.resourceTracker().register(access);
+                    return new SnapshotBuilderTestInstance("orders", new ArrayList<>(), false);
+                });
         ProviderRegistry registry = new SnapshotBuilderTestRegistry(
                 new ProviderRegistry.Registration(provider, provider.descriptor()));
         SnapshotBuilder builder = SnapshotBuilderTestSupport.builder(registry, "gen-1", CLOCK, dataAccessFactory);
 
-        try (var  _ = builder.build(SnapshotBuilderTestSupport.application("test",
+        try (var _ = builder.build(SnapshotBuilderTestSupport.application("test",
                 new SnapshotBuilderTestYaml.TestCap("orders", "orders", "1.0.0")))) {
             assertThat(dataAccessFactory.lastOpened()).isNotNull();
             assertThat(dataAccessFactory.lastOpened().isClosed()).isFalse();

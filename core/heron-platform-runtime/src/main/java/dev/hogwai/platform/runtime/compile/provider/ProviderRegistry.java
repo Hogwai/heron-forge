@@ -3,6 +3,7 @@ package dev.hogwai.platform.runtime.compile.provider;
 import dev.hogwai.platform.spi.ProviderId;
 import dev.hogwai.platform.spi.provider.ProviderDescriptor;
 import dev.hogwai.platform.spi.provider.ProviderFactory;
+
 import java.util.Objects;
 import java.util.Optional;
 
@@ -23,7 +24,7 @@ public interface ProviderRegistry {
      *
      * @param providerId the provider identifier
      * @return the registration, or {@link Optional#empty()} if the provider is
-     *         not registered
+     * not registered
      * @throws NullPointerException if {@code providerId} is {@code null}
      */
     Optional<Registration> registration(ProviderId providerId);

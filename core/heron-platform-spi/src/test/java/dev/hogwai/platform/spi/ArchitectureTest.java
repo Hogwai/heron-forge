@@ -7,7 +7,9 @@ import com.tngtech.archunit.lang.ArchRule;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
-/** Verifies the SPI stays a pure, framework-independent contract module. */
+/**
+ * Verifies the SPI stays a pure, framework-independent contract module.
+ */
 @AnalyzeClasses(packages = "dev.hogwai.platform.spi", importOptions = ImportOption.DoNotIncludeTests.class)
 class ArchitectureTest {
 

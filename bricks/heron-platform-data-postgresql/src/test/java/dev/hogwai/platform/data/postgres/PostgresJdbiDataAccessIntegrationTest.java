@@ -35,7 +35,9 @@ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/** Opt-in PostgreSQL coverage for the PostgreSQL Jdbi data access implementation. */
+/**
+ * Opt-in PostgreSQL coverage for the PostgreSQL Jdbi data access implementation.
+ */
 @EnabledIfEnvironmentVariable(named = "RUN_POSTGRES_TESTS", matches = "true")
 class PostgresJdbiDataAccessIntegrationTest {
 
@@ -51,7 +53,7 @@ class PostgresJdbiDataAccessIntegrationTest {
     void opensWithProbeMapsRowsAndBindsNamedParameters() {
         try (DataAccess access = new PostgresJdbiDataAccessFactory().open(CONFIG)) {
             List<Row> rows = access.query(new QueryRequest<>("named-row", "SELECT :name AS name, :amount AS amount",
-                    Map.of("name", "Ada", AMOUNT, 7L), row -> new Row(row.string("name"), row.longValue(AMOUNT))),
+                            Map.of("name", "Ada", AMOUNT, 7L), row -> new Row(row.string("name"), row.longValue(AMOUNT))),
                     ACTIVE);
 
             assertThat(rows).containsExactly(new Row("Ada", 7L));
@@ -119,10 +121,10 @@ class PostgresJdbiDataAccessIntegrationTest {
         try (DataAccess access = new PostgresJdbiDataAccessFactory().open(CONFIG)) {
             QueryRequest<Long> request = new QueryRequest<>("mapping-cancellation",
                     "SELECT 1 AS value UNION ALL SELECT 2 AS value", Map.of(), row -> {
-                        long value = row.longValue(VALUE);
-                        cancelled.set(true);
-                        return value;
-                    });
+                long value = row.longValue(VALUE);
+                cancelled.set(true);
+                return value;
+            });
             var queryContext = new QueryContext(ACTIVE.deadline(), cancelled::get);
             assertThatThrownBy(() -> access.query(request, queryContext))
                     .isInstanceOf(PlatformException.class)
@@ -255,7 +257,7 @@ class PostgresJdbiDataAccessIntegrationTest {
         DataAccess access = factory.open(CONFIG);
 
         List<Row> rows = access.query(new QueryRequest<>("pooled-row", "SELECT :name AS name, :amount AS amount",
-                Map.of("name", "Ada", AMOUNT, 7L), row -> new Row(row.string("name"), row.longValue(AMOUNT))),
+                        Map.of("name", "Ada", AMOUNT, 7L), row -> new Row(row.string("name"), row.longValue(AMOUNT))),
                 ACTIVE);
         assertThat(rows).containsExactly(new Row("Ada", 7L));
 

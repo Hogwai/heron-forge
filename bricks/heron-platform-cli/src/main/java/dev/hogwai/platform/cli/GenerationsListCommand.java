@@ -13,7 +13,9 @@ import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Spec;
 
-/** Picocli subcommand listing the stored generations of an application. */
+/**
+ * Picocli subcommand listing the stored generations of an application.
+ */
 @Command(name = "list",
         description = "List the stored generations of an application, most recent first")
 public final class GenerationsListCommand implements Callable<Integer> {
@@ -28,7 +30,9 @@ public final class GenerationsListCommand implements Callable<Integer> {
     @Spec
     private CommandSpec commandSpec;
 
-    /** Creates the picocli generations list command. */
+    /**
+     * Creates the picocli generations list command.
+     */
     public GenerationsListCommand() {
         // populated by picocli
     }

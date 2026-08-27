@@ -133,7 +133,8 @@ public final class ProviderResolver {
      * @param descriptor  the resolved provider descriptor
      * @param diagnostics the immutable aggregated diagnostics (warnings)
      */
-    public record ResolvedProvider(ProviderFactory factory, ProviderDescriptor descriptor, List<Diagnostic> diagnostics) {
+    public record ResolvedProvider(ProviderFactory factory, ProviderDescriptor descriptor,
+                                   List<Diagnostic> diagnostics) {
         /**
          * Compact constructor enforcing non-null components and an immutable
          * diagnostics list.

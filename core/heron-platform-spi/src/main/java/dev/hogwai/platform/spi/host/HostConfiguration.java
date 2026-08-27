@@ -3,7 +3,8 @@ package dev.hogwai.platform.spi.host;
 import java.time.Duration;
 import java.util.Objects;
 
-/** Host bind and request-timeout configuration.
+/**
+ * Host bind and request-timeout configuration.
  *
  * @param bindAddress    address on which the adapter binds
  * @param port           bind port, or zero for an automatically selected port
@@ -11,7 +12,9 @@ import java.util.Objects;
  */
 public record HostConfiguration(String bindAddress, int port, Duration requestTimeout) {
 
-    /** Validates the host bind address, port, and timeout. */
+    /**
+     * Validates the host bind address, port, and timeout.
+     */
     public HostConfiguration {
         Objects.requireNonNull(bindAddress, "bindAddress must not be null");
         if (bindAddress.isBlank()) {

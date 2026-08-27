@@ -14,16 +14,22 @@ import dev.hogwai.platform.spi.data.Schema;
 import dev.hogwai.platform.spi.data.SchemaRecord;
 import dev.hogwai.platform.spi.data.access.DataRow;
 
-/** Shared mapping helpers for fake data access implementations in tests. */
+/**
+ * Shared mapping helpers for fake data access implementations in tests.
+ */
 public final class FakeDataAccessSupport {
 
-    /** Default dataset limits matching the brick defaults. */
+    /**
+     * Default dataset limits matching the brick defaults.
+     */
     public static final DataSetLimits DEFAULT_LIMITS = new DataSetLimits(1_000, 1_000_000);
 
     private FakeDataAccessSupport() {
     }
 
-    /** Maps a row to a schema record using the field-to-column mapping. */
+    /**
+     * Maps a row to a schema record using the field-to-column mapping.
+     */
     public static SchemaRecord toRecord(DataRow row, Schema schema, Map<String, String> columnByField) {
         Map<FieldId, Object> values = new HashMap<>();
         for (Field field : schema.fields()) {
@@ -36,9 +42,11 @@ public final class FakeDataAccessSupport {
         return SchemaRecord.of(schema, values);
     }
 
-    /** Builds a materialized data set with the supplied limits. */
+    /**
+     * Builds a materialized data set with the supplied limits.
+     */
     public static MaterializedDataSet dataSet(Schema schema, String name, List<SchemaRecord> records,
-            DataSetLimits limits) {
+                                              DataSetLimits limits) {
         long estimate = Math.multiplyExact(records.size(), 256L);
         return new MaterializedDataSet(schema, records,
                 new DataSetMetadata(name, limits), estimate);

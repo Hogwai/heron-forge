@@ -14,7 +14,9 @@ import org.junit.jupiter.api.Test;
 
 import dev.hogwai.platform.spi.Diagnostic;
 
-/** Verifies environment placeholder resolution in configuration values. */
+/**
+ * Verifies environment placeholder resolution in configuration values.
+ */
 class EnvPlaceholdersTest {
 
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
@@ -96,7 +98,7 @@ class EnvPlaceholdersTest {
         assertThat(diagnostics).isEmpty();
         assertThat(resolved.at("/limits/maxRows").asLong()).isEqualTo(100);
         assertThat(resolved.at("/limits/enabled").asBoolean()).isTrue();
-        assertThat(resolved.at("/limits/ratio").decimalValue().toString()).isEqualTo("0.5");
+        assertThat(resolved.at("/limits/ratio").decimalValue()).hasToString("0.5");
         assertThat(resolved.at("/limits/empty").isNull()).isTrue();
     }
 

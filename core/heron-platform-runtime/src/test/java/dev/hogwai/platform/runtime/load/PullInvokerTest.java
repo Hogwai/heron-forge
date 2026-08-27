@@ -73,7 +73,7 @@ class PullInvokerTest {
         MaterializedDataSet targetData = dataset("target");
 
         ProviderFactory source = factory("source", descriptor("source", CapabilityKind.SOURCE,
-                Map.of(), Map.of(new PortId("out"), port("out"))),
+                        Map.of(), Map.of(new PortId("out"), port("out"))),
                 (inputs, context) -> {
                     order.add("source");
                     sourceExecutions.incrementAndGet();
@@ -81,14 +81,14 @@ class PullInvokerTest {
                     return sourceData;
                 });
         ProviderFactory unrelated = factory("unrelated", descriptor("unrelated", CapabilityKind.SOURCE,
-                Map.of(), Map.of(new PortId("out"), port("out"))),
+                        Map.of(), Map.of(new PortId("out"), port("out"))),
                 (inputs, context) -> {
                     unrelatedExecutions.incrementAndGet();
                     return unrelatedData;
                 });
         ProviderFactory target = factory("target", descriptor("target", CapabilityKind.TRANSFORM,
-                Map.of(new PortId("left"), port("left"), new PortId("right"), port("right")),
-                Map.of(new PortId("out"), port("out"))),
+                        Map.of(new PortId("left"), port("left"), new PortId("right"), port("right")),
+                        Map.of(new PortId("out"), port("out"))),
                 (inputs, context) -> {
                     order.add("target");
                     targetExecutions.incrementAndGet();
@@ -117,7 +117,7 @@ class PullInvokerTest {
         AtomicInteger sourceExecutions = new AtomicInteger();
         MaterializedDataSet sourceData = dataset("source");
         ProviderFactory source = factory("source", descriptor("source", CapabilityKind.SOURCE,
-                Map.of(), Map.of(new PortId("out"), port("out"))),
+                        Map.of(), Map.of(new PortId("out"), port("out"))),
                 (inputs, context) -> {
                     sourceExecutions.incrementAndGet();
                     assertThat(inputs.isEmpty()).isTrue();
@@ -164,13 +164,13 @@ class PullInvokerTest {
         List<String> order = new ArrayList<>();
         MaterializedDataSet sourceData = dataset("source");
         ProviderFactory source = factory("source", descriptor("source", CapabilityKind.SOURCE,
-                Map.of(), Map.of(new PortId("out"), port("out"))),
+                        Map.of(), Map.of(new PortId("out"), port("out"))),
                 (_, _) -> {
                     order.add("source");
                     return sourceData;
                 });
         ProviderFactory target = factory("target", descriptor("target", CapabilityKind.TRANSFORM,
-                Map.of(new PortId("left"), port("left")), Map.of(new PortId("out"), port("out"))),
+                        Map.of(new PortId("left"), port("left")), Map.of(new PortId("out"), port("out"))),
                 (inputs, _) -> {
                     order.add("target");
                     assertThat(inputs.get(new PortId("left"))).isSameAs(sourceData);
@@ -215,14 +215,14 @@ class PullInvokerTest {
     void streamingUpstreamIsCollectedWhenConsumedAsInput() {
         List<String> order = new ArrayList<>();
         ProviderFactory source = factory("source", descriptor("source", CapabilityKind.SOURCE,
-                Map.of(), Map.of(new PortId("out"), port("out"))),
+                        Map.of(), Map.of(new PortId("out"), port("out"))),
                 (_, _) -> {
                     order.add("source");
                     return StreamingDataSet.over(schema(), records(2).iterator(),
                             new DataSetLimits(100, 100_000), 5, FAR_FUTURE, () -> false);
                 });
         ProviderFactory target = factory("target", descriptor("target", CapabilityKind.TRANSFORM,
-                Map.of(new PortId("left"), port("left")), Map.of(new PortId("out"), port("out"))),
+                        Map.of(new PortId("left"), port("left")), Map.of(new PortId("out"), port("out"))),
                 (inputs, _) -> {
                     order.add("target");
                     MaterializedDataSet left = inputs.get(new PortId("left"));
@@ -253,14 +253,14 @@ class PullInvokerTest {
         List<String> order = new ArrayList<>();
         CloseableRowIterator rows = new CloseableRowIterator(records(2).iterator());
         ProviderFactory source = factory("source", descriptor("source", CapabilityKind.SOURCE,
-                Map.of(), Map.of(new PortId("out"), port("out"))),
+                        Map.of(), Map.of(new PortId("out"), port("out"))),
                 (_, _) -> {
                     order.add("source");
                     return StreamingDataSet.over(schema(), rows,
                             new DataSetLimits(100, 100_000), 5, FAR_FUTURE, () -> false);
                 });
         ProviderFactory target = factory("target", descriptor("target", CapabilityKind.TRANSFORM,
-                Map.of(new PortId("left"), port("left")), Map.of(new PortId("out"), port("out"))),
+                        Map.of(new PortId("left"), port("left")), Map.of(new PortId("out"), port("out"))),
                 (inputs, _) -> {
                     order.add("target");
                     MaterializedDataSet left = inputs.get(new PortId("left"));
@@ -293,7 +293,7 @@ class PullInvokerTest {
                 new DataSetMetadata("target", new DataSetLimits(100, 100_000)),
                 4L * StreamingDataSet.ROW_ESTIMATE_BYTES);
         ProviderFactory target = factory("target", descriptor("target", CapabilityKind.SOURCE,
-                Map.of(), Map.of(new PortId("out"), port("out"))),
+                        Map.of(), Map.of(new PortId("out"), port("out"))),
                 (_, _) -> targetData);
         ProviderRegistry registry = new Registry(target);
 
@@ -316,15 +316,15 @@ class PullInvokerTest {
     void streamsThroughTheHostContractOnlyForStreamingTargets() {
         MaterializedDataSet sourceData = dataset("source");
         ProviderFactory source = factory("source", descriptor("source", CapabilityKind.SOURCE,
-                Map.of(), Map.of(new PortId("out"), port("out"))),
+                        Map.of(), Map.of(new PortId("out"), port("out"))),
                 (_, _) -> sourceData);
         ProviderFactory target = factory("target", descriptor("target", CapabilityKind.TRANSFORM,
-                Map.of(new PortId("left"), port("left"), new PortId("right"), port("right")),
-                Map.of(new PortId("out"), port("out"))),
+                        Map.of(new PortId("left"), port("left"), new PortId("right"), port("right")),
+                        Map.of(new PortId("out"), port("out"))),
                 (_, _) -> StreamingDataSet.over(schema(), records(2).iterator(),
                         new DataSetLimits(100, 100_000), 5, FAR_FUTURE, () -> false));
         ProviderFactory unrelated = factory("unrelated", descriptor("unrelated", CapabilityKind.SOURCE,
-                Map.of(), Map.of(new PortId("out"), port("out"))),
+                        Map.of(), Map.of(new PortId("out"), port("out"))),
                 (_, _) -> dataset("unrelated"));
         ProviderRegistry registry = new Registry(source, target, unrelated);
 

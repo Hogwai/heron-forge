@@ -26,7 +26,7 @@ class ProviderDescriptorTest {
     }
 
     private static ProviderDescriptor descriptor(CapabilityKind kind, int spiMajor,
-            Map<PortId, PortDescriptor> inputs, Map<PortId, PortDescriptor> outputs) {
+                                                 Map<PortId, PortDescriptor> inputs, Map<PortId, PortDescriptor> outputs) {
         return new ProviderDescriptor(PROVIDER, VERSION, kind, spiMajor, inputs, outputs,
                 config());
     }

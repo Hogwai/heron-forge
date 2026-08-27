@@ -7,6 +7,7 @@ import dev.hogwai.platform.spi.ProviderId;
 import dev.hogwai.platform.spi.ProviderVersion;
 import dev.hogwai.platform.spi.SpiMajor;
 import dev.hogwai.platform.spi.data.DataSetLimits;
+import dev.hogwai.platform.spi.data.DataSetMetadata;
 import dev.hogwai.platform.spi.data.MaterializedDataSet;
 import dev.hogwai.platform.spi.data.Schema;
 import dev.hogwai.platform.spi.data.access.DataAccess;
@@ -25,44 +26,66 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class ProviderFactoryTest {
 
-    private static final DataAccessFactory DATA_ACCESS_FACTORY = configuration -> new DataAccess() {
+    private static final DataAccessFactory DATA_ACCESS_FACTORY = _ -> new DataAccess() {
         @Override
         public <T> List<T> query(QueryRequest<T> request, QueryContext context) {
             return List.of();
         }
 
         @Override
-        public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
-                Schema schema, Map<String, String> columnByField) {
+        public MaterializedDataSet queryToDataSet(QueryContext context,
+                                                  String operation,
+                                                  String sql,
+                                                  Schema schema,
+                                                  Map<String, String> columnByField) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
-                Map<String, ?> parameters, Schema schema, Map<String, String> columnByField) {
+        public MaterializedDataSet queryToDataSet(QueryContext context,
+                                                  String operation,
+                                                  String sql,
+                                                  Map<String, ?> parameters,
+                                                  Schema schema,
+                                                  Map<String, String> columnByField) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
-                Schema schema, Map<String, String> columnByField, DataSetLimits limits) {
+        public MaterializedDataSet queryToDataSet(QueryContext context,
+                                                  String operation, String sql,
+                                                  Schema schema,
+                                                  Map<String, String> columnByField,
+                                                  DataSetLimits limits) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
-                Map<String, ?> parameters, Schema schema, Map<String, String> columnByField, DataSetLimits limits) {
+        public MaterializedDataSet queryToDataSet(QueryContext context,
+                                                  String operation, String sql,
+                                                  Map<String, ?> parameters,
+                                                  Schema schema,
+                                                  Map<String, String> columnByField,
+                                                  DataSetLimits limits) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-            public dev.hogwai.platform.spi.data.StreamingDataSet streamQuery(QueryContext context, String operation, String sql,
-                    Schema schema, Map<String, String> columnByField, DataSetLimits limits, int batchSize) {
-                throw new UnsupportedOperationException();
-            }
+        public dev.hogwai.platform.spi.data.StreamingDataSet streamQuery(QueryContext context,
+                                                                         String operation,
+                                                                         String sql,
+                                                                         Schema schema,
+                                                                         Map<String, String> columnByField,
+                                                                         DataSetLimits limits,
+                                                                         int batchSize) {
+            throw new UnsupportedOperationException();
+        }
 
-            @Override
-        public int execute(QueryContext context, String operation, String sql, Map<String, ?> parameters) {
+        @Override
+        public int execute(QueryContext context,
+                           String operation,
+                           String sql,
+                           Map<String, ?> parameters) {
             throw new UnsupportedOperationException();
         }
 
@@ -78,7 +101,9 @@ class ProviderFactoryTest {
             new ConfigurationSchema(Set.of("host"), Set.of("host"),
                     Map.of("host", ConfigurationSchema.ScalarKind.STRING), Map.of()));
 
-    /** A well-behaved factory that decodes the raw config itself. */
+    /**
+     * A well-behaved factory that decodes the raw config itself.
+     */
     private static final class FakeFactory implements ProviderFactory {
         @Override
         public ProviderDescriptor descriptor() {
@@ -96,9 +121,9 @@ class ProviderFactoryTest {
 
         @Override
         public CapabilityInstance create(Map<String, Object> rawConfig, BuildContext context) {
-            return (inputs, ctx) -> new MaterializedDataSet(ProviderTestSupport.schema("s"), List.of(),
-                    new dev.hogwai.platform.spi.data.DataSetMetadata("ds",
-                            new DataSetLimits(10, 1000)), 0);
+            return (_, _) ->
+                    new MaterializedDataSet(ProviderTestSupport.schema("s"), List.of(),
+                    new DataSetMetadata("ds", new DataSetLimits(10, 1000)), 0);
         }
     }
 
@@ -123,7 +148,7 @@ class ProviderFactoryTest {
     @Test
     void createReturnsCapabilityInstance() {
         CapabilityInstance instance = new FakeFactory().create(Map.of("host", "good"),
-                new BuildContext(java.time.Clock.systemUTC(), resource -> { }, DATA_ACCESS_FACTORY));
+                new BuildContext(java.time.Clock.systemUTC(), _ -> {}, DATA_ACCESS_FACTORY));
         assertThat(instance).isNotNull();
     }
 }

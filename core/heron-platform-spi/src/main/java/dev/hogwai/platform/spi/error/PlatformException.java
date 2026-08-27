@@ -16,7 +16,9 @@ import java.util.Objects;
  */
 public final class PlatformException extends RuntimeException {
 
-    /** The stable error code. */
+    /**
+     * The stable error code.
+     */
     private final PlatformErrorCode code;
 
     /**
@@ -57,6 +59,7 @@ public final class PlatformException extends RuntimeException {
 
     /**
      * Returns error code of exception
+     *
      * @return the stable error code
      */
     public PlatformErrorCode code() {
@@ -65,6 +68,7 @@ public final class PlatformException extends RuntimeException {
 
     /**
      * Returns diagnostics of exception
+     *
      * @return an immutable view of the diagnostics
      */
     public List<Diagnostic> diagnostics() {

@@ -7,10 +7,16 @@ import dev.hogwai.platform.spi.Diagnostic;
  *
  */
 public enum Severity {
-    /** Informational diagnostic. */
+    /**
+     * Informational diagnostic.
+     */
     INFO,
-    /** Warning diagnostic. */
+    /**
+     * Warning diagnostic.
+     */
     WARNING,
-    /** Error diagnostic. */
+    /**
+     * Error diagnostic.
+     */
     ERROR
 }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import dev.hogwai.platform.runtime.config.Diagnostics;
 import dev.hogwai.platform.runtime.config.InputBindingConfig;
 import dev.hogwai.platform.spi.Diagnostic;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -71,7 +72,7 @@ final class InputMapper {
      * @return the mapped input binding, or {@code null} if invalid
      */
     static InputBindingConfig mapInput(JsonNode input, String path, String inputPort,
-                                      List<Diagnostic> diagnostics) {
+                                       List<Diagnostic> diagnostics) {
         if (input == null || !input.isObject()) {
             diagnostics.add(Diagnostics.schemaError(path, "input binding must be a mapping", "provide a mapping"));
             return null;

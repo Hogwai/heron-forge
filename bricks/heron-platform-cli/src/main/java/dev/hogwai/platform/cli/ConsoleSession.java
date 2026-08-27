@@ -1,17 +1,27 @@
 package dev.hogwai.platform.cli;
 
-/** Injectable terminal interaction used by interactive CLI commands. */
+/**
+ * Injectable terminal interaction used by interactive CLI commands.
+ */
 interface ConsoleSession {
 
-    /** Returns whether input can be read interactively. */
+    /**
+     * Returns whether input can be read interactively.
+     */
     boolean isInteractive();
 
-    /** Reads one line after displaying the prompt. */
+    /**
+     * Reads one line after displaying the prompt.
+     */
     String readLine(String prompt);
 
-    /** Writes text without a line terminator. */
+    /**
+     * Writes text without a line terminator.
+     */
     void print(String value);
 
-    /** Writes text followed by the platform line terminator. */
+    /**
+     * Writes text followed by the platform line terminator.
+     */
     void println(String value);
 }

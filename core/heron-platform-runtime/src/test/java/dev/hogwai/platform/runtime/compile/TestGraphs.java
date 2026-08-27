@@ -3,6 +3,7 @@ package dev.hogwai.platform.runtime.compile;
 import dev.hogwai.platform.runtime.config.ApplicationConfig;
 import dev.hogwai.platform.runtime.config.CapabilityConfig;
 import dev.hogwai.platform.runtime.config.InputBindingConfig;
+
 import java.util.List;
 import java.util.Map;
 

@@ -4,13 +4,16 @@ import dev.hogwai.platform.spi.Diagnostic;
 import dev.hogwai.platform.spi.error.PlatformErrorCode;
 import dev.hogwai.platform.spi.error.Severity;
 import dev.hogwai.platform.spi.provider.ConfigurationSchema;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/** Immutable thresholds used by the supply-chain exception detector. */
+/**
+ * Immutable thresholds used by the supply-chain exception detector.
+ */
 @SuppressWarnings("PMD.CyclomaticComplexity")
 final class DetectorConfig {
 
@@ -71,7 +74,7 @@ final class DetectorConfig {
     }
 
     private static void validateLong(Map<String, Object> config, String field, List<Diagnostic> diagnostics,
-            java.util.function.LongPredicate predicate) {
+                                     java.util.function.LongPredicate predicate) {
         Object value = config.get(field);
         BigDecimal decimal = value instanceof Number number ? decimalOrNull(number) : null;
         if (decimal == null || isNotIntegral(decimal)

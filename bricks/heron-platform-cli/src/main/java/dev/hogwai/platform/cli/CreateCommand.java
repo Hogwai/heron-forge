@@ -6,7 +6,9 @@ import java.nio.file.Path;
 import java.util.Locale;
 import java.util.concurrent.Callable;
 
-/** Picocli command group for creating Heron projects. */
+/**
+ * Picocli command group for creating Heron projects.
+ */
 @Command(name = "create", mixinStandardHelpOptions = true,
         description = "Create a Heron application, provider, or brick",
         subcommands = {CreateAppCommand.class, CreateProviderCommand.class, CreateBrickCommand.class})
@@ -15,12 +17,16 @@ public final class CreateCommand implements Callable<Integer> {
     private final Path baseDirectory;
     private final ConsoleSession console;
 
-    /** Creates a command group rooted at the current directory. */
+    /**
+     * Creates a command group rooted at the current directory.
+     */
     public CreateCommand() {
         this(Path.of(""), new SystemConsoleSession());
     }
 
-    /** Creates a command group with injectable directory and console. */
+    /**
+     * Creates a command group with injectable directory and console.
+     */
     CreateCommand(Path baseDirectory, ConsoleSession console) {
         this.baseDirectory = baseDirectory;
         this.console = console;

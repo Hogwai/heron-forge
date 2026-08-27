@@ -5,7 +5,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
 
-/** Verifies pool option defaults and incoherent-size rejection. */
+/**
+ * Verifies pool option defaults and incoherent-size rejection.
+ */
 class JdbiPoolOptionsTest {
 
     @Test

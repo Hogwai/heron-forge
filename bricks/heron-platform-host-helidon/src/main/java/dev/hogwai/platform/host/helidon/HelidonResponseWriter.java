@@ -20,7 +20,9 @@ import static dev.hogwai.platform.host.helidon.http.HttpHelper.getHttpCode;
 import static dev.hogwai.platform.host.helidon.http.HttpHelper.sanitize;
 import static dev.hogwai.platform.host.helidon.http.HttpHelper.sendResponse;
 
-/** Serializes generic host invocation results as JSON HTTP responses. */
+/**
+ * Serializes generic host invocation results as JSON HTTP responses.
+ */
 public final class HelidonResponseWriter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HelidonResponseWriter.class);
@@ -30,12 +32,16 @@ public final class HelidonResponseWriter {
     public static final String FAILURE_MUST_NOT_BE_NULL = "failure must not be null";
     public static final String PAYLOAD_MUST_NOT_BE_NULL = "payload must not be null";
 
-    /** Creates a response writer. */
+    /**
+     * Creates a response writer.
+     */
     public HelidonResponseWriter() {
         // no state
     }
 
-    /** Writes an invocation result. */
+    /**
+     * Writes an invocation result.
+     */
     public void write(ServerResponse response, InvocationResult result) {
         Objects.requireNonNull(response, RESPONSE_MUST_NOT_BE_NULL);
         Objects.requireNonNull(result, RESULT_MUST_NOT_BE_NULL);
@@ -83,7 +89,9 @@ public final class HelidonResponseWriter {
         }
     }
 
-    /** Writes a failure with an already selected HTTP status. */
+    /**
+     * Writes a failure with an already selected HTTP status.
+     */
     public void writeFailure(ServerResponse response, int statusCode, InvocationFailure failure) {
         Objects.requireNonNull(response, RESPONSE_MUST_NOT_BE_NULL);
         Objects.requireNonNull(failure, FAILURE_MUST_NOT_BE_NULL);

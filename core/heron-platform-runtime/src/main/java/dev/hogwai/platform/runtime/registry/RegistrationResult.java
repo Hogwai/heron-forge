@@ -1,6 +1,7 @@
 package dev.hogwai.platform.runtime.registry;
 
 import dev.hogwai.platform.spi.registry.GenerationRecord;
+
 import java.util.Objects;
 
 /**
@@ -13,9 +14,9 @@ import java.util.Objects;
  * call, and {@code false} when an already-known identical generationRecord was returned
  * unchanged.
  *
- * @param generationRecord  the stored generation generationRecord, never {@code null}
- * @param created {@code true} when the generationRecord was persisted by this call,
- *                {@code false} when the pre-existing generationRecord was returned as is
+ * @param generationRecord the stored generation generationRecord, never {@code null}
+ * @param created          {@code true} when the generationRecord was persisted by this call,
+ *                         {@code false} when the pre-existing generationRecord was returned as is
  */
 public record RegistrationResult(GenerationRecord generationRecord, boolean created) {
 

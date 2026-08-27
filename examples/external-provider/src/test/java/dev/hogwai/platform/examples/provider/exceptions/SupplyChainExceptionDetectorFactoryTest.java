@@ -39,32 +39,49 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class SupplyChainExceptionDetectorFactoryTest {
 
     private static final ProviderVersion VERSION = ProviderVersion.parse("1.0.0");
-    private static final DataAccessFactory DATA_ACCESS_FACTORY = configuration -> new DataAccess() {
+    private static final DataAccessFactory DATA_ACCESS_FACTORY = _ -> new DataAccess() {
         @Override
         public <T> List<T> query(QueryRequest<T> request, QueryContext context) {
             return List.of();
         }
+
         @Override
-        public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
-                Schema schema, Map<String, String> columnByField) {
+        public MaterializedDataSet queryToDataSet(QueryContext context,
+                                                  String operation,
+                                                  String sql,
+                                                  Schema schema,
+                                                  Map<String, String> columnByField) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
-                Map<String, ?> parameters, Schema schema, Map<String, String> columnByField) {
+        public MaterializedDataSet queryToDataSet(QueryContext context,
+                                                  String operation,
+                                                  String sql,
+                                                  Map<String, ?> parameters,
+                                                  Schema schema,
+                                                  Map<String, String> columnByField) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
-                Schema schema, Map<String, String> columnByField, DataSetLimits limits) {
+        public MaterializedDataSet queryToDataSet(QueryContext context,
+                                                  String operation,
+                                                  String sql,
+                                                  Schema schema,
+                                                  Map<String, String> columnByField,
+                                                  DataSetLimits limits) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
-                Map<String, ?> parameters, Schema schema, Map<String, String> columnByField, DataSetLimits limits) {
+        public MaterializedDataSet queryToDataSet(QueryContext context,
+                                                  String operation,
+                                                  String sql,
+                                                  Map<String, ?> parameters,
+                                                  Schema schema,
+                                                  Map<String, String> columnByField,
+                                                  DataSetLimits limits) {
             throw new UnsupportedOperationException();
         }
 
@@ -78,8 +95,12 @@ class SupplyChainExceptionDetectorFactoryTest {
                                             int batchSize) {
             throw new UnsupportedOperationException();
         }
+
         @Override
-        public int execute(QueryContext context, String operation, String sql, Map<String, ?> parameters) {
+        public int execute(QueryContext context,
+                           String operation,
+                           String sql,
+                           Map<String, ?> parameters) {
             throw new UnsupportedOperationException();
         }
 
@@ -89,7 +110,8 @@ class SupplyChainExceptionDetectorFactoryTest {
         }
     };
     private static final BuildContext BUILD_CONTEXT = new BuildContext(
-            Clock.systemUTC(), resource -> { }, DATA_ACCESS_FACTORY);
+            Clock.systemUTC(), _ -> {
+    }, DATA_ACCESS_FACTORY);
 
     @Test
     void exposesTheExactDetectorDescriptor() {
@@ -120,14 +142,16 @@ class SupplyChainExceptionDetectorFactoryTest {
                 new PortId("orders"), orders,
                 new PortId("deliveries"), deliveries)), context());
 
-        assertThat(result.records()).extracting(schemaRecord -> schemaRecord.value(new FieldId("exceptionType")))
+        assertThat(result.records())
+                .extracting(schemaRecord -> schemaRecord.value(new FieldId("exceptionType")))
                 .contains("LATE_DELIVERY", "INSUFFICIENT_QUANTITY", "PRIORITY_RISK");
         assertThat(result.records()).allSatisfy(schemaRecord -> {
             assertThat(schemaRecord.value(new FieldId("orderId"))).isNotNull();
             assertThat(schemaRecord.value(new FieldId("reason"))).asString().isNotBlank();
             assertThat(schemaRecord.value(new FieldId("recommendedAction"))).asString().isNotBlank();
         });
-        assertThat(result.records()).noneMatch(schemaRecord -> "OK-001".equals(schemaRecord.value(new FieldId("orderId"))));
+        assertThat(result.records())
+                .noneMatch(schemaRecord -> "OK-001".equals(schemaRecord.value(new FieldId("orderId"))));
     }
 
     @Test

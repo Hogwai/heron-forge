@@ -137,8 +137,8 @@ final class JdbiDataAccess implements DataAccess {
 
     @Override
     public MaterializedDataSet queryToDataSet(QueryContext context, String operation, String sql,
-            Map<String, ?> parameters, Schema schema, Map<String, String> columnByField,
-            DataSetLimits limits) {
+                                              Map<String, ?> parameters, Schema schema, Map<String, String> columnByField,
+                                              DataSetLimits limits) {
         Objects.requireNonNull(context, CONTEXT_MUST_NOT_BE_NULL);
         Objects.requireNonNull(schema, "schema must not be null");
         Objects.requireNonNull(columnByField, "columnByField must not be null");
@@ -202,7 +202,9 @@ final class JdbiDataAccess implements DataAccess {
                         context::isCancellationRequested));
     }
 
-    /** Rolls back then closes quietly: release failures never mask the original. */
+    /**
+     * Rolls back then closes quietly: release failures never mask the original.
+     */
     private static void releaseQuietly(Handle handle) {
         try {
             handle.rollback();

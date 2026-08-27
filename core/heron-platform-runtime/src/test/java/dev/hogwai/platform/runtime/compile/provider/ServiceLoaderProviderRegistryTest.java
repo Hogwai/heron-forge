@@ -91,6 +91,6 @@ class ServiceLoaderProviderRegistryTest {
     }
 
     private static URLClassLoader loader(Path tempDir) throws IOException {
-        return new URLClassLoader(new URL[] {tempDir.toUri().toURL()}, ServiceLoaderProviderRegistryTest.class.getClassLoader());
+        return new URLClassLoader(new URL[]{tempDir.toUri().toURL()}, ServiceLoaderProviderRegistryTest.class.getClassLoader());
     }
 }

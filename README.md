@@ -4,8 +4,8 @@
 
 Heron Forge is a Java platform for building, discovering, validating, and composing provider-based capabilities.
 
-Providers expose capabilities through an SPI. 
-The runtime loads providers, validates application configuration and capability graphs, checks schemas and dependencies and prepares immutable runtime snapshots.
+Providers expose capabilities through an SPI. The runtime loads providers, validates application configuration and
+capability graphs, checks schemas and dependencies and prepares immutable runtime snapshots.
 
 ### Architecture
 
@@ -78,7 +78,10 @@ Use the Gradle wrapper (Gradle 9.7.0):
 
 `check` runs the unit tests, static analysis (Checkstyle, PMD, Error Prone), coverage reporting and coverage gates.
 
-A `Makefile` wraps the daily workflow (`make help`). It exposes `make check`, `make publish`, `make cli`, `make db-up` / `db-down` and `make integration` (opt-in PostgreSQL suites with the required environment). `make demo-run` starts the factory-demo shell in the foreground. `make e2e` scaffolds an application, wires a database-backed provider, boots the shell and probes the HTTP endpoints.
+A `Makefile` wraps the daily workflow (`make help`). It exposes `make check`, `make publish`, `make cli`, `make db-up` /
+`db-down` and `make integration` (opt-in PostgreSQL suites with the required environment). `make demo-run` starts the
+factory-demo shell in the foreground. `make e2e` scaffolds an application, wires a database-backed provider, boots the
+shell and probes the HTTP endpoints.
 
 ## Scaffolding (`heron create`)
 
@@ -100,10 +103,11 @@ $HERON create brick pg-store --type=data       # data-access brick skeleton
 $HERON create brick web --type=host            # host adapter brick skeleton
 ```
 
-`heron create` without arguments starts an interactive wizard in a terminal, or prints the direct usage with exit status 2 when no terminal is available.
-Project names must match `[a-z][a-z0-9-]*`.
-Generated builds resolve `dev.hogwai.platform:heron-platform-*` from `mavenLocal()`, so run `./gradlew publishToMavenLocal` first.
-Provider generation defaults to Java. Use `--language=KOTLIN` to generate a Kotlin/JVM provider that implements the Java SPI and registers through `ServiceLoader`.
+`heron create` without arguments starts an interactive wizard in a terminal, or prints the direct usage with exit status
+2 when no terminal is available. Project names must match `[a-z][a-z0-9-]*`. Generated builds resolve
+`dev.hogwai.platform:heron-platform-*` from `mavenLocal()`, so run `./gradlew publishToMavenLocal` first. Provider
+generation defaults to Java. Use `--language=KOTLIN` to generate a Kotlin/JVM provider that implements the Java SPI and
+registers through `ServiceLoader`.
 
 ## Service registration (`@HeronService`)
 
@@ -116,9 +120,10 @@ public final class DemoOrdersProviderFactory implements ProviderFactory {
 }
 ```
 
-At compile time the `heron-platform-processor` annotation processor generates the `META-INF/services/<interface>` descriptor. 
-It also validates the declaration: public non-abstract class with a public no-argument constructor and class implementing the declared contract. 
-Metadata must be sound too: non-blank whitespace-free id, canonical `major.minor.patch` version (default `1.0.0`), unique ids per contract inside a module.
+At compile time the `heron-platform-processor` annotation processor generates the `META-INF/services/<interface>`
+descriptor. It also validates the declaration: public non-abstract class with a public no-argument constructor and class
+implementing the declared contract. Metadata must be sound too: non-blank whitespace-free id, canonical
+`major.minor.patch` version (default `1.0.0`), unique ids per contract inside a module.
 
 Modules carrying annotated classes must declare the processor on javac's processor path:
 
@@ -130,13 +135,14 @@ dependencies {
 }
 ```
 
-The annotation lives in `core:heron-platform-spi`. The processor is build-time only and never appears in runtime artifacts. 
-The runtime discovery mechanism (`ServiceLoader`) is unchanged.
+The annotation lives in `core:heron-platform-spi`. The processor is build-time only and never appears in runtime
+artifacts. The runtime discovery mechanism (`ServiceLoader`) is unchanged.
 
 ## Generation registry
 
-Applications do not have to be started straight from a YAML file. 
-`heron register` validates a configuration, seals it (the generation id is the full hex SHA-256 of the raw YAML bytes) and stores it with lifecycle metadata:
+Applications do not have to be started straight from a YAML file.
+`heron register` validates a configuration, seals it (the generation id is the full hex SHA-256 of the raw YAML bytes)
+and stores it with lifecycle metadata:
 
 ```bash
 HERON=bricks/heron-platform-cli/build/install/heron/bin/heron
@@ -149,26 +155,32 @@ $HERON start --store /var/lib/heron/reg --app my-app            # boots the late
 $HERON rollback --store /var/lib/heron/reg --app my-app         # prints the start command for the previous STABLE
 ```
 
-Generations follow a monotone lifecycle: `EXPERIMENTAL → STABLE → DEPRECATED → RETIRED`. 
-`start` picks the latest STABLE generation by default. RETIRED is always refused and DEPRECATED requires an explicit `--generation` (with a warning).
+Generations follow a monotone lifecycle: `EXPERIMENTAL → STABLE → DEPRECATED → RETIRED`.
+`start` picks the latest STABLE generation by default. RETIRED is always refused and DEPRECATED requires an explicit
+`--generation` (with a warning).
 
-The store keeps the sealed definition, never live state. Each generation is a directory holding the raw validated YAML (`${ENV}` placeholders stay unresolved on disk, so no secrets are persisted) plus a `record.json` metadata file:
+The store keeps the sealed definition, never live state. Each generation is a directory holding the raw validated YAML
+(`${ENV}` placeholders stay unresolved on disk, so no secrets are persisted) plus a `record.json` metadata file:
 
 ```text
 <store-root>/<applicationId>/<generationId>/{config.yaml,record.json}
 ```
 
-The store root comes from `--store`, else the `HERON_REGISTRY_DIR` environment variable, else `./registry`. 
-At activation the stored YAML is reparsed and recompiled through the same pipeline as a direct boot. The integrity check `sha256(rawYaml) == generationId` runs before any compilation, so a stored generation always rebuilds to exactly what was sealed. 
-The default store is the file-backed brick (`bricks:heron-platform-registry`, service id `registry.file`). Another backend means writing another brick implementing `spi.registry.GenerationStore`.
+The store root comes from `--store`, else the `HERON_REGISTRY_DIR` environment variable, else `./registry`. At
+activation the stored YAML is reparsed and recompiled through the same pipeline as a direct boot. The integrity check
+`sha256(rawYaml) == generationId` runs before any compilation, so a stored generation always rebuilds to exactly what
+was sealed. The default store is the file-backed brick (`bricks:heron-platform-registry`, service id `registry.file`).
+Another backend means writing another brick implementing `spi.registry.GenerationStore`.
 
 ## Factory demo consumer path
 
-The factory demo has one supported consumer path: 
-the standard Heron shell and the PostgreSQL fixture supplied by Compose. 
-Credentials are never stored in configuration files: the runtime resolves `${HERON_DB_URL}`, `${HERON_DB_USER}` and `${HERON_DB_PASSWORD}` placeholders in `supply-chain.yaml` from the environment.
-Placeholder resolution is strict: a placeholder must span the entire value (`password: ${HERON_DB_PASSWORD}`, never `prefix-${VAR}`), and a missing or blank variable fails the load with `CONFIG_PARSE_ERROR`.
-Start the database, export the connection settings matching the Compose fixture, run the acceptance checks, build the shell distribution, and start the application:
+The factory demo has one supported consumer path:
+the standard Heron shell and the PostgreSQL fixture supplied by Compose. Credentials are never stored in configuration
+files: the runtime resolves `${HERON_DB_URL}`, `${HERON_DB_USER}` and `${HERON_DB_PASSWORD}` placeholders in
+`supply-chain.yaml` from the environment. Placeholder resolution is strict: a placeholder must span the entire value
+(`password: ${HERON_DB_PASSWORD}`, never `prefix-${VAR}`), and a missing or blank variable fails the load with
+`CONFIG_PARSE_ERROR`. Start the database, export the connection settings matching the Compose fixture, run the
+acceptance checks, build the shell distribution, and start the application:
 
 ```bash
 docker compose -f examples/factory-demo/docker-compose.yml up -d
@@ -181,19 +193,24 @@ RUN_POSTGRES_TESTS=true ./gradlew :examples:factory-demo:test
   --config examples/factory-demo/src/main/resources/supply-chain.yaml
 ```
 
-The shell serves `GET /health/ready`, `GET /exceptions` and `GET /kotlin-order-summary` on `http://127.0.0.1:8080`. 
-To try a different policy, stop the shell, change `minimumDeliveryRatio` in `supply-chain.yaml` (for example from `0.8` to`0.4`) and start it again. 
-Stop the shell with `Ctrl-C`.
-Stop PostgreSQL with `docker compose -f examples/factory-demo/docker-compose.yml down`.
+The shell serves `GET /health/ready`, `GET /exceptions` and `GET /kotlin-order-summary` on `http://127.0.0.1:8080`. To
+try a different policy, stop the shell, change `minimumDeliveryRatio` in `supply-chain.yaml` (for example from `0.8` to
+`0.4`) and start it again. Stop the shell with `Ctrl-C`. Stop PostgreSQL with
+`docker compose -f examples/factory-demo/docker-compose.yml down`.
 
-`factory-demo` has no `main`, scheduler, retry loop, or custom runner. 
-Helidon and picocli are supplied by the standard shell.
+`factory-demo` has no `main`, scheduler, retry loop, or custom runner. Helidon and picocli are supplied by the standard
+shell.
 
-`examples:external-provider` contains the Java supply-chain providers. `examples:kotlin-provider` is a separate Kotlin/JVM module containing `demo.kotlin.order-summary`, a PostgreSQL-backed aggregate provider that joins orders and deliveries to expose delivery status and percentage. It uses the `DataAccess` contract, resource tracking, and `ServiceLoader` registration, and is included in `factory-demo` without replacing the Java providers.
+`examples:external-provider` contains the Java supply-chain providers. `examples:kotlin-provider` is a separate
+Kotlin/JVM module containing `demo.kotlin.order-summary`, a PostgreSQL-backed aggregate provider that joins orders and
+deliveries to expose delivery status and percentage. It uses the `DataAccess` contract, resource tracking, and
+`ServiceLoader` registration, and is included in `factory-demo` without replacing the Java providers.
 
 ### Widget surface
 
-Declare dashboard widgets in the application YAML. Register the configuration, then export the sealed generation as a JSON manifest for the React shell in `web/ui-shell`. Build the CLI distribution first (`make cli`). Export the database connection variables before registering, because the stored YAML keeps `${ENV}` placeholders unresolved:
+Declare dashboard widgets in the application YAML. Register the configuration, then export the sealed generation as a
+JSON manifest for the React shell in `web/ui-shell`. Build the CLI distribution first (`make cli`). Export the database
+connection variables before registering, because the stored YAML keeps `${ENV}` placeholders unresolved:
 
 ```bash
 export HERON_DB_URL=jdbc:postgresql://localhost:5432/heron_demo
@@ -218,15 +235,23 @@ bricks/heron-platform-cli/build/install/heron/bin/heron widgets export \
   --output web/ui-shell/generated/widgets.json
 ```
 
-`npm run build` chains the export, then `tsc`, then Vite. A fresh clone must build the CLI distribution and register once before the shell can compile, because no placeholder manifest exists in the repository.
+`npm run build` chains the export, then `tsc`, then Vite. A fresh clone must build the CLI distribution and register
+once before the shell can compile, because no placeholder manifest exists in the repository.
 
-The export selects the latest STABLE generation by default. An explicit `--generation` allows DEPRECATED with a warning and refuses RETIRED. It verifies the stored YAML against its SHA-256 generation id before writing. Environment placeholders resolve at export time, exactly like activation.
+The export selects the latest STABLE generation by default. An explicit `--generation` allows DEPRECATED with a warning
+and refuses RETIRED. It verifies the stored YAML against its SHA-256 generation id before writing. Environment
+placeholders resolve at export time, exactly like activation.
 
-The manifest carries the store generation id as a JSON field. The shell shows it in its footer as an identity stamp. The affinity check lives in the CLI, not in the backend. When `heron start --store` activates a generation whose id differs from the manifest id, it prints a warning asking for a re-export. A missing manifest produces an info line. The check is advisory only and never blocks the boot. Widget types are validated at parse time (`kpi`, `table`, `chart`). Unknown types fail the export, and the shell degrades gracefully on types it does not know.
+The manifest carries the store generation id as a JSON field. The shell shows it in its footer as an identity stamp. The
+affinity check lives in the CLI, not in the backend. When `heron start --store` activates a generation whose id differs
+from the manifest id, it prints a warning asking for a re-export. A missing manifest produces an info line. The check is
+advisory only and never blocks the boot. Widget types are validated at parse time (`kpi`, `table`, `chart`). Unknown
+types fail the export, and the shell degrades gracefully on types it does not know.
 
 ## Modules
 
-The platform is split into core modules (agnostic, framework-independent) and bricks (pluggable components that can wired in).
+The platform is split into core modules (agnostic, framework-independent) and bricks (pluggable components that can
+wired in).
 
 | Module                                  | Kind    | Description                                                           | Depends on                                                                                                                                                    |
 |-----------------------------------------|---------|-----------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -244,30 +269,40 @@ The platform is split into core modules (agnostic, framework-independent) and br
 ## Boundaries
 
 - The core (`spi`, `runtime`) is framework-independent: it knows neither Helidon, nor picocli, nor PostgreSQL.
-- The bricks (`data-jdbi`, `data-postgresql`, `host-helidon`, `cli`, `registry`) are pluggable: one can pick its database brick, its HTTP brick, its launcher and its generation store.
-- The data contract lives in the framework-independent `core:heron-platform-spi`. `bricks:heron-platform-data-jdbi` is the generic SQL engine over Jdbi. `bricks:heron-platform-data-postgresql` is a thin dialect on top of it (PostgresPlugin, JDBC driver) and is discovered by the runtime through `ServiceLoader`. Supporting another database means writing another thin dialect brick.
-- The launcher (`bricks:heron-platform-cli`) is host-agnostic: it discovers the `HostAdapter` implementation through `ServiceLoader`. `bricks:heron-platform-host-helidon` is the HTTP brick that one can wire in. Another host brick can be plugged in without touching the launcher.
-- The registry keeps cold/hot separation: the store persists sealed definitions (`GenerationRecord`), while `RuntimeSnapshot` holds live capability instances and stays RAM-only. Swapping the file store for another backend (e.g. PostgreSQL) means writing another `GenerationStore` brick. Core and CLI stay unchanged.
+- The bricks (`data-jdbi`, `data-postgresql`, `host-helidon`, `cli`, `registry`) are pluggable: one can pick its
+  database brick, its HTTP brick, its launcher and its generation store.
+- The data contract lives in the framework-independent `core:heron-platform-spi`. `bricks:heron-platform-data-jdbi` is
+  the generic SQL engine over Jdbi. `bricks:heron-platform-data-postgresql` is a thin dialect on top of it
+  (PostgresPlugin, JDBC driver) and is discovered by the runtime through `ServiceLoader`. Supporting another database
+  means writing another thin dialect brick.
+- The launcher (`bricks:heron-platform-cli`) is host-agnostic: it discovers the `HostAdapter` implementation through
+  `ServiceLoader`. `bricks:heron-platform-host-helidon` is the HTTP brick that one can wire in. Another host brick can
+  be plugged in without touching the launcher.
+- The registry keeps cold/hot separation: the store persists sealed definitions (`GenerationRecord`), while
+  `RuntimeSnapshot` holds live capability instances and stays RAM-only. Swapping the file store for another backend
+  (e.g. PostgreSQL) means writing another `GenerationStore` brick. Core and CLI stay unchanged.
 
-The runtime discovers the `DataAccessFactory` implementation on the classpath via `ServiceLoader` and supplies it to providers through `BuildContext`. 
-A configuration that never touches data access loads even without a data brick. A provider that opens a data client fails with `DATA_ACCESS_UNAVAILABLE` when no brick is present. 
-The launcher fails with a clear `HostException` when no host brick is on the classpath. 
-A provider opens a data client during creation, registers it in the resource tracker, and receives a fresh database handle for each query. 
-The generic Jdbi factory installs no plugins unless they are supplied explicitly, the PostgreSQL factory installs `PostgresPlugin`. 
-Both factories run a `SELECT 1` startup probe and sanitize startup and query failures. 
-The PostgreSQL factory backs every client with a small HikariCP connection pool (`JdbiPoolOptions.defaults()`, closed together with the client when the snapshot releases it).
-Jdbi applies a per-query timeout from the execution deadline. A cancellation signal cannot actively interrupt a server call that is already blocked without a separate statement-cancellation mechanism. 
-PostgreSQL integration tests are opt-in with `RUN_POSTGRES_TESTS=true`.
+The runtime discovers the `DataAccessFactory` implementation on the classpath via `ServiceLoader` and supplies it to
+providers through `BuildContext`. A configuration that never touches data access loads even without a data brick. A
+provider that opens a data client fails with `DATA_ACCESS_UNAVAILABLE` when no brick is present. The launcher fails with
+a clear `HostException` when no host brick is on the classpath. A provider opens a data client during creation,
+registers it in the resource tracker, and receives a fresh database handle for each query. The generic Jdbi factory
+installs no plugins unless they are supplied explicitly, the PostgreSQL factory installs `PostgresPlugin`. Both
+factories run a `SELECT 1` startup probe and sanitize startup and query failures. The PostgreSQL factory backs every
+client with a small HikariCP connection pool (`JdbiPoolOptions.defaults()`, closed together with the client when the
+snapshot releases it). Jdbi applies a per-query timeout from the execution deadline. A cancellation signal cannot
+actively interrupt a server call that is already blocked without a separate statement-cancellation mechanism. PostgreSQL
+integration tests are opt-in with `RUN_POSTGRES_TESTS=true`.
 
 ### Streaming datasets
 
-Large results do not have to be materialized. 
-`DataAccess.streamQuery(...)` returns a `StreamingDataSet`, an `AutoCloseable` view delivering bounded batches. 
-Every pull re-checks the deadline and the cancellation signal and enforces the same `DataSetLimits` as materialized datasets. 
-A capability declares its result shape through the covariant return of `execute`. 
-Return a `StreamingDataSet` to stream (entrypoint targets flow lazily to the host) or keep returning a `MaterializedDataSet` as before. 
-When a streaming capability is consumed as an upstream input, the runtime collects it into a materialized dataset for composition. 
-The demo orders capability (`demo.orders`) streams by default over the Jdbi cursor.
+Large results do not have to be materialized.
+`DataAccess.streamQuery(...)` returns a `StreamingDataSet`, an `AutoCloseable` view delivering bounded batches. Every
+pull re-checks the deadline and the cancellation signal and enforces the same `DataSetLimits` as materialized datasets.
+A capability declares its result shape through the covariant return of `execute`. Return a `StreamingDataSet` to stream
+(entrypoint targets flow lazily to the host) or keep returning a `MaterializedDataSet` as before. When a streaming
+capability is consumed as an upstream input, the runtime collects it into a materialized dataset for composition. The
+demo orders capability (`demo.orders`) streams by default over the Jdbi cursor.
 
 ## Versions & tools
 
@@ -292,11 +327,11 @@ All versions are declared in `gradle.properties`.
 
 ## Revapi (API compatibility)
 
-`heron-platform-spi` is checked for API compatibility with Revapi. 
-Revapi compares the current SPI public API with a previous `heron-platform-spi` artifact. 
-This project uses the Gradle plugin `org.revapi:gradle-revapi:1.8.0`, the analyzer `org.revapi:revapi-java:0.19.1` and the baseline version `0.1.0`.
- 
-The baseline can be installed locally. 
+`heron-platform-spi` is checked for API compatibility with Revapi. Revapi compares the current SPI public API with a
+previous `heron-platform-spi` artifact. This project uses the Gradle plugin `org.revapi:gradle-revapi:1.8.0`, the
+analyzer `org.revapi:revapi-java:0.19.1` and the baseline version `0.1.0`.
+
+The baseline can be installed locally.
 `revapiAnalyze` generates the analysis, while `revapi` enforces it as a build check.
 
 To demonstrate the check, publish the unchanged SPI first:
@@ -311,8 +346,7 @@ Then make an intentional breaking change to the public SPI API and run:
 ./gradlew :core:heron-platform-spi:revapi
 ```
 
-Revapi should fail and report the break. Reverting the API change should make
-the check pass again.
+Revapi should fail and report the break. Reverting the API change should make the check pass again.
 
 ## License
 

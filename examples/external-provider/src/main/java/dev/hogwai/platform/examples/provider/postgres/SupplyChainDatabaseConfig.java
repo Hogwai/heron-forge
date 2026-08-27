@@ -12,7 +12,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/** PostgreSQL configuration shared by the source providers. */
+/**
+ * PostgreSQL configuration shared by the source providers.
+ */
 @SuppressWarnings("PMD.CyclomaticComplexity")
 public final class SupplyChainDatabaseConfig {
     private SupplyChainDatabaseConfig() {
@@ -36,7 +38,7 @@ public final class SupplyChainDatabaseConfig {
     }
 
     public static List<Diagnostic> validate(Map<String, Object> rawConfig,
-            String providerName) {
+                                            String providerName) {
         if (rawConfig == null) {
             return List.of(databaseDiagnostic("/config", providerName + " configuration must be an object"));
         }
@@ -72,7 +74,9 @@ public final class SupplyChainDatabaseConfig {
                 requiredString(config, PASSWORD));
     }
 
-    /** Returns the dataset limits from the configuration, or the defaults. */
+    /**
+     * Returns the dataset limits from the configuration, or the defaults.
+     */
     public static DataSetLimits limits(Map<String, Object> rawConfig) {
         Map<String, Object> config = rawConfig == null ? Map.of() : rawConfig;
         return new DataSetLimits(longValue(config, MAX_ROWS, 1_000), longValue(config, MAX_BYTES, 1_000_000));

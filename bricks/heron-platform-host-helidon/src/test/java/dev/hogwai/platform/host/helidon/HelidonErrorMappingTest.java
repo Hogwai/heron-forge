@@ -58,21 +58,21 @@ class HelidonErrorMappingTest {
     private record FailingApplication(FailureCode code) implements HostApplication {
 
         @Override
-            public List<EntrypointDescriptor> entrypoints() {
-                return List.of(new EntrypointDescriptor("failure", "/failure"));
-            }
-
-            @Override
-            public ExecutionOutcome execute(InvocationRequest request) {
-                if (code == FailureCode.INTERNAL) {
-                    throw new IllegalStateException("sensitive provider detail");
-                }
-                return ExecutionOutcome.failure(new InvocationFailure(code, "safe\nfailure message"));
-            }
-
-            @Override
-            public void close() {
-                // No-op
-            }
+        public List<EntrypointDescriptor> entrypoints() {
+            return List.of(new EntrypointDescriptor("failure", "/failure"));
         }
+
+        @Override
+        public ExecutionOutcome execute(InvocationRequest request) {
+            if (code == FailureCode.INTERNAL) {
+                throw new IllegalStateException("sensitive provider detail");
+            }
+            return ExecutionOutcome.failure(new InvocationFailure(code, "safe\nfailure message"));
+        }
+
+        @Override
+        public void close() {
+            // No-op
+        }
+    }
 }

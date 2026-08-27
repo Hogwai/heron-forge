@@ -20,7 +20,7 @@ final class ApplicationMapper {
 
     private static final String API_VERSION = "heron.dev/v1";
     private static final Set<String> ROOT_FIELDS =
-            Set.of("apiVersion", "application", "capabilities", "endpoints", "widgets");
+            Set.of("apiVersion", "application", "capabilities", "endpoints", "widgets", "workers");
 
     private ApplicationMapper() {
         // no instances
@@ -40,10 +40,12 @@ final class ApplicationMapper {
         List<EntrypointConfig> entrypoints = EntrypointMapper.mapEntrypoints(
                 root.get("endpoints"), "/endpoints", diagnostics);
         List<WidgetConfig> widgets = WidgetMapper.mapWidgets(root.get("widgets"), "/widgets", diagnostics);
+        List<dev.hogwai.platform.runtime.config.WorkerConfig> workers = WorkerMapper.mapWorkers(
+                root.get("workers"), "/workers", diagnostics);
 
         if (!diagnostics.isEmpty()) {
             return null;
         }
-        return new ApplicationConfig(apiVersion, name, capabilities, entrypoints, widgets);
+        return new ApplicationConfig(apiVersion, name, capabilities, entrypoints, widgets, workers);
     }
 }

@@ -1,6 +1,7 @@
 package dev.hogwai.platform.runtime.config.safe;
 
 import com.fasterxml.jackson.databind.JsonNode;
+
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;

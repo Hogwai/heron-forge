@@ -25,7 +25,9 @@ import dev.hogwai.platform.spi.provider.ConfigurationSchema;
 import dev.hogwai.platform.spi.provider.PortDescriptor;
 import dev.hogwai.platform.spi.provider.ProviderDescriptor;
 
-/** Shared descriptor, graph, and data-access setup for snapshot builder tests. */
+/**
+ * Shared descriptor, graph, and data-access setup for snapshot builder tests.
+ */
 final class SnapshotBuilderTestSupport {
 
     private static final DataAccessFactory DATA_ACCESS_FACTORY = new SnapshotBuilderTestDataAccessFactory();
@@ -38,7 +40,7 @@ final class SnapshotBuilderTestSupport {
     }
 
     static SnapshotBuilder builder(ProviderRegistry registry, String generationId, Clock clock,
-            DataAccessFactory dataAccessFactory) {
+                                   DataAccessFactory dataAccessFactory) {
         return new SnapshotBuilder(new ProviderResolver(registry), new GraphCompiler(),
                 clock, dataAccessFactory, () -> generationId);
     }

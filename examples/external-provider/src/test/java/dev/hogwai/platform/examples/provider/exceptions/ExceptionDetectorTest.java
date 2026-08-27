@@ -65,8 +65,8 @@ class ExceptionDetectorTest {
                         "deliveredAt", requiredAt))));
 
         return detector.execute(CapabilityInputs.of(Map.of(
-                new PortId("orders"), orders,
-                new PortId("deliveries"), deliveries)), context()).records().stream()
+                        new PortId("orders"), orders,
+                        new PortId("deliveries"), deliveries)), context()).records().stream()
                 .map(schemaRecord -> (String) schemaRecord.value(new FieldId("exceptionType")))
                 .toList();
     }

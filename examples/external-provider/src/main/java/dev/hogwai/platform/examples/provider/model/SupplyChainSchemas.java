@@ -4,10 +4,13 @@ import dev.hogwai.platform.spi.data.Field;
 import dev.hogwai.platform.spi.data.FieldId;
 import dev.hogwai.platform.spi.data.FieldType;
 import dev.hogwai.platform.spi.data.Schema;
+
 import java.util.List;
 import java.util.Optional;
 
-/** Schemas shared by the deterministic supply-chain example providers. */
+/**
+ * Schemas shared by the deterministic supply-chain example providers.
+ */
 public final class SupplyChainSchemas {
 
     private static final Schema ORDERS = createOrders();

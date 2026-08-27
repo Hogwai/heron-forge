@@ -11,7 +11,9 @@ import java.util.List;
 
 import org.jdbi.v3.postgres.PostgresPlugin;
 
-/** Opens PostgreSQL data access clients backed by the generic Jdbi implementation. */
+/**
+ * Opens PostgreSQL data access clients backed by the generic Jdbi implementation.
+ */
 @HeronService(value = DataAccessFactory.class, id = "data.postgres")
 public final class PostgresJdbiDataAccessFactory implements DataAccessFactory {
 

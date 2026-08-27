@@ -40,7 +40,8 @@ class ProjectWriterTest {
         Files.createDirectories(target);
         Files.writeString(target.resolve("keep.txt"), "keep");
 
-        assertThatThrownBy(() -> ProjectWriter.writeAll(target, Map.of("new.txt", "new")))
+        var map = Map.of("new.txt", "new");
+        assertThatThrownBy(() -> ProjectWriter.writeAll(target, map))
                 .isInstanceOf(IllegalStateException.class);
         assertThat(target.resolve("new.txt")).doesNotExist();
         assertThat(Files.readString(target.resolve("keep.txt"))).isEqualTo("keep");

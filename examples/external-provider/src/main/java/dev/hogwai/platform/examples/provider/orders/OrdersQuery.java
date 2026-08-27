@@ -6,9 +6,12 @@ import dev.hogwai.platform.spi.data.MaterializedDataSet;
 import dev.hogwai.platform.spi.data.StreamingDataSet;
 import dev.hogwai.platform.spi.data.access.DataAccess;
 import dev.hogwai.platform.spi.data.access.QueryContext;
+
 import java.util.Map;
 
-/** Reader for the orders source query. */
+/**
+ * Reader for the orders source query.
+ */
 final class OrdersQuery {
 
     private static final String SQL = "SELECT order_id, ordered_quantity, required_at, priority "

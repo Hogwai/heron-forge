@@ -23,8 +23,8 @@ public final class HttpHelper {
      * Write health response
      *
      * @param response server response
-     * @param live liveness
-     * @param ready readiness
+     * @param live     liveness
+     * @param ready    readiness
      */
     public static void writeHealth(ServerResponse response, boolean live, boolean ready) {
         boolean healthy = live || ready;
@@ -41,8 +41,8 @@ public final class HttpHelper {
     /**
      * Extract id from a request
      *
-     * @param request request
-     * @param headerName header to extract
+     * @param request        request
+     * @param headerName     header to extract
      * @param fallbackHeader fallback header
      * @return extracted id
      */

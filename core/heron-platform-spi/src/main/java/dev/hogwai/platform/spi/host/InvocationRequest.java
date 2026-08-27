@@ -3,7 +3,8 @@ package dev.hogwai.platform.spi.host;
 import java.time.Instant;
 import java.util.Objects;
 
-/** Request metadata supplied to a host application invocation.
+/**
+ * Request metadata supplied to a host application invocation.
  *
  * @param entrypointId       requested entrypoint identifier
  * @param requestId          request identifier
@@ -18,7 +19,9 @@ public record InvocationRequest(
         Instant deadline,
         CancellationSignal cancellationSignal) {
 
-    /** Validates the required request metadata. */
+    /**
+     * Validates the required request metadata.
+     */
     public InvocationRequest {
         requireNonBlank(entrypointId, "entrypointId");
         requireNonBlank(requestId, "requestId");

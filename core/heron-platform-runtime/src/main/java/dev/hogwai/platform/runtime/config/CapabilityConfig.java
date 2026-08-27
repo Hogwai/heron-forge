@@ -1,6 +1,7 @@
 package dev.hogwai.platform.runtime.config;
 
 import dev.hogwai.platform.runtime.config.safe.SafeConfig;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;

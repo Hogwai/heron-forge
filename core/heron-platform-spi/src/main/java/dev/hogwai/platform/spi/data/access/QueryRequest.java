@@ -5,7 +5,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
-/** Immutable description of one data query. */
+/**
+ * Immutable description of one data query.
+ */
 public record QueryRequest<T>(String operation, String sql, Map<String, ?> parameters, RowMapper<T> mapper) {
 
     /**

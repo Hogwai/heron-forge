@@ -13,12 +13,16 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-/** Picocli command that scaffolds a Heron provider plugin. */
+/**
+ * Picocli command that scaffolds a Heron provider plugin.
+ */
 @SuppressWarnings("PMD.CyclomaticComplexity")
 @Command(name = "provider", description = "Scaffold a new Heron provider plugin")
 public final class CreateProviderCommand implements Callable<Integer> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CreateProviderCommand.class);
+    public static final String KOTLIN = "KOTLIN";
+    public static final String SOURCE = "SOURCE";
 
     private final Path baseDirectory;
 
@@ -28,18 +32,22 @@ public final class CreateProviderCommand implements Callable<Integer> {
     @Option(names = "--package", description = "base package")
     String packageName;
 
-    @Option(names = "--kind", description = "capability kind: SOURCE or TRANSFORM", defaultValue = "SOURCE")
+    @Option(names = "--kind", description = "capability kind: SOURCE or TRANSFORM", defaultValue = SOURCE)
     String kind;
 
     @Option(names = "--language", description = "source language: JAVA or KOTLIN", defaultValue = "JAVA")
     String language;
 
-    /** Creates a provider command rooted at the current directory. */
+    /**
+     * Creates a provider command rooted at the current directory.
+     */
     public CreateProviderCommand() {
         this(Path.of(""));
     }
 
-    /** Creates a provider command rooted at the given directory for tests. */
+    /**
+     * Creates a provider command rooted at the given directory for tests.
+     */
     CreateProviderCommand(Path baseDirectory) {
         this.baseDirectory = baseDirectory;
     }
@@ -68,7 +76,7 @@ public final class CreateProviderCommand implements Callable<Integer> {
     }
 
     private static Map<String, String> renderFiles(String projectName, String basePackage,
-            String capabilityKind, String sourceLanguage) throws IOException {
+                                                   String capabilityKind, String sourceLanguage) throws IOException {
         Map<String, String> model = new LinkedHashMap<>(PlatformVersions.templateModel());
         model.put("projectName", projectName);
         model.put("basePackage", basePackage);
@@ -76,7 +84,7 @@ public final class CreateProviderCommand implements Callable<Integer> {
         model.put("kind", capabilityKind);
         model.put("inputPorts", inputPorts(capabilityKind, sourceLanguage));
         String className = ProjectNames.toJavaTypeName(projectName);
-        boolean kotlin = sourceLanguage.equals("KOTLIN");
+        boolean kotlin = sourceLanguage.equals(KOTLIN);
         String sourceExtension = kotlin ? "kt" : "java";
         String sourceTemplate = kotlin ? "provider/ProviderFactory.kt.template" : "provider/ProviderFactory.java.template";
         String testTemplate = kotlin ? "provider/ProviderFactoryTest.kt.template"
@@ -93,13 +101,13 @@ public final class CreateProviderCommand implements Callable<Integer> {
     }
 
     private static String sourcePath(String basePackage, String sourceSet, String sourceLanguage) {
-        String sourceDirectory = sourceLanguage.equals("KOTLIN") ? "kotlin" : "java";
+        String sourceDirectory = sourceLanguage.equals(KOTLIN) ? "kotlin" : "java";
         return "src/%s/%s/%s/".formatted(sourceSet, sourceDirectory, basePackage.replace('.', '/'));
     }
 
     private static String normalizeKind(String value) {
-        String normalized = value == null || value.isBlank() ? "SOURCE" : value.toUpperCase(Locale.ROOT);
-        if (!normalized.equals("SOURCE") && !normalized.equals("TRANSFORM")) {
+        String normalized = value == null || value.isBlank() ? SOURCE : value.toUpperCase(Locale.ROOT);
+        if (!normalized.equals(SOURCE) && !normalized.equals("TRANSFORM")) {
             throw new IllegalArgumentException("provider kind must be SOURCE or TRANSFORM");
         }
         return normalized;
@@ -107,17 +115,17 @@ public final class CreateProviderCommand implements Callable<Integer> {
 
     private static String normalizeLanguage(String value) {
         String normalized = value == null || value.isBlank() ? "JAVA" : value.toUpperCase(Locale.ROOT);
-        if (!normalized.equals("JAVA") && !normalized.equals("KOTLIN")) {
+        if (!normalized.equals("JAVA") && !normalized.equals(KOTLIN)) {
             throw new IllegalArgumentException("provider language must be JAVA or KOTLIN");
         }
         return normalized;
     }
 
     private static String inputPorts(String kind, String language) {
-        if (kind.equals("SOURCE")) {
-            return language.equals("KOTLIN") ? "emptyMap()" : "Map.of()";
+        if (kind.equals(SOURCE)) {
+            return language.equals(KOTLIN) ? "emptyMap()" : "Map.of()";
         }
-        if (language.equals("KOTLIN")) {
+        if (language.equals(KOTLIN)) {
             return "mapOf(PortId(\"input\") to PortDescriptor(PortId(\"input\"), SCHEMA, true))";
         }
         return "Map.of(new PortId(\"input\"), new PortDescriptor(new PortId(\"input\"), SCHEMA, true))";

@@ -57,7 +57,9 @@ final class WidgetMapper {
     }
 }
 
-/** Maps and validates one widget declaration. */
+/**
+ * Maps and validates one widget declaration.
+ */
 final class WidgetDeclarationMapper {
 
     private static final Set<String> WIDGET_FIELDS = Set.of("id", "type", "title", "target");

@@ -10,116 +10,115 @@
 @import "tailwindcss";
 
 @theme {
-  /* Type — standard system stacks (demo machine has its own fonts) */
-  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    /* Type — standard system stacks (demo machine has its own fonts) */
+    --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 
-  /* Breakpoints (documenting the grid model; values are v4 defaults) */
-  --breakpoint-lg: 1024px; /* hybrid: KPI 6, rest 12 */
-  --breakpoint-xl: 1280px; /* full model: KPI 4, chart 8, table 12 */
+    /* Breakpoints (documenting the grid model; values are v4 defaults) */
+    --breakpoint-lg: 1024px; /* hybrid: KPI 6, rest 12 */
+    --breakpoint-xl: 1280px; /* full model: KPI 4, chart 8, table 12 */
+    /* Surfaces */
+    --color-canvas: #eef1f4;
+    --color-canvas-dot: #dde3e9;
+    --color-surface: #ffffff;
+    --color-surface-2: #f6f8fa;
+    --color-surface-hover: #f7f9fb;
 
-  /* Surfaces */
-  --color-canvas: #eef1f4;
-  --color-canvas-dot: #dde3e9;
-  --color-surface: #ffffff;
-  --color-surface-2: #f6f8fa;
-  --color-surface-hover: #f7f9fb;
+    /* Hairlines */
+    --color-line: #dfe4ea;
+    --color-line-soft: #ebeff3;
+    --color-line-strong: #c8d1da;
 
-  /* Hairlines */
-  --color-line: #dfe4ea;
-  --color-line-soft: #ebeff3;
-  --color-line-strong: #c8d1da;
+    /* Ink */
+    --color-ink: #17222e;
+    --color-ink-2: #4e6076;
+    --color-ink-3: #8494a6;
 
-  /* Ink */
-  --color-ink: #17222e;
-  --color-ink-2: #4e6076;
-  --color-ink-3: #8494a6;
+    /* Accent — forge orange, used sparingly (identity, seal, focus) */
+    --color-accent: #d9541e;
+    --color-accent-deep: #b84314;
+    --color-accent-tint: #fbeee7;
 
-  /* Accent — forge orange, used sparingly (identity, seal, focus) */
-  --color-accent: #d9541e;
-  --color-accent-deep: #b84314;
-  --color-accent-tint: #fbeee7;
+    /* Data hue — steel-blue ramp for chart series */
+    --color-chart-hi: #2d5b8a;
+    --color-chart-lo: #b9cde0;
+    --color-chart-grid: #e6ebf0;
 
-  /* Data hue — steel-blue ramp for chart series */
-  --color-chart-hi: #2d5b8a;
-  --color-chart-lo: #b9cde0;
-  --color-chart-grid: #e6ebf0;
+    /* Status */
+    --color-ok: #2f9e44;
+    --color-warn: #b8860b;
+    --color-danger: #c0322b;
 
-  /* Status */
-  --color-ok: #2f9e44;
-  --color-warn: #b8860b;
-  --color-danger: #c0322b;
+    /* Elevation */
+    --shadow-card: 0 1px 2px rgba(23, 34, 46, 0.05), 0 1px 6px rgba(23, 34, 46, 0.04);
+    --shadow-card-hover: 0 2px 4px rgba(23, 34, 46, 0.06), 0 4px 14px rgba(23, 34, 46, 0.07);
 
-  /* Elevation */
-  --shadow-card: 0 1px 2px rgba(23, 34, 46, 0.05), 0 1px 6px rgba(23, 34, 46, 0.04);
-  --shadow-card-hover: 0 2px 4px rgba(23, 34, 46, 0.06), 0 4px 14px rgba(23, 34, 46, 0.07);
+    /* Motion */
+    --animate-card-in: card-in 0.55s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+    --animate-shimmer: shimmer 1.5s ease-in-out infinite;
+    --animate-pulse-ring: pulse-ring 2.4s ease-out infinite;
 
-  /* Motion */
-  --animate-card-in: card-in 0.55s cubic-bezier(0.2, 0.7, 0.3, 1) both;
-  --animate-shimmer: shimmer 1.5s ease-in-out infinite;
-  --animate-pulse-ring: pulse-ring 2.4s ease-out infinite;
-
-  @keyframes card-in {
-    from {
-      opacity: 0;
-      transform: translateY(8px);
+    @keyframes card-in {
+        from {
+            opacity: 0;
+            transform: translateY(8px);
+        }
+        to {
+            opacity: 1;
+            transform: none;
+        }
     }
-    to {
-      opacity: 1;
-      transform: none;
-    }
-  }
 
-  @keyframes shimmer {
-    to {
-      transform: translateX(100%);
+    @keyframes shimmer {
+        to {
+            transform: translateX(100%);
+        }
     }
-  }
 
-  @keyframes pulse-ring {
-    0% {
-      box-shadow: 0 0 0 0 rgba(47, 158, 68, 0.35);
+    @keyframes pulse-ring {
+        0% {
+            box-shadow: 0 0 0 0 rgba(47, 158, 68, 0.35);
+        }
+        70% {
+            box-shadow: 0 0 0 5px rgba(47, 158, 68, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(47, 158, 68, 0);
+        }
     }
-    70% {
-      box-shadow: 0 0 0 5px rgba(47, 158, 68, 0);
-    }
-    100% {
-      box-shadow: 0 0 0 0 rgba(47, 158, 68, 0);
-    }
-  }
 }
 
 @layer base {
-  html {
-    -webkit-text-size-adjust: 100%;
-  }
+    html {
+        -webkit-text-size-adjust: 100%;
+    }
 
-  body {
-    margin: 0;
-    background-color: var(--color-canvas);
-    /* Faint blueprint dot grid — texture without noise */
-    background-image: radial-gradient(var(--color-canvas-dot) 1px, transparent 1px);
-    background-size: 24px 24px;
-    color: var(--color-ink);
-    font-size: 14px;
-    line-height: 1.5;
-    -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
-  }
+    body {
+        margin: 0;
+        background-color: var(--color-canvas);
+        /* Faint blueprint dot grid — texture without noise */
+        background-image: radial-gradient(var(--color-canvas-dot) 1px, transparent 1px);
+        background-size: 24px 24px;
+        color: var(--color-ink);
+        font-size: 14px;
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+    }
 
-  :focus-visible {
-    outline: 2px solid var(--color-accent);
-    outline-offset: 2px;
-    border-radius: 4px;
-  }
+    :focus-visible {
+        outline: 2px solid var(--color-accent);
+        outline-offset: 2px;
+        border-radius: 4px;
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
 }

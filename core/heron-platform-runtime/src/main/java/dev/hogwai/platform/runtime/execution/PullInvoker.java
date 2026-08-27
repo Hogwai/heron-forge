@@ -67,7 +67,7 @@ public final class PullInvoker {
      * @return the target result, materialized
      */
     public MaterializedDataSet invokeTargetAsMaterialized(RuntimeSnapshot snapshot, String targetId,
-            ExecutionContext context) {
+                                                          ExecutionContext context) {
         return Evaluator.asMaterialized(invokeTarget(snapshot, targetId, context));
     }
 
@@ -92,7 +92,7 @@ public final class PullInvoker {
         }
 
         private MaterializedDataSet evaluateMaterialized(RuntimeSnapshot snapshot, String id,
-                ExecutionContext context) {
+                                                         ExecutionContext context) {
             MaterializedDataSet cached = memoized.get(id);
             if (cached != null) {
                 return cached;
@@ -139,20 +139,20 @@ public final class PullInvoker {
     private record RequestGuard(Clock clock) {
 
         private void check(ExecutionContext context) {
-                context.cancellationToken().throwIfCancellationRequested();
-                if (!clock.instant().isBefore(context.deadline())) {
-                    throw new PlatformException(PlatformErrorCode.DEADLINE_EXCEEDED, List.of(
-                            new Diagnostic(PlatformErrorCode.DEADLINE_EXCEEDED, Severity.ERROR, null,
-                                    "execution deadline exceeded", null)));
-                }
+            context.cancellationToken().throwIfCancellationRequested();
+            if (!clock.instant().isBefore(context.deadline())) {
+                throw new PlatformException(PlatformErrorCode.DEADLINE_EXCEEDED, List.of(
+                        new Diagnostic(PlatformErrorCode.DEADLINE_EXCEEDED, Severity.ERROR, null,
+                                "execution deadline exceeded", null)));
             }
         }
+    }
 
     private static final class ProviderExecutor {
         private DataSet execute(RuntimeSnapshot snapshot, CapabilityNode node,
-                CapabilityInputs inputs, ExecutionContext context) {
+                                CapabilityInputs inputs, ExecutionContext context) {
             try (CapabilityInstance instance =
-                    snapshot.instance(node.id()).orElseThrow(ProviderExecutor::configurationFailure)) {
+                         snapshot.instance(node.id()).orElseThrow(ProviderExecutor::configurationFailure)) {
                 return Objects.requireNonNull(instance.execute(inputs, context),
                         "provider returned a null dataset");
             } catch (PlatformException failure) {
