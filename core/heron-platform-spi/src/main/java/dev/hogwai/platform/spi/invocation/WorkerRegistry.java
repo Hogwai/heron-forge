@@ -1,12 +1,14 @@
 package dev.hogwai.platform.spi.invocation;
 
+import dev.hogwai.platform.spi.provider.BuildContext;
+
 import java.util.List;
 import java.util.Optional;
 
 /**
  * Registry for {@link AsyncWorker} instances.
  *
- * <p>Providers can discover workers at build-time via {@link dev.hogwai.platform.spi.provider.BuildContext}
+ * <p>Providers can discover workers at build-time via {@link BuildContext}
  * and store references for use during execution.
  */
 public interface WorkerRegistry {

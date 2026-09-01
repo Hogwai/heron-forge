@@ -96,12 +96,9 @@ class WidgetsExportCommandTest {
         Path store = tempDir.resolve("store");
         String generationId = register(store, YAML);
         try (FileGenerationStore generationStore = new FileGenerationStore(store)) {
-            generationStore.transition(APPLICATION, generationId,
-                    dev.hogwai.platform.spi.registry.GenerationStatus.STABLE);
-            generationStore.transition(APPLICATION, generationId,
-                    dev.hogwai.platform.spi.registry.GenerationStatus.DEPRECATED);
-            generationStore.transition(APPLICATION, generationId,
-                    dev.hogwai.platform.spi.registry.GenerationStatus.RETIRED);
+            generationStore.transition(APPLICATION, generationId, GenerationStatus.STABLE);
+            generationStore.transition(APPLICATION, generationId, GenerationStatus.DEPRECATED);
+            generationStore.transition(APPLICATION, generationId, GenerationStatus.RETIRED);
         }
         Path output = tempDir.resolve("widgets.json");
 

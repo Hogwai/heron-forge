@@ -11,6 +11,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ServiceLoader;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -19,7 +20,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * Tests for {@link ServiceLoaderProviderRegistry} discovery and loading.
  *
  * <p>Proves that fixture providers are discovered through the Java
- * {@link java.util.ServiceLoader} mechanism from the test classpath without
+ * {@link ServiceLoader} mechanism from the test classpath without
  * modifying the runtime, that each instance loads the service exactly once and
  * reads each factory descriptor exactly once, and that the registry keeps the
  * descriptor it observed.

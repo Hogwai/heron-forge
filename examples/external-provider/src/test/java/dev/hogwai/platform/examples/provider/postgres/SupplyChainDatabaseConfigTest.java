@@ -1,6 +1,8 @@
 package dev.hogwai.platform.examples.provider.postgres;
 
+import dev.hogwai.platform.spi.Diagnostic;
 import dev.hogwai.platform.spi.data.access.DataAccessConfiguration;
+import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -49,21 +51,16 @@ class SupplyChainDatabaseConfigTest {
 
     @Test
     void rejectsUnknownBlankAndMissingDatabaseFields() {
-        List<dev.hogwai.platform.spi.Diagnostic> diagnostics = SupplyChainDatabaseConfig.validate(
+        List<Diagnostic> diagnostics = SupplyChainDatabaseConfig.validate(
                 Map.of("url", " ", "unexpected", "value"), "orders");
 
         assertThat(diagnostics).hasSize(4);
-        assertThat(diagnostics).extracting(dev.hogwai.platform.spi.Diagnostic::path,
-                        dev.hogwai.platform.spi.Diagnostic::message)
+        assertThat(diagnostics).extracting(Diagnostic::path, Diagnostic::message)
                 .containsExactlyInAnyOrder(
-                        org.assertj.core.groups.Tuple.tuple("/config/url",
-                                "database configuration field must be a non-blank string"),
-                        org.assertj.core.groups.Tuple.tuple("/config/<key>",
-                                "unknown database configuration field"),
-                        org.assertj.core.groups.Tuple.tuple("/config/user",
-                                "missing required database configuration field"),
-                        org.assertj.core.groups.Tuple.tuple("/config/password",
-                                "missing required database configuration field"));
+                        Tuple.tuple("/config/url", "database configuration field must be a non-blank string"),
+                        Tuple.tuple("/config/<key>", "unknown database configuration field"),
+                        Tuple.tuple("/config/user", "missing required database configuration field"),
+                        Tuple.tuple("/config/password", "missing required database configuration field"));
     }
 
     @Test

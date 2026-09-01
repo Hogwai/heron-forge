@@ -15,6 +15,7 @@ import dev.hogwai.platform.spi.SpiMajor;
 import dev.hogwai.platform.spi.error.PlatformErrorCode;
 import dev.hogwai.platform.spi.error.PlatformException;
 import dev.hogwai.platform.spi.error.Severity;
+import dev.hogwai.platform.spi.provider.CapabilityInstance;
 import dev.hogwai.platform.spi.provider.ConfigurationSchema;
 import dev.hogwai.platform.spi.provider.ProviderDescriptor;
 import dev.hogwai.platform.spi.provider.ProviderFactory;
@@ -38,7 +39,7 @@ import static dev.hogwai.platform.spi.error.PlatformErrorCode.PROVIDER_CONFIG_ER
  * All diagnostics are aggregated and any error severity diagnostic aborts
  * resolution. On success the aggregated warnings (generic and provider) are
  * preserved in the {@link ResolvedProvider}. No
- * {@link dev.hogwai.platform.spi.provider.CapabilityInstance} is created here
+ * {@link CapabilityInstance} is created here
  * and no raw configuration is exposed by the public result.
  */
 public final class ProviderResolver {

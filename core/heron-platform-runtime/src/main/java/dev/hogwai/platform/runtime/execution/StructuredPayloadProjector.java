@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 import dev.hogwai.platform.spi.data.DataSet;
 import dev.hogwai.platform.spi.data.MaterializedDataSet;
@@ -29,7 +30,7 @@ public final class StructuredPayloadProjector {
         Map<String, Object> root = new LinkedHashMap<>();
         List<Map<String, Object>> rows = new ArrayList<>();
         if (dataSet instanceof StreamingDataSet streamed) {
-            java.util.Optional<List<SchemaRecord>> batch = streamed.nextBatch();
+            Optional<List<SchemaRecord>> batch = streamed.nextBatch();
             while (batch.isPresent()) {
                 for (SchemaRecord schemaRecord : batch.get()) {
                     rows.add(toGenericRow(schemaRecord));

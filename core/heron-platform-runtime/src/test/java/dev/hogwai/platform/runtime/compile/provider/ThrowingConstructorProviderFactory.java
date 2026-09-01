@@ -2,10 +2,12 @@ package dev.hogwai.platform.runtime.compile.provider;
 
 import dev.hogwai.platform.spi.provider.ProviderDescriptor;
 
+import java.util.ServiceConfigurationError;
+
 /**
  * Fixture provider factory whose constructor throws.
  *
- * <p>Used to prove that a {@link java.util.ServiceConfigurationError} raised
+ * <p>Used to prove that a {@link ServiceConfigurationError} raised
  * while instantiating a provider is reported with a safe service name and
  * without leaking the constructor failure detail.
  */

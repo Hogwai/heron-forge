@@ -15,6 +15,7 @@ import dev.hogwai.platform.runtime.compile.GraphCompiler;
 import dev.hogwai.platform.runtime.compile.WidgetValidator;
 import dev.hogwai.platform.runtime.compile.provider.ProviderRegistry;
 import dev.hogwai.platform.runtime.compile.provider.ProviderResolver;
+import dev.hogwai.platform.runtime.compile.provider.ServiceLoaderProviderRegistry;
 import dev.hogwai.platform.runtime.config.CapabilityConfig;
 import dev.hogwai.platform.runtime.config.EntrypointConfig;
 import dev.hogwai.platform.runtime.config.ParsedApplication;
@@ -50,8 +51,7 @@ public final class ApplicationLoader {
      * @return the loaded host application
      */
     public static HostApplication load(InputStream yaml) {
-        return load(yaml, new dev.hogwai.platform.runtime.compile.provider.ServiceLoaderProviderRegistry(),
-                discoverDataAccessFactory());
+        return load(yaml, new ServiceLoaderProviderRegistry(), discoverDataAccessFactory());
     }
 
     /**
@@ -64,7 +64,7 @@ public final class ApplicationLoader {
     public static ValidationReport validate(InputStream yaml) {
         Objects.requireNonNull(yaml, YAML_MUST_NOT_BE_NULL);
         try {
-            return validate(yaml, new dev.hogwai.platform.runtime.compile.provider.ServiceLoaderProviderRegistry());
+            return validate(yaml, new ServiceLoaderProviderRegistry());
         } catch (PlatformException failure) {
             return new ValidationReport(failure.diagnostics());
         }

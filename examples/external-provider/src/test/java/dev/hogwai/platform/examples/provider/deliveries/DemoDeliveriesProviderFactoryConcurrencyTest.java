@@ -80,7 +80,7 @@ class DemoDeliveriesProviderFactoryConcurrencyTest {
 
             assertThat(results).hasSize(THREADS);
             assertThat(results).allSatisfy(result -> {
-                var materialized = (dev.hogwai.platform.spi.data.MaterializedDataSet) result;
+                var materialized = (MaterializedDataSet) result;
                 assertThat(materialized.schema().fields())
                         .extracting(field -> field.id().value())
                         .containsExactly("orderId", "deliveredQuantity", "deliveredAt");

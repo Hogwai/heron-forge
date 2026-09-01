@@ -11,7 +11,7 @@ import java.util.Set;
  * Maps the {@code provider} section of a capability declaration.
  *
  * <p>Package-private helper that keeps the public
- * {@link dev.hogwai.platform.runtime.config.mapping.ConfigMapper} within the
+ * {@link ConfigMapper} within the
  * project's cyclomatic complexity budget.
  */
 final class ProviderMapper {

@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -62,7 +63,7 @@ class CreateCommandTest {
         private RecordingConsole(boolean interactive, String... responses) {
             this.interactive = interactive;
             this.responses = new ArrayDeque<>();
-            this.responses.addAll(java.util.List.of(responses));
+            this.responses.addAll(List.of(responses));
         }
 
         @Override

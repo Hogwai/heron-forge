@@ -4,6 +4,7 @@ import dev.hogwai.platform.spi.Diagnostic;
 import dev.hogwai.platform.spi.error.PlatformErrorCode;
 import dev.hogwai.platform.spi.error.PlatformException;
 import dev.hogwai.platform.spi.error.Severity;
+import dev.hogwai.platform.spi.provider.ResourceTracker;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -11,8 +12,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Runtime implementation of the SPI
- * {@link dev.hogwai.platform.spi.provider.ResourceTracker}.
+ * Runtime implementation of the SPI {@link ResourceTracker}.
  *
  * <p>Registers {@link AutoCloseable} resources and closes them in reverse order
  * of registration when {@link #close()} is invoked. Closing is idempotent. If
@@ -27,7 +27,7 @@ import java.util.Objects;
  * within a build/teardown sequence. It is distinct from the SPI interface it
  * implements and does not modify it.
  */
-public final class SnapshotResourceTracker implements dev.hogwai.platform.spi.provider.ResourceTracker {
+public final class SnapshotResourceTracker implements ResourceTracker {
 
     private final Deque<AutoCloseable> resources = new ArrayDeque<>();
     private boolean closed;

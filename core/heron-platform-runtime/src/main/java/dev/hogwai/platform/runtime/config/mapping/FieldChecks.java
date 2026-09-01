@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
  * Shared field-level checks used by the config mappers.
  *
  * <p>Package-private helper that keeps the public
- * {@link dev.hogwai.platform.runtime.config.mapping.ConfigMapper} within the
+ * {@link ConfigMapper} within the
  * project's cyclomatic complexity budget.
  */
 final class FieldChecks {

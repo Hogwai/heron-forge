@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 import dev.hogwai.platform.spi.host.EntrypointDescriptor;
 import dev.hogwai.platform.spi.host.ExecutionOutcome;
 import dev.hogwai.platform.spi.host.HostApplication;
+import dev.hogwai.platform.spi.host.InvocationRequest;
 import dev.hogwai.platform.spi.host.StructuredPayload;
 import dev.hogwai.platform.spi.invocation.WorkerInvocationRequest;
 import org.junit.jupiter.api.Test;
@@ -24,7 +25,7 @@ class InternalWorkerTest {
         }
 
         @Override
-        public ExecutionOutcome execute(dev.hogwai.platform.spi.host.InvocationRequest request) {
+        public ExecutionOutcome execute(InvocationRequest request) {
             return ExecutionOutcome.materialized(new StructuredPayload(Map.of("result", "ok")));
         }
 

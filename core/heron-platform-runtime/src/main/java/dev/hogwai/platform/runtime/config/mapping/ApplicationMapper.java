@@ -6,6 +6,7 @@ import dev.hogwai.platform.runtime.config.CapabilityConfig;
 import dev.hogwai.platform.runtime.config.Diagnostics;
 import dev.hogwai.platform.runtime.config.EntrypointConfig;
 import dev.hogwai.platform.runtime.config.WidgetConfig;
+import dev.hogwai.platform.runtime.config.WorkerConfig;
 import dev.hogwai.platform.spi.Diagnostic;
 
 import java.util.List;
@@ -40,7 +41,7 @@ final class ApplicationMapper {
         List<EntrypointConfig> entrypoints = EntrypointMapper.mapEntrypoints(
                 root.get("endpoints"), "/endpoints", diagnostics);
         List<WidgetConfig> widgets = WidgetMapper.mapWidgets(root.get("widgets"), "/widgets", diagnostics);
-        List<dev.hogwai.platform.runtime.config.WorkerConfig> workers = WorkerMapper.mapWorkers(
+        List<WorkerConfig> workers = WorkerMapper.mapWorkers(
                 root.get("workers"), "/workers", diagnostics);
 
         if (!diagnostics.isEmpty()) {

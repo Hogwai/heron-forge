@@ -7,8 +7,11 @@ import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -17,6 +20,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import dev.hogwai.platform.runtime.compile.provider.ProviderRegistry;
 import dev.hogwai.platform.runtime.execution.PullInvoker;
@@ -25,6 +29,7 @@ import dev.hogwai.platform.runtime.snapshot.RuntimeSnapshot;
 import dev.hogwai.platform.runtime.snapshot.SnapshotBuilder;
 import dev.hogwai.platform.runtime.snapshot.SnapshotCandidate;
 import dev.hogwai.platform.spi.CapabilityKind;
+import dev.hogwai.platform.spi.Diagnostic;
 import dev.hogwai.platform.spi.PortId;
 import dev.hogwai.platform.spi.ProviderId;
 import dev.hogwai.platform.spi.ProviderVersion;
@@ -45,6 +50,7 @@ import dev.hogwai.platform.spi.host.FailureCode;
 import dev.hogwai.platform.spi.host.HostApplication;
 import dev.hogwai.platform.spi.host.InvocationFailure;
 import dev.hogwai.platform.spi.host.InvocationRequest;
+import dev.hogwai.platform.spi.provider.BuildContext;
 import dev.hogwai.platform.spi.provider.CapabilityInputs;
 import dev.hogwai.platform.spi.provider.CapabilityInstance;
 import dev.hogwai.platform.spi.provider.ConfigurationSchema;
@@ -371,7 +377,7 @@ class PullInvokerTest {
 
     private static ProviderFactory factory(String id, ProviderDescriptor descriptor,
                                            CapabilityExecution execution) {
-        java.util.Objects.requireNonNull(id, "id must not be null");
+        Objects.requireNonNull(id, "id must not be null");
         return new ProviderFactory() {
             @Override
             public ProviderDescriptor descriptor() {
@@ -379,13 +385,12 @@ class PullInvokerTest {
             }
 
             @Override
-            public List<dev.hogwai.platform.spi.Diagnostic> validate(Map<String, Object> config) {
+            public List<Diagnostic> validate(Map<String, Object> config) {
                 return List.of();
             }
 
             @Override
-            public CapabilityInstance create(Map<String, Object> config,
-                                             dev.hogwai.platform.spi.provider.BuildContext context) {
+            public CapabilityInstance create(Map<String, Object> config, BuildContext context) {
                 return execution::execute;
             }
         };
@@ -420,12 +425,12 @@ class PullInvokerTest {
         return new MaterializedDataSet(schema(), List.of(), new DataSetMetadata(name, new DataSetLimits(100, 1000)), 0);
     }
 
-    private static final class CloseableRowIterator implements java.util.Iterator<SchemaRecord>, AutoCloseable {
+    private static final class CloseableRowIterator implements Iterator<SchemaRecord>, AutoCloseable {
 
-        private final java.util.Iterator<SchemaRecord> delegate;
+        private final Iterator<SchemaRecord> delegate;
         private boolean closed;
 
-        private CloseableRowIterator(java.util.Iterator<SchemaRecord> delegate) {
+        private CloseableRowIterator(Iterator<SchemaRecord> delegate) {
             this.delegate = delegate;
         }
 
@@ -496,8 +501,8 @@ class PullInvokerTest {
         private final Map<ProviderId, Registration> registrations;
 
         private Registry(ProviderFactory... factories) {
-            this.registrations = java.util.Arrays.stream(factories)
-                    .collect(java.util.stream.Collectors.toUnmodifiableMap(
+            this.registrations = Arrays.stream(factories)
+                    .collect(Collectors.toUnmodifiableMap(
                             factory -> factory.descriptor().providerId(),
                             factory -> new Registration(factory, factory.descriptor())));
         }

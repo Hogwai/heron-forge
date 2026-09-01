@@ -16,7 +16,7 @@ import dev.hogwai.platform.spi.Diagnostic;
  * Maps the {@code capabilities} list and each capability declaration.
  *
  * <p>Package-private helper that keeps the public
- * {@link dev.hogwai.platform.runtime.config.mapping.ConfigMapper} within the
+ * {@link ConfigMapper} within the
  * project's cyclomatic complexity budget.
  */
 final class CapabilityMapper {

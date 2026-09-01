@@ -3,6 +3,7 @@ package dev.hogwai.platform.examples.provider.deliveries;
 import dev.hogwai.platform.examples.provider.model.SupplyChainSchemas;
 import dev.hogwai.platform.examples.provider.support.FakeDataAccessSupport;
 import dev.hogwai.platform.spi.CapabilityKind;
+import dev.hogwai.platform.spi.Diagnostic;
 import dev.hogwai.platform.spi.PortId;
 import dev.hogwai.platform.spi.ProviderVersion;
 import dev.hogwai.platform.spi.SpiMajor;
@@ -45,7 +46,7 @@ class DemoDeliveriesProviderFactoryTest {
         assertThat(factory.validate(Map.of(
                 "url", "jdbc:postgresql://db/heron_demo", "user", "db-user", "password", "db-password"))).isEmpty();
         assertThat(factory.validate(Map.of("url", "jdbc:postgresql://db/heron_demo")))
-                .extracting(dev.hogwai.platform.spi.Diagnostic::message)
+                .extracting(Diagnostic::message)
                 .containsExactlyInAnyOrder(
                         "missing required database configuration field",
                         "missing required database configuration field");

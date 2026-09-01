@@ -7,12 +7,13 @@ import dev.hogwai.platform.spi.provider.ProviderFactory;
 
 import java.util.List;
 import java.util.Map;
+import java.util.ServiceLoader;
 
 /**
  * Base class for the Task 6 fixture provider factories.
  *
  * <p>Concrete subclasses are public with public no-arg constructors so that
- * they can be instantiated by the Java {@link java.util.ServiceLoader}.
+ * they can be instantiated by the Java {@link ServiceLoader}.
  */
 abstract class AbstractFixtureFactory implements ProviderFactory {
 

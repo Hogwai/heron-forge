@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.LongPredicate;
 
 /**
  * Immutable thresholds used by the supply-chain exception detector.
@@ -73,8 +74,10 @@ final class DetectorConfig {
         return priorityRiskDays;
     }
 
-    private static void validateLong(Map<String, Object> config, String field, List<Diagnostic> diagnostics,
-                                     java.util.function.LongPredicate predicate) {
+    private static void validateLong(Map<String, Object> config,
+                                     String field,
+                                     List<Diagnostic> diagnostics,
+                                     LongPredicate predicate) {
         Object value = config.get(field);
         BigDecimal decimal = value instanceof Number number ? decimalOrNull(number) : null;
         if (decimal == null || isNotIntegral(decimal)

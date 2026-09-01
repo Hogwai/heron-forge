@@ -88,7 +88,7 @@ public final class ServiceLoaderProviderRegistry implements ProviderRegistry {
                 }
             } catch (ServiceConfigurationError | SecurityException | LinkageError _) {
                 diagnostics.add(new Diagnostic(PlatformErrorCode.PROVIDER_CONFIG_ERROR, Severity.ERROR, null,
-                        "provider service dev.hogwai.platform.spi.provider.ProviderFactory could not be loaded",
+                        "provider service ProviderFactory could not be loaded",
                         "check the provider implementation and its service registration"));
             }
             if (!diagnostics.isEmpty()) {

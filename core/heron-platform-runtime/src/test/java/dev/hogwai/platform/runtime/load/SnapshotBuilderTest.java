@@ -10,6 +10,7 @@ import dev.hogwai.platform.spi.error.PlatformErrorCode;
 import dev.hogwai.platform.spi.error.PlatformException;
 import dev.hogwai.platform.spi.error.Severity;
 import dev.hogwai.platform.spi.provider.BuildContext;
+import dev.hogwai.platform.spi.provider.CapabilityInstance;
 import org.junit.jupiter.api.Test;
 
 import java.time.Clock;
@@ -25,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * Tests for {@link SnapshotBuilder}.
  *
  * <p>Uses in-memory trusted provider factories that create real
- * {@link dev.hogwai.platform.spi.provider.CapabilityInstance}s with observable
+ * {@link CapabilityInstance}s with observable
  * close behavior, so teardown order and cleanup are asserted against real
  * instances rather than mocks.
  */

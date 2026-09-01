@@ -17,7 +17,7 @@ import java.util.Set;
  * current capability; each value is a binding with exactly {@code capability}
  * and {@code port}. The target input port name is preserved explicitly on the
  * resulting {@link InputBindingConfig}. Package-private helper that keeps the
- * public {@link dev.hogwai.platform.runtime.config.mapping.ConfigMapper} within the
+ * public {@link ConfigMapper} within the
  * project's cyclomatic complexity budget.
  */
 final class InputMapper {

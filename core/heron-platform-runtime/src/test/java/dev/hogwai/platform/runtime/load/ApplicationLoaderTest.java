@@ -4,15 +4,19 @@ import java.io.ByteArrayInputStream;
 import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 
 import dev.hogwai.platform.runtime.compile.provider.ProviderRegistry;
 import dev.hogwai.platform.runtime.snapshot.SnapshotCandidate;
 import dev.hogwai.platform.spi.Diagnostic;
 import dev.hogwai.platform.spi.data.DataSet;
+import dev.hogwai.platform.spi.data.DataSetLimits;
+import dev.hogwai.platform.spi.data.DataSetMetadata;
 import dev.hogwai.platform.spi.data.MaterializedDataSet;
 import dev.hogwai.platform.spi.data.access.DataAccessFactory;
 import dev.hogwai.platform.spi.error.PlatformErrorCode;
@@ -56,8 +60,7 @@ class ApplicationLoaderTest {
                 new SnapshotBuilderTestProviderFactory(
                         SnapshotBuilderTestSupport.source("source", "1.0.0"), context -> {
                     captured.set(context);
-                    return new SnapshotBuilderTestInstance("source", new java.util.ArrayList<>(),
-                            false);
+                    return new SnapshotBuilderTestInstance("source", new ArrayList<>(), false);
                 });
         ProviderRegistry registry = new SnapshotBuilderTestRegistry(
                 new ProviderRegistry.Registration(provider, provider.descriptor()));
@@ -221,12 +224,12 @@ class ApplicationLoaderTest {
                 dataset, new AtomicInteger(), null));
     }
 
-    private static TestFixture sourceFixture(String id, List<Diagnostic> diagnostics,
-                                             java.util.function.Function<dev.hogwai.platform.spi.provider.BuildContext,
-                                                     CapabilityInstance> creator) {
+    private static TestFixture sourceFixture(String id,
+                                             List<Diagnostic> diagnostics,
+                                             Function<BuildContext, CapabilityInstance> creator) {
         AtomicInteger created = new AtomicInteger();
         AtomicBoolean closed = new AtomicBoolean();
-        AtomicReference<dev.hogwai.platform.spi.execution.ExecutionContext> lastContext = new AtomicReference<>();
+        AtomicReference<ExecutionContext> lastContext = new AtomicReference<>();
         TestFixture fixture = new TestFixture(created, closed, new AtomicInteger(),
                 lastContext, SnapshotBuilderTestSupport.dataAccessFactory());
         SnapshotBuilderTestProviderFactory factory =
@@ -246,12 +249,14 @@ class ApplicationLoaderTest {
         private final AtomicInteger created;
         private final AtomicBoolean closed;
         private final AtomicInteger closedCount;
-        private final AtomicReference<dev.hogwai.platform.spi.execution.ExecutionContext> lastContext;
+        private final AtomicReference<ExecutionContext> lastContext;
         private final DataAccessFactory dataAccessFactory;
         private ProviderRegistry registry;
 
-        private TestFixture(AtomicInteger created, AtomicBoolean closed, AtomicInteger closedCount,
-                            AtomicReference<dev.hogwai.platform.spi.execution.ExecutionContext> lastContext,
+        private TestFixture(AtomicInteger created,
+                            AtomicBoolean closed,
+                            AtomicInteger closedCount,
+                            AtomicReference<ExecutionContext> lastContext,
                             DataAccessFactory dataAccessFactory) {
             this.created = created;
             this.closed = closed;
@@ -261,7 +266,9 @@ class ApplicationLoaderTest {
         }
     }
 
-    private record CloseTrackingInstance(CapabilityInstance delegate, AtomicBoolean closed, AtomicInteger closeCount,
+    private record CloseTrackingInstance(CapabilityInstance delegate,
+                                         AtomicBoolean closed,
+                                         AtomicInteger closeCount,
                                          AtomicReference<ExecutionContext> lastContext) implements CapabilityInstance {
 
         @Override
@@ -297,11 +304,11 @@ class ApplicationLoaderTest {
     }
 
     private static final class MaterializedDataSetFactory {
-        private static dev.hogwai.platform.spi.data.MaterializedDataSet dataset() {
-            return new dev.hogwai.platform.spi.data.MaterializedDataSet(
-                    SnapshotBuilderTestSupport.schema(), List.of(),
-                    new dev.hogwai.platform.spi.data.DataSetMetadata("source",
-                            new dev.hogwai.platform.spi.data.DataSetLimits(100, 1000)), 0);
+        private static MaterializedDataSet dataset() {
+            return new MaterializedDataSet(
+                    SnapshotBuilderTestSupport.schema(),
+                    List.of(),
+                    new DataSetMetadata("source", new DataSetLimits(100, 1000)), 0);
         }
     }
 }

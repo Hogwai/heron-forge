@@ -167,11 +167,11 @@ public final class PullInvoker {
         }
 
         private static PlatformException configurationFailure() {
-            return new PlatformException(PlatformErrorCode.GRAPH_REFERENCE_ERROR, java.util.List.of());
+            return new PlatformException(PlatformErrorCode.GRAPH_REFERENCE_ERROR, List.of());
         }
 
         private static PlatformException providerFailure() {
-            return new PlatformException(PlatformErrorCode.CAPABILITY_EXECUTION_ERROR, java.util.List.of(
+            return new PlatformException(PlatformErrorCode.CAPABILITY_EXECUTION_ERROR, List.of(
                     new Diagnostic(PlatformErrorCode.CAPABILITY_EXECUTION_ERROR, Severity.ERROR, null,
                             "capability execution failed", "check the provider implementation")));
         }

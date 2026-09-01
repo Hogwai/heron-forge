@@ -6,7 +6,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -140,17 +142,17 @@ class StreamingDataSetTest {
     private static List<SchemaRecord> records(int count) {
         List<SchemaRecord> records = new ArrayList<>();
         for (int index = 0; index < count; index++) {
-            records.add(SchemaRecord.of(SCHEMA, java.util.Map.of(new FieldId("value"), "row-" + index)));
+            records.add(SchemaRecord.of(SCHEMA, Map.of(new FieldId("value"), "row-" + index)));
         }
         return records;
     }
 
-    private static final class CloseableIterator implements java.util.Iterator<SchemaRecord>, AutoCloseable {
+    private static final class CloseableIterator implements Iterator<SchemaRecord>, AutoCloseable {
 
-        private final java.util.Iterator<SchemaRecord> delegate;
+        private final Iterator<SchemaRecord> delegate;
         private boolean closed;
 
-        private CloseableIterator(java.util.Iterator<SchemaRecord> delegate) {
+        private CloseableIterator(Iterator<SchemaRecord> delegate) {
             this.delegate = delegate;
         }
 

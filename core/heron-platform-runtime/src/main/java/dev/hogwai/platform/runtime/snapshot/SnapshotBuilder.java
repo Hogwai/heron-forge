@@ -5,15 +5,19 @@ import dev.hogwai.platform.runtime.compile.CapabilityNode;
 import dev.hogwai.platform.runtime.compile.GraphCompiler;
 import dev.hogwai.platform.runtime.compile.provider.ProviderResolver;
 import dev.hogwai.platform.runtime.config.ApplicationConfig;
+import dev.hogwai.platform.runtime.config.WorkerConfig;
 import dev.hogwai.platform.spi.Diagnostic;
 import dev.hogwai.platform.spi.data.access.DataAccessFactory;
 import dev.hogwai.platform.spi.error.PlatformErrorCode;
 import dev.hogwai.platform.spi.error.PlatformException;
 import dev.hogwai.platform.spi.error.Severity;
 import dev.hogwai.platform.runtime.invocation.InMemoryWorkerRegistry;
+import dev.hogwai.platform.spi.invocation.AsyncWorker;
+import dev.hogwai.platform.spi.invocation.WorkerFactory;
 import dev.hogwai.platform.spi.invocation.WorkerRegistry;
 import dev.hogwai.platform.spi.provider.BuildContext;
 import dev.hogwai.platform.spi.provider.CapabilityInstance;
+import dev.hogwai.platform.spi.provider.ResourceTracker;
 
 import java.time.Clock;
 import java.util.HashMap;
@@ -32,7 +36,7 @@ import java.util.function.Supplier;
  * {@link CapabilityInstance} per {@link CapabilityGraph} node. Each instance is
  * created with the raw safe configuration carried by the node and a
  * {@link BuildContext} that exposes only the application id, the snapshot id, a
- * {@link Clock}, the SPI {@link dev.hogwai.platform.spi.provider.ResourceTracker}
+ * {@link Clock}, the SPI {@link ResourceTracker}
  * and the supplied {@link DataAccessFactory}. Providers own data access clients
  * they open and must register them immediately with the resource tracker.
  * Every created instance is registered with the runtime {@link SnapshotResourceTracker}
@@ -117,7 +121,7 @@ public final class SnapshotBuilder {
         Map<String, Supplier<CapabilityInstance>> factories;
         try {
             populateWorkers(application);
-            factories = InstanceBuilder.createInstanceFactories(graph, tracker, clock, dataAccessFactory);
+            factories = InstanceBuilder.createInstanceFactories(graph, tracker, clock, dataAccessFactory, workerRegistry);
         } catch (RuntimeException _) {
             throw FailureHandler.wrapFailure(tracker);
         }
@@ -138,21 +142,19 @@ public final class SnapshotBuilder {
         if (application.workers().isEmpty()) {
             return;
         }
-        Map<String, dev.hogwai.platform.spi.invocation.WorkerFactory> factories = new HashMap<>();
-        for (dev.hogwai.platform.spi.invocation.WorkerFactory factory
-                : ServiceLoader.load(dev.hogwai.platform.spi.invocation.WorkerFactory.class)) {
+        Map<String, WorkerFactory> factories = new HashMap<>();
+        for (WorkerFactory factory : ServiceLoader.load(WorkerFactory.class)) {
             factories.put(factory.transport(), factory);
         }
-        for (dev.hogwai.platform.runtime.config.WorkerConfig worker : application.workers()) {
-            dev.hogwai.platform.spi.invocation.WorkerFactory factory = factories.get(worker.transport());
+        for (WorkerConfig worker : application.workers()) {
+            WorkerFactory factory = factories.get(worker.transport());
             if (factory == null) {
                 throw new PlatformException(PlatformErrorCode.PROVIDER_CONFIG_ERROR, List.of(
                         new Diagnostic(PlatformErrorCode.PROVIDER_CONFIG_ERROR, Severity.ERROR, null,
-                                "unknown worker transport '" + worker.transport() + "'",
-                                "use one of " + String.join(", ", factories.keySet()))));
+                                "unknown worker transport '%s'".formatted(worker.transport()),
+                                "use one of %s".formatted(String.join(", ", factories.keySet())))));
             }
-            dev.hogwai.platform.spi.invocation.AsyncWorker asyncWorker =
-                    factory.create(worker.id(), worker.config());
+            AsyncWorker asyncWorker = factory.create(worker.id(), worker.config());
             workerRegistry.register(asyncWorker);
         }
     }

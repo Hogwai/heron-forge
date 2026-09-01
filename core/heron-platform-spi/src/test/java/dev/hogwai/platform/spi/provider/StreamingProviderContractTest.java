@@ -8,6 +8,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import dev.hogwai.platform.spi.CapabilityKind;
+import dev.hogwai.platform.spi.Diagnostic;
+import dev.hogwai.platform.spi.PortId;
+import dev.hogwai.platform.spi.ProviderId;
+import dev.hogwai.platform.spi.ProviderVersion;
+import dev.hogwai.platform.spi.SpiMajor;
 import dev.hogwai.platform.spi.data.DataSetLimits;
 import dev.hogwai.platform.spi.data.Field;
 import dev.hogwai.platform.spi.data.FieldId;
@@ -17,11 +23,6 @@ import dev.hogwai.platform.spi.data.SchemaRecord;
 import dev.hogwai.platform.spi.data.StreamingDataSet;
 import org.junit.jupiter.api.Test;
 
-import dev.hogwai.platform.spi.CapabilityKind;
-import dev.hogwai.platform.spi.PortId;
-import dev.hogwai.platform.spi.ProviderId;
-import dev.hogwai.platform.spi.ProviderVersion;
-import dev.hogwai.platform.spi.SpiMajor;
 import dev.hogwai.platform.spi.execution.ExecutionContext;
 
 /**
@@ -42,13 +43,13 @@ class StreamingProviderContractTest {
             }
 
             @Override
-            public List<dev.hogwai.platform.spi.Diagnostic> validate(Map<String, Object> rawConfig) {
+            public List<Diagnostic> validate(Map<String, Object> rawConfig) {
                 return List.of();
             }
 
             @Override
             public StreamingInstance create(Map<String, Object> rawConfig, BuildContext context) {
-                return (inputs, executionContext) -> stream();
+                return (_, _) -> stream();
             }
 
             private ProviderDescriptor buildDescriptor() {

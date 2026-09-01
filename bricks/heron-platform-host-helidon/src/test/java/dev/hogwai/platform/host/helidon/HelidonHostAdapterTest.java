@@ -10,6 +10,7 @@ import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -21,6 +22,7 @@ import dev.hogwai.platform.spi.host.HostConfiguration;
 import dev.hogwai.platform.spi.host.HostException;
 import dev.hogwai.platform.spi.host.InvocationFailure;
 import dev.hogwai.platform.spi.host.InvocationRequest;
+import dev.hogwai.platform.spi.host.StreamingPayload;
 import dev.hogwai.platform.spi.host.StructuredPayload;
 import org.junit.jupiter.api.Test;
 
@@ -186,16 +188,16 @@ class HelidonHostAdapterTest {
         }
     }
 
-    private static final class SingleBatchPayload implements dev.hogwai.platform.spi.host.StreamingPayload {
+    private static final class SingleBatchPayload implements StreamingPayload {
         private boolean delivered;
 
         @Override
-        public java.util.Optional<List<Map<String, Object>>> nextBatch() {
+        public Optional<List<Map<String, Object>>> nextBatch() {
             if (delivered) {
-                return java.util.Optional.empty();
+                return Optional.empty();
             }
             delivered = true;
-            return java.util.Optional.of(List.of(Map.of("id", "row-0")));
+            return Optional.of(List.of(Map.of("id", "row-0")));
         }
 
         @Override

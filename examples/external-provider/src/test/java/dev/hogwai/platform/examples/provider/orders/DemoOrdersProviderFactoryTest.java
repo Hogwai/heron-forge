@@ -8,6 +8,7 @@ import java.util.Set;
 
 import dev.hogwai.platform.examples.provider.support.FakeDataAccessSupport;
 import dev.hogwai.platform.spi.CapabilityKind;
+import dev.hogwai.platform.spi.Diagnostic;
 import dev.hogwai.platform.spi.PortId;
 import dev.hogwai.platform.spi.ProviderVersion;
 import dev.hogwai.platform.spi.SpiMajor;
@@ -52,7 +53,7 @@ class DemoOrdersProviderFactoryTest {
     @Test
     void rejectsConfigurationMissingRequiredDatabaseFields() {
         assertThat(new DemoOrdersProviderFactory().validate(Map.of()))
-                .extracting(dev.hogwai.platform.spi.Diagnostic::message)
+                .extracting(Diagnostic::message)
                 .containsExactlyInAnyOrder(
                         "missing required database configuration field",
                         "missing required database configuration field",

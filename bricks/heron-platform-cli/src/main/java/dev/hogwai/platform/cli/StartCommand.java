@@ -7,6 +7,7 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.Spec;
 
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.concurrent.Callable;
 
 /**
@@ -116,7 +117,7 @@ public final class StartCommand implements Callable<Integer> {
      * @param waiter the shutdown waiter to use
      */
     void shutdownWaiter(HeronLauncher.ShutdownWaiter waiter) {
-        this.shutdownWaiter = java.util.Objects.requireNonNull(waiter, "waiter must not be null");
+        this.shutdownWaiter = Objects.requireNonNull(waiter, "waiter must not be null");
     }
 
     @Override

@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * <p>Proves that incoherent, duplicated or failing providers are rejected with
  * {@link PlatformErrorCode#PROVIDER_CONFIG_ERROR} diagnostics that never leak
  * classpath, exception or sensitive details and always carry the safe service
- * name {@code dev.hogwai.platform.spi.provider.ProviderFactory}.
+ * name {@code ProviderFactory}.
  */
 class ServiceLoaderProviderRegistryFailureTest {
 
@@ -89,7 +89,7 @@ class ServiceLoaderProviderRegistryFailureTest {
                         PlatformException pe = (PlatformException) e;
                         assertThat(pe.code()).isEqualTo(PlatformErrorCode.PROVIDER_CONFIG_ERROR);
                         assertThat(pe.diagnostics()).extracting(Diagnostic::message)
-                                .anyMatch(m -> m.contains("dev.hogwai.platform.spi.provider.ProviderFactory"));
+                                .anyMatch(m -> m.contains("ProviderFactory"));
                         assertThat(pe.diagnostics()).extracting(Diagnostic::message)
                                 .noneMatch(m -> m.contains("DoesNotExist"));
                     });
@@ -107,7 +107,7 @@ class ServiceLoaderProviderRegistryFailureTest {
                         PlatformException pe = (PlatformException) e;
                         assertThat(pe.code()).isEqualTo(PlatformErrorCode.PROVIDER_CONFIG_ERROR);
                         assertThat(pe.diagnostics()).extracting(Diagnostic::message)
-                                .anyMatch(m -> m.contains("dev.hogwai.platform.spi.provider.ProviderFactory"));
+                                .anyMatch(m -> m.contains("ProviderFactory"));
                         assertThat(pe.diagnostics()).extracting(Diagnostic::message)
                                 .noneMatch(m -> m.contains("cannot construct"));
                     });
@@ -125,7 +125,7 @@ class ServiceLoaderProviderRegistryFailureTest {
                     PlatformException pe = (PlatformException) e;
                     assertThat(pe.code()).isEqualTo(PlatformErrorCode.PROVIDER_CONFIG_ERROR);
                     assertThat(pe.diagnostics()).extracting(Diagnostic::message)
-                            .anyMatch(m -> m.contains("dev.hogwai.platform.spi.provider.ProviderFactory"));
+                            .anyMatch(m -> m.contains("ProviderFactory"));
                     assertThat(pe.diagnostics()).extracting(Diagnostic::message)
                             .noneMatch(m -> m.contains("access denied"));
                 });
@@ -142,7 +142,7 @@ class ServiceLoaderProviderRegistryFailureTest {
                     PlatformException pe = (PlatformException) e;
                     assertThat(pe.code()).isEqualTo(PlatformErrorCode.PROVIDER_CONFIG_ERROR);
                     assertThat(pe.diagnostics()).extracting(Diagnostic::message)
-                            .anyMatch(m -> m.contains("dev.hogwai.platform.spi.provider.ProviderFactory"));
+                            .anyMatch(m -> m.contains("ProviderFactory"));
                     assertThat(pe.diagnostics()).extracting(Diagnostic::message)
                             .noneMatch(m -> m.contains("missing dependency"));
                 });

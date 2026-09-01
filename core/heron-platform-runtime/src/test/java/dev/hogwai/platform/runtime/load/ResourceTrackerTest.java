@@ -3,6 +3,7 @@ package dev.hogwai.platform.runtime.load;
 import dev.hogwai.platform.runtime.snapshot.SnapshotResourceTracker;
 import dev.hogwai.platform.spi.error.PlatformErrorCode;
 import dev.hogwai.platform.spi.error.PlatformException;
+import dev.hogwai.platform.spi.provider.ResourceTracker;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -12,15 +13,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * Tests for the runtime {@link SnapshotResourceTracker} implementing the SPI
- * {@link dev.hogwai.platform.spi.provider.ResourceTracker}.
+ * Tests for the runtime {@link SnapshotResourceTracker} implementing the SPI {@link ResourceTracker}.
  */
 class ResourceTrackerTest {
 
     @Test
     void implementsSpiResourceTracker() {
-        assertThat(new SnapshotResourceTracker())
-                .isInstanceOf(dev.hogwai.platform.spi.provider.ResourceTracker.class);
+        assertThat(new SnapshotResourceTracker()).isInstanceOf(ResourceTracker.class);
     }
 
     @Test

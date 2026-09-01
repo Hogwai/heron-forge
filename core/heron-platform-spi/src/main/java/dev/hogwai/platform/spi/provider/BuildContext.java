@@ -1,10 +1,13 @@
 package dev.hogwai.platform.spi.provider;
 
 import dev.hogwai.platform.spi.data.access.DataAccessFactory;
+import dev.hogwai.platform.spi.invocation.AsyncWorker;
 import dev.hogwai.platform.spi.invocation.WorkerRegistry;
 
 import java.time.Clock;
+import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Immutable context passed to {@link ProviderFactory#create}.
@@ -48,18 +51,18 @@ public record BuildContext(Clock clock, ResourceTracker resourceTracker, DataAcc
 
     private static final class NoopWorkerRegistry implements WorkerRegistry {
         @Override
-        public void register(dev.hogwai.platform.spi.invocation.AsyncWorker worker) {
+        public void register(AsyncWorker worker) {
             // no-op
         }
 
         @Override
-        public java.util.Optional<dev.hogwai.platform.spi.invocation.AsyncWorker> find(String workerId) {
-            return java.util.Optional.empty();
+        public Optional<AsyncWorker> find(String workerId) {
+            return Optional.empty();
         }
 
         @Override
-        public java.util.List<dev.hogwai.platform.spi.invocation.AsyncWorker> all() {
-            return java.util.List.of();
+        public List<AsyncWorker> all() {
+            return List.of();
         }
     }
 }

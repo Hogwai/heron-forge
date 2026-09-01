@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import dev.hogwai.platform.runtime.config.ApplicationConfig;
 import dev.hogwai.platform.runtime.config.Diagnostics;
 import dev.hogwai.platform.runtime.config.ParsedApplication;
+import dev.hogwai.platform.runtime.config.SafeYamlParser;
 import dev.hogwai.platform.runtime.config.safe.SafeConfig;
 import dev.hogwai.platform.spi.Diagnostic;
 
@@ -16,7 +17,7 @@ import java.util.Map;
  * {@link ParsedApplication}.
  *
  * <p>This is the single crossing point from the public
- * {@link dev.hogwai.platform.runtime.config.SafeYamlParser} and
+ * {@link SafeYamlParser} and
  * configuration boundary into the package-private application/provider/capability/input mapping and shape
  * validation below.
  */

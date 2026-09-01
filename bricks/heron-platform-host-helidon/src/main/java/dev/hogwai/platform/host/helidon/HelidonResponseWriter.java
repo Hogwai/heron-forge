@@ -11,6 +11,7 @@ import dev.hogwai.platform.spi.host.FailureCode;
 import dev.hogwai.platform.spi.host.InvocationFailure;
 import dev.hogwai.platform.spi.host.InvocationResult;
 import dev.hogwai.platform.spi.host.InvocationSuccess;
+import dev.hogwai.platform.spi.host.StreamingPayload;
 import dev.hogwai.platform.spi.host.StructuredPayload;
 import io.helidon.webserver.http.ServerResponse;
 import org.slf4j.Logger;
@@ -60,7 +61,7 @@ public final class HelidonResponseWriter {
      * @param response the server response
      * @param payload  the streamed payload owned by the caller
      */
-    public void writeStreaming(ServerResponse response, dev.hogwai.platform.spi.host.StreamingPayload payload) {
+    public void writeStreaming(ServerResponse response, StreamingPayload payload) {
         Objects.requireNonNull(response, RESPONSE_MUST_NOT_BE_NULL);
         Objects.requireNonNull(payload, PAYLOAD_MUST_NOT_BE_NULL);
         List<Map<String, Object>> firstBatch;

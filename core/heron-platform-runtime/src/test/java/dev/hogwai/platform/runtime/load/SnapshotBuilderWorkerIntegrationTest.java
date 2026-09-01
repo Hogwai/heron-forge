@@ -1,6 +1,7 @@
 package dev.hogwai.platform.runtime.load;
 
 import dev.hogwai.platform.runtime.config.ApplicationConfig;
+import dev.hogwai.platform.runtime.config.CapabilityConfig;
 import dev.hogwai.platform.runtime.config.WorkerConfig;
 import dev.hogwai.platform.runtime.compile.provider.ProviderRegistry;
 import dev.hogwai.platform.runtime.snapshot.SnapshotBuilder;
@@ -41,7 +42,7 @@ class SnapshotBuilderWorkerIntegrationTest {
         WorkerConfig worker = new WorkerConfig("order-service", "http",
                 Map.of("baseUrl", "https://orders.example.com"));
         ApplicationConfig app = new ApplicationConfig("heron.dev/v1", "test",
-                List.of(new dev.hogwai.platform.runtime.config.CapabilityConfig("orders", "orders", "1.0.0",
+                List.of(new CapabilityConfig("orders", "orders", "1.0.0",
                         Map.of("host", "localhost"), List.of())),
                 List.of(), List.of(), List.of(worker));
 
