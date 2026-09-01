@@ -90,14 +90,14 @@ public final class SnapshotBuilder {
         String generationId = FailureHandler.requireGenerationId(generationIdSupplier.get());
 
         SnapshotResourceTracker tracker = new SnapshotResourceTracker();
-        Map<String, CapabilityInstance> instances;
+        Map<String, Supplier<CapabilityInstance>> factories;
         try {
-            instances = InstanceBuilder.createInstances(graph, tracker, clock, dataAccessFactory);
+            factories = InstanceBuilder.createInstanceFactories(graph, tracker, clock, dataAccessFactory);
         } catch (RuntimeException _) {
             throw FailureHandler.wrapFailure(tracker);
         }
         try {
-            RuntimeSnapshot snapshot = new RuntimeSnapshot(generationId, graph, instances);
+            RuntimeSnapshot snapshot = new RuntimeSnapshot(generationId, graph, factories);
             return new SnapshotCandidate(snapshot, tracker);
         } catch (RuntimeException failure) {
             try {
@@ -121,22 +121,28 @@ public final class SnapshotBuilder {
             // no instances
         }
 
-        static Map<String, CapabilityInstance> createInstances(CapabilityGraph graph, SnapshotResourceTracker tracker,
-                                                               Clock clock, DataAccessFactory dataAccessFactory) {
-            Map<String, CapabilityInstance> instances = new LinkedHashMap<>();
+        static Map<String, Supplier<CapabilityInstance>> createInstanceFactories(
+                CapabilityGraph graph, SnapshotResourceTracker tracker,
+                Clock clock, DataAccessFactory dataAccessFactory) {
+            Map<String, Supplier<CapabilityInstance>> factories = new LinkedHashMap<>();
             for (CapabilityNode node : graph.nodes()) {
-                BuildContext context = new BuildContext(clock, tracker, dataAccessFactory);
-                CapabilityInstance instance = node.factory().create(node.config(), context);
-                if (instance == null) {
-                    throw new PlatformException(PlatformErrorCode.PROVIDER_CONFIG_ERROR, List.of(
-                            new Diagnostic(PlatformErrorCode.PROVIDER_CONFIG_ERROR, Severity.ERROR, null,
-                                    "provider returned a null capability instance",
-                                    "check the provider implementation")));
-                }
-                tracker.register(instance);
-                instances.put(node.id(), instance);
+                Supplier<CapabilityInstance> factory = () -> {
+                    BuildContext context = new BuildContext(clock, tracker, dataAccessFactory);
+                    CapabilityInstance instance = node.factory().create(node.config(), context);
+                    if (instance == null) {
+                        throw new PlatformException(PlatformErrorCode.PROVIDER_CONFIG_ERROR, List.of(
+                                new Diagnostic(PlatformErrorCode.PROVIDER_CONFIG_ERROR, Severity.ERROR, null,
+                                        "provider returned a null capability instance",
+                                        "check the provider implementation")));
+                    }
+                    return instance;
+                };
+
+                CapabilityInstance testInstance = factory.get();
+                tracker.register(testInstance);
+                factories.put(node.id(), factory);
             }
-            return instances;
+            return factories;
         }
     }
 

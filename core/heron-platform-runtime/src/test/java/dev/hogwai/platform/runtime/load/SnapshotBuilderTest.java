@@ -53,8 +53,8 @@ class SnapshotBuilderTest {
                 new SnapshotBuilderTestYaml.TestCap("orders", "orders", "1.0.0"),
                 new SnapshotBuilderTestYaml.TestCap("late", "late", "1.0.0")))) {
             assertThat(candidate.snapshot().generationId()).isEqualTo("gen-1");
-            assertThat(candidate.snapshot().instances()).containsOnlyKeys("orders", "late");
-            assertThat(candidate.snapshot().instances().keySet())
+            assertThat(candidate.snapshot().instanceFactories()).containsOnlyKeys("orders", "late");
+            assertThat(candidate.snapshot().instanceFactories().keySet())
                     .isEqualTo(candidate.snapshot().graph().nodeIds());
             assertThat(closeOrder).isEmpty();
         }
@@ -74,7 +74,7 @@ class SnapshotBuilderTest {
 
         try (SnapshotCandidate candidate = builder.build(SnapshotBuilderTestSupport.application("test",
                 new SnapshotBuilderTestYaml.TestCap("orders", "orders", "1.0.0")))) {
-            assertThat(candidate.snapshot().instances().keySet())
+            assertThat(candidate.snapshot().instanceFactories().keySet())
                     .containsExactlyElementsOf(candidate.snapshot().graph().nodeIds());
             assertThat(closeOrder).isEmpty();
         }
