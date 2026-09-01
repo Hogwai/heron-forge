@@ -3,7 +3,7 @@ package dev.hogwai.platform.runtime.config;
 import java.util.Objects;
 
 /**
- * Immutable, model of a single input binding.
+ * Immutable model of a single input binding.
  *
  * <p>An input binding explicitly names the target input port on the current
  * capability ({@code inputPort}) and references another capability by

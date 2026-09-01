@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -21,7 +22,7 @@ class RuntimeSnapshotTest {
     @Test
     void exposesGenerationIdAndGraph() {
         CapabilityGraph graph = SnapshotTestSupport.graph();
-        RuntimeSnapshot snapshot = new RuntimeSnapshot("gen-1", graph, Map.of("orders", SnapshotTestSupport.instance()));
+        RuntimeSnapshot snapshot = new RuntimeSnapshot("gen-1", graph, Map.of("orders", SnapshotTestSupport.factory()));
 
         assertThat(snapshot.generationId()).isEqualTo("gen-1");
         assertThat(snapshot.graph()).isSameAs(graph);
@@ -54,7 +55,7 @@ class RuntimeSnapshotTest {
     @Test
     void rejectsBlankInstanceKey() {
         assertThatThrownBy(() -> new RuntimeSnapshot("gen-1", SnapshotTestSupport.graph(),
-                Map.of("", SnapshotTestSupport.instance())))
+                Map.of("", SnapshotTestSupport.factory())))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -67,40 +68,43 @@ class RuntimeSnapshotTest {
     @Test
     void rejectsExtraInstance() {
         assertThatThrownBy(() -> new RuntimeSnapshot("gen-1", SnapshotTestSupport.graph(),
-                Map.of("orders", SnapshotTestSupport.instance(), "extra", SnapshotTestSupport.instance())))
+                Map.of("orders", SnapshotTestSupport.factory(), "extra", SnapshotTestSupport.factory())))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    void defensivelyCopiesInstances() {
-        CapabilityInstance a = SnapshotTestSupport.instance();
-        CapabilityInstance b = SnapshotTestSupport.instance();
-        Map<String, CapabilityInstance> mutable = new LinkedHashMap<>();
+    void defensivelyCopiesFactories() {
+        Supplier<CapabilityInstance> a = SnapshotTestSupport.factory();
+        Supplier<CapabilityInstance> b = SnapshotTestSupport.factory();
+        Map<String, Supplier<CapabilityInstance>> mutable = new LinkedHashMap<>();
         mutable.put("orders", a);
         RuntimeSnapshot snapshot = new RuntimeSnapshot("gen-1", SnapshotTestSupport.graph(), mutable);
 
         mutable.put("extra", b);
 
-        assertThat(snapshot.instances()).containsOnlyKeys("orders");
-        assertThat(snapshot.instance("orders")).get().isSameAs(a);
+        assertThat(snapshot.instanceFactories()).containsOnlyKeys("orders");
+        assertThat(snapshot.instance("orders")).isPresent();
         assertThat(snapshot.instance("extra")).isEmpty();
     }
 
     @Test
-    void exposesImmutableInstances() {
+    void exposesImmutableFactories() {
         RuntimeSnapshot snapshot = new RuntimeSnapshot("gen-1", SnapshotTestSupport.graph(),
-                Map.of("orders", SnapshotTestSupport.instance()));
+                Map.of("orders", SnapshotTestSupport.factory()));
 
-        assertThatThrownBy(() -> snapshot.instances().put("x", SnapshotTestSupport.instance()))
+        assertThatThrownBy(() -> snapshot.instanceFactories().put("x", SnapshotTestSupport.factory()))
                 .isInstanceOf(UnsupportedOperationException.class);
     }
 
     @Test
-    void instanceReturnsOptional() {
-        CapabilityInstance a = SnapshotTestSupport.instance();
-        RuntimeSnapshot snapshot = new RuntimeSnapshot("gen-1", SnapshotTestSupport.graph(), Map.of("orders", a));
+    void instanceReturnsOptionalAndCreatesFreshInstance() {
+        Supplier<CapabilityInstance> factory = SnapshotTestSupport.factory();
+        RuntimeSnapshot snapshot = new RuntimeSnapshot("gen-1", SnapshotTestSupport.graph(), Map.of("orders", factory));
 
-        assertThat(snapshot.instance("orders")).get().isSameAs(a);
+        CapabilityInstance first = snapshot.instance("orders").orElseThrow();
+        CapabilityInstance second = snapshot.instance("orders").orElseThrow();
+
+        assertThat(first).isNotSameAs(second);
         assertThat(snapshot.instance("missing")).isEmpty();
     }
 

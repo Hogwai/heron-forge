@@ -10,6 +10,7 @@ import dev.hogwai.platform.spi.provider.CapabilityInstance;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 /**
  * Package-private helpers for the lifecycle package tests.
@@ -31,5 +32,9 @@ final class SnapshotTestSupport {
         return (_, _) -> {
             throw new UnsupportedOperationException("not used in snapshot tests");
         };
+    }
+
+    static Supplier<CapabilityInstance> factory() {
+        return SnapshotTestSupport::instance;
     }
 }

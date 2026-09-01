@@ -6,23 +6,24 @@ import dev.hogwai.platform.spi.provider.CapabilityInstance;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
  * Immutable snapshot of a compiled generation.
  *
  * <p>A snapshot binds a non-blank generation identifier to the compiled
- * {@link CapabilityGraph} and the capability instances created for it, keyed by
- * capability id. Construction is package-private and receives already compiled
- * graph data and created instances. This class neither resolves providers nor
- * executes capabilities.
+ * {@link CapabilityGraph} and capability instance factories keyed by
+ * capability id. Each call to {@link #instance(String)} creates a fresh
+ * {@link CapabilityInstance} via the corresponding factory, ensuring that
+ * concurrent requests never share mutable state.
  *
  * <p>All collections are defensively copied and exposed immutably; no mutable
- * collection is ever exposed. The instance keys must cover exactly the graph
- * node ids: a missing or extra instance is rejected at construction with an
+ * collection is ever exposed. The factory keys must cover exactly the graph
+ * node ids: a missing or extra factory is rejected at construction with an
  * {@link IllegalArgumentException}.
  */
 public record RuntimeSnapshot(String generationId, CapabilityGraph graph,
-                              Map<String, CapabilityInstance> instances) {
+                              Map<String, Supplier<CapabilityInstance>> instanceFactories) {
 
     public RuntimeSnapshot {
         Objects.requireNonNull(generationId, "generationId must not be null");
@@ -30,26 +31,27 @@ public record RuntimeSnapshot(String generationId, CapabilityGraph graph,
             throw new IllegalArgumentException("generationId must not be blank");
         }
         Objects.requireNonNull(graph, "graph must not be null");
-        Map<String, CapabilityInstance> copy =
-                Map.copyOf(Objects.requireNonNull(instances, "instances must not be null"));
+        Map<String, Supplier<CapabilityInstance>> copy =
+                Map.copyOf(Objects.requireNonNull(instanceFactories, "instanceFactories must not be null"));
         for (String key : copy.keySet()) {
             if (key.isBlank()) {
-                throw new IllegalArgumentException("instance keys must not be blank");
+                throw new IllegalArgumentException("instance factory keys must not be blank");
             }
         }
         if (!copy.keySet().equals(graph.nodeIds())) {
-            throw new IllegalArgumentException("instances must cover exactly the graph node ids");
+            throw new IllegalArgumentException("instance factories must cover exactly the graph node ids");
         }
-        instances = copy;
+        instanceFactories = copy;
     }
 
     /**
-     * Returns the capability instance for the given capability id, if present.
+     * Creates a capability instance for the given capability id.
      *
      * @param capabilityId the capability id
-     * @return the instance, or {@link Optional#empty()} if absent
+     * @return a new instance, or {@link Optional#empty()} if no factory is registered
      */
     public Optional<CapabilityInstance> instance(String capabilityId) {
-        return Optional.ofNullable(instances.get(capabilityId));
+        Supplier<CapabilityInstance> factory = instanceFactories.get(capabilityId);
+        return Optional.ofNullable(factory).map(Supplier::get);
     }
 }
